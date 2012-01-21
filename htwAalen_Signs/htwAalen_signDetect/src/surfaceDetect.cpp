@@ -49,11 +49,17 @@ public:
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
+    	int MAX_KERNEL_LENGTH=31;
 
-    if (cv_ptr->image.rows > 60 && cv_ptr->image.cols > 60)
-      cv::circle(cv_ptr->image, cv::Point(50, 50), 10, CV_RGB(255,0,0));
 
-    cv::imshow(WINDOW, cv_ptr->image);
+    	cv::Mat cpy=cv_ptr->image.clone();
+    	for ( int i = 1; i < MAX_KERNEL_LENGTH; i = i + 2 )
+		{
+			cv::GaussianBlur(cpy, cv_ptr->image,  cv::Size( i, i ), 0, 10 );
+		}
+		cv::circle(cv_ptr->image, cv::Point(50, 50), 10, CV_RGB(255,255,255));
+
+    	cv::imshow(WINDOW, cv_ptr->image);
     cv::waitKey(3);
 
     image_pub_.publish(cv_ptr->toImageMsg());
