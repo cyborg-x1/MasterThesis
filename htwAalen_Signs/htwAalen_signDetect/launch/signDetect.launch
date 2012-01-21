@@ -1,0 +1,7 @@
+<launch>
+	<include file="$(find openni_camera)/launch/openni_node.launch" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" required="true" />
+	<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
+		<remap from="in" to="camera/depth/image"/> 
+	</node>
+</launch>
