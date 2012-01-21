@@ -4,4 +4,19 @@
 	<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
 		<remap from="in" to="camera/depth/image"/>
 	</node>
+	
+	
+	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+	
+	<node pkg="nodelet" type="nodelet" name="PointCloudStandAlone"  args="manager" output="screen"/>
+
+		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_debug"
+	        args="load depth_image_proc/point_cloud_xyzrgb PointCloudStandAlone --no-bond">
+	    <!-- Explicit topic remappings, shouldn't need all of these -->
+	    <remap from="rgb/image_rect_color"        to="camera/rgb/image_color" />
+	    <remap from="rgb/camera_info"             to="camera/rgb/camera_info" />
+	    <remap from="depth_registered/image_rect" to="debug" />
+	    <remap from="depth_registered/points"     to="debug_points" />
+  	</node>       
+	
 </launch>
