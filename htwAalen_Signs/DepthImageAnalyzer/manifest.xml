@@ -15,12 +15,24 @@
   <!-- rosbuild1 -->
   <depend package="qt_build"/>
   <depend package="roscpp"/>
-  <depend package="opencv2" />
+  <depend package="std_srvs"/>
+  <depend package="std_msgs"/>
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="image_geometry"/>
+  <depend package="image_transport"/>
+  <depend package="openni_camera"/>
   
   <rosbuild2>
-    <depend package="qt_build"/>
-    <depend package="roscpp"/>
-    <depend package="opencv2" />
+	<depend package="qt_build"/>
+	<depend package="roscpp"/>
+	<depend package="std_srvs"/>
+	<depend package="std_msgs"/>
+	<depend package="opencv2"/>
+	<depend package="cv_bridge"/>
+	<depend package="image_geometry"/>
+	<depend package="image_transport"/>
+	<depend package="openni_camera"/>
   </rosbuild2>
   
 </package>
