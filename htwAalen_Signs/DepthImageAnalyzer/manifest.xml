@@ -1,0 +1,26 @@
+<package>
+  <description brief="DepthImageAnalyzer">
+
+     DepthImageAnalyzer
+
+  </description>
+  <author>Christian Holl</author>
+  <license>LGPL</license><!-- LGPL because of Qt usage-->
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/DepthImageAnalyzer</url>
+
+
+  <rosdep name="qt4"/>
+
+  <!-- rosbuild1 -->
+  <depend package="qt_build"/>
+  <depend package="roscpp"/>
+  <depend package="opencv2" />
+  
+  <rosbuild2>
+    <depend package="qt_build"/>
+    <depend package="roscpp"/>
+    <depend package="opencv2" />
+  </rosbuild2>
+  
+</package>
