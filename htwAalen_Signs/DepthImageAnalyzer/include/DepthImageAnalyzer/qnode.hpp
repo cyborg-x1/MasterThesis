@@ -19,7 +19,14 @@
 #include <ros/ros.h>
 #include <string>
 #include <QThread>
+#include <QImage>
 #include <QStringListModel>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <QGraphicsView>
 
 
 /*****************************************************************************
@@ -38,7 +45,7 @@ public:
 	QNode(int argc, char** argv );
 	virtual ~QNode();
 	bool init();
-	bool init(const std::string &master_url, const std::string &host_url);
+	//bool init(const std::string &master_url, const std::string &host_url); //TODO delete?
 	void run();
 
 	/*********************
@@ -53,17 +60,43 @@ public:
 	 };
 
 	QStringListModel* loggingModel() { return &logging_model; }
+	QGraphicsView*  depthViewer(){ return &depth_viewer;}
+	QImage* displayImage(){ return &display_image; }
 	void log( const LogLevel &level, const std::string &msg);
 
 signals:
 	void loggingUpdated();
     void rosShutdown();
+    void image(QImage);
+
 
 private:
 	int init_argc;
 	char** init_argv;
+
+	QGraphicsView depth_viewer;
+
+
+	//DEMOSTUFF TODO DELETE
 	ros::Publisher chatter_publisher;
-    QStringListModel logging_model;
+	/////////////////////////////////
+
+
+	//Loglist
+	QStringListModel logging_model;
+
+	//QImage
+	QImage display_image;
+
+	//Image subscriber and callback function
+	image_transport::Subscriber depth_image;
+	void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+
+
+	//Storage for current depth image
+	cv::Mat current_depth_image;
+
+
 };
 
 }  // namespace DepthImageAnalyzer

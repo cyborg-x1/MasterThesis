@@ -2,8 +2,12 @@
 #define DEPTHIMAGEANALYZER_H
 
 #include <QtGui/QWidget>
+#include <QBrush>
+#include <QImage>
 #include "ui_depthimageanalyzer.h"
 #include "qnode.hpp"
+
+
 
 namespace DepthImageAnalyzer {
 
@@ -24,7 +28,15 @@ namespace DepthImageAnalyzer {
 
     private:
 	Ui::DepthImageAnalyzerClass ui;
+	QGraphicsScene scene;
 	QNode qnode;
+	QImage image;
+
+
+	private slots:
+	void depthImage(QImage img);
+
+
     };
 
 }

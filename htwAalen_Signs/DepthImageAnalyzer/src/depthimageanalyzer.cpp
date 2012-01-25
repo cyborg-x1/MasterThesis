@@ -3,10 +3,11 @@ namespace DepthImageAnalyzer {
   DepthImageAnalyzer::DepthImageAnalyzer(int argc, char** argv, QWidget *parent)
       : QWidget(parent)
       , qnode(argc,argv)
+  	  , image(640,480,QImage::Format_RGB32)
   {
       ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
       QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-
+      qnode.init();
   }
 
   DepthImageAnalyzer::~DepthImageAnalyzer()
@@ -25,6 +26,11 @@ namespace DepthImageAnalyzer {
   }
 
   void DepthImageAnalyzer::on_lineEdit_2_editingFinished()
+  {
+
+  }
+
+  void DepthImageAnalyzer::depthImage(QImage img)
   {
 
   }
