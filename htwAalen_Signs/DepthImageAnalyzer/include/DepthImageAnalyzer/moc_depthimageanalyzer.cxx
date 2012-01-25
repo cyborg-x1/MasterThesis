@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'depthimageanalyzer.hpp'
 **
-** Created: Wed Jan 25 19:46:49 2012
+** Created: Wed Jan 25 23:41:19 2012
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.4)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,23 +23,34 @@ static const uint qt_meta_data_DepthImageAnalyzer__DepthImageAnalyzer[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+       6,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       0,       // signalCount
+       2,       // signalCount
+
+ // signals: signature, parameters, type, tag, flags
+      40,   39,   39,   39, 0x05,
+      71,   59,   39,   39, 0x05,
 
  // slots: signature, parameters, type, tag, flags
-      44,   40,   39,   39, 0x08,
-      63,   39,   39,   39, 0x08,
+      94,   39,   39,   39, 0x08,
+     132,   39,   39,   39, 0x08,
+     176,  172,   39,   39, 0x08,
+     202,  195,   39,   39, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_DepthImageAnalyzer__DepthImageAnalyzer[] = {
     "DepthImageAnalyzer::DepthImageAnalyzer\0"
-    "\0img\0depthImage(QImage)\0clickPos(QPointF)\0"
+    "\0highlightDisable()\0lower,upper\0"
+    "highlight(float,float)\0"
+    "on_pushButton_Highlight_Set_clicked()\0"
+    "on_pushButton_Highlight_Reset_clicked()\0"
+    "img\0depthImage(QImage)\0,value\0"
+    "clickPos(QPoint,float)\0"
 };
 
 const QMetaObject DepthImageAnalyzer::DepthImageAnalyzer::staticMetaObject = {
@@ -71,12 +82,29 @@ int DepthImageAnalyzer::DepthImageAnalyzer::qt_metacall(QMetaObject::Call _c, in
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: depthImage((*reinterpret_cast< QImage(*)>(_a[1]))); break;
-        case 1: clickPos((*reinterpret_cast< QPointF(*)>(_a[1]))); break;
+        case 0: highlightDisable(); break;
+        case 1: highlight((*reinterpret_cast< float(*)>(_a[1])),(*reinterpret_cast< float(*)>(_a[2]))); break;
+        case 2: on_pushButton_Highlight_Set_clicked(); break;
+        case 3: on_pushButton_Highlight_Reset_clicked(); break;
+        case 4: depthImage((*reinterpret_cast< QImage(*)>(_a[1]))); break;
+        case 5: clickPos((*reinterpret_cast< QPoint(*)>(_a[1])),(*reinterpret_cast< float(*)>(_a[2]))); break;
         default: ;
         }
-        _id -= 2;
+        _id -= 6;
     }
     return _id;
+}
+
+// SIGNAL 0
+void DepthImageAnalyzer::DepthImageAnalyzer::highlightDisable()
+{
+    QMetaObject::activate(this, &staticMetaObject, 0, 0);
+}
+
+// SIGNAL 1
+void DepthImageAnalyzer::DepthImageAnalyzer::highlight(float _t1, float _t2)
+{
+    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
+    QMetaObject::activate(this, &staticMetaObject, 1, _a);
 }
 QT_END_MOC_NAMESPACE

@@ -20,6 +20,7 @@
 #include <string>
 #include <QThread>
 #include <QImage>
+#include <QPoint>
 #include <QStringListModel>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -94,6 +95,24 @@ private:
 
 	//Storage for current depth image
 	cv::Mat current_depth_image;
+
+
+	//Highlight stuff
+	bool highlightEnable;
+	float lower;
+	float upper;
+
+	//position to analyze
+	QPoint position;
+
+public slots:
+	void clickPos(QPointF pos){ this->position=pos.toPoint(); }
+	void highlightDisable(){ this->highlightEnable = false; }
+	void highlight(float lower, float upper){ this->highlightEnable= true; this->lower=lower; this->upper=upper;}
+
+
+signals:
+	void currentPosValue(QPoint, float);
 
 
 };
