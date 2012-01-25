@@ -30,7 +30,9 @@ namespace DepthImageAnalyzer {
 QNode::QNode(int argc, char** argv) :
 	init_argc(argc),
 	init_argv(argv),
-	display_image(640,480,QImage::Format_RGB32)
+	display_image(640,480,QImage::Format_RGB32),
+	highlightEnable(false),
+	position(0,0)
 	{}
 
 QNode::~QNode() {
@@ -151,10 +153,19 @@ void QNode::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 	        float* Dy = msgImg->ptr<float>(y);
 	        for(int x = 0; x < msgImg->cols; x++)
 	        {
-
+	        	if(x==position.x() && y==position.y())
+	        	{
+	        		emit currentPosValue(position,Dy[x]);
+ 	        	}
 	        	int value=255*((Dy[x])/(10));
-	        	display_image.setPixel(x,y,value<<16|value<<8|value);
-
+	        	if(highlightEnable && Dy[x]>lower && Dy[x]<upper)
+	        	{
+	        		display_image.setPixel(x,y,value<<16);
+	        	}
+	        	else
+	        	{
+	        		display_image.setPixel(x,y,value<<16|value<<8|value);
+	        	}
 	        }
 	    }
 	    emit image(display_image);

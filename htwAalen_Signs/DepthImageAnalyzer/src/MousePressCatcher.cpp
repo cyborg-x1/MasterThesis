@@ -19,11 +19,9 @@ MousePressCatcher::~MousePressCatcher() {
 
 bool MousePressCatcher::sceneEventFilter(QGraphicsItem *watched, QEvent *event)
 {
-	qDebug()<<"Event"<<event->type();
     if (event->type() == QEvent::GraphicsSceneMousePress)
     {
 			QGraphicsSceneMouseEvent *buttonEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
-
 			emit clickPos(buttonEvent->pos());
         return true;
     } else {
