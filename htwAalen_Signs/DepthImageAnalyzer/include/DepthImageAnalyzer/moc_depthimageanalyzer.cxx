@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'depthimageanalyzer.hpp'
 **
-** Created: Tue Jan 24 23:10:53 2012
+** Created: Wed Jan 25 19:46:49 2012
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.4)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_DepthImageAnalyzer__DepthImageAnalyzer[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       4,   14, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -31,20 +31,15 @@ static const uint qt_meta_data_DepthImageAnalyzer__DepthImageAnalyzer[] = {
        0,       // signalCount
 
  // slots: signature, parameters, type, tag, flags
-      40,   39,   39,   39, 0x08,
-      64,   39,   39,   39, 0x08,
-      94,   39,   39,   39, 0x08,
-     130,  126,   39,   39, 0x08,
+      44,   40,   39,   39, 0x08,
+      63,   39,   39,   39, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_DepthImageAnalyzer__DepthImageAnalyzer[] = {
     "DepthImageAnalyzer::DepthImageAnalyzer\0"
-    "\0on_pushButton_clicked()\0"
-    "on_lineEdit_editingFinished()\0"
-    "on_lineEdit_2_editingFinished()\0img\0"
-    "depthImage(QImage)\0"
+    "\0img\0depthImage(QImage)\0clickPos(QPointF)\0"
 };
 
 const QMetaObject DepthImageAnalyzer::DepthImageAnalyzer::staticMetaObject = {
@@ -76,13 +71,11 @@ int DepthImageAnalyzer::DepthImageAnalyzer::qt_metacall(QMetaObject::Call _c, in
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
-        case 0: on_pushButton_clicked(); break;
-        case 1: on_lineEdit_editingFinished(); break;
-        case 2: on_lineEdit_2_editingFinished(); break;
-        case 3: depthImage((*reinterpret_cast< QImage(*)>(_a[1]))); break;
+        case 0: depthImage((*reinterpret_cast< QImage(*)>(_a[1]))); break;
+        case 1: clickPos((*reinterpret_cast< QPointF(*)>(_a[1]))); break;
         default: ;
         }
-        _id -= 4;
+        _id -= 2;
     }
     return _id;
 }

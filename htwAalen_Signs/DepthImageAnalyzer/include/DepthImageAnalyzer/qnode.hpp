@@ -61,7 +61,6 @@ public:
 
 	QStringListModel* loggingModel() { return &logging_model; }
 	QGraphicsView*  depthViewer(){ return &depth_viewer;}
-	QImage* displayImage(){ return &display_image; }
 	void log( const LogLevel &level, const std::string &msg);
 
 signals:

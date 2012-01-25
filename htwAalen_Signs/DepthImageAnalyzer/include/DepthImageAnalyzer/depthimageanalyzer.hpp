@@ -4,6 +4,9 @@
 #include <QtGui/QWidget>
 #include <QBrush>
 #include <QImage>
+#include <QGraphicsRectItem>
+#include <QPoint>
+#include "MousePressCatcher.hpp"
 #include "ui_depthimageanalyzer.h"
 #include "qnode.hpp"
 
@@ -19,22 +22,17 @@ namespace DepthImageAnalyzer {
 	DepthImageAnalyzer(int argc, char** argv, QWidget *parent = 0);
 	~DepthImageAnalyzer();
 
-    private slots:
-	void on_pushButton_clicked();
-
-	void on_lineEdit_editingFinished();
-
-	void on_lineEdit_2_editingFinished();
-
     private:
 	Ui::DepthImageAnalyzerClass ui;
-	QGraphicsScene scene;
-	QNode qnode;
-	QImage image;
 
+	QNode qnode;
+	QGraphicsRectItem *rect_Image;
 
 	private slots:
 	void depthImage(QImage img);
+	void clickPos(QPointF);
+
+	signals:
 
 
     };
