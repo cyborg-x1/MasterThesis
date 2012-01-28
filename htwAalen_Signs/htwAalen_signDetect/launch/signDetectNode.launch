@@ -1,0 +1,7 @@
+<launch>
+
+	<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
+		<remap from="in" to="camera/depth/image"/>
+	</node>
+
+</launch>

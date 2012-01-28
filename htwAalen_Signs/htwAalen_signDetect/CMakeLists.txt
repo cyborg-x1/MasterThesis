@@ -31,3 +31,4 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 
 rosbuild_add_executable(surfaceDetect src/surfaceDetect.cpp)
+rosbuild_add_executable(toCompressFromCompress src/toCompressFromCompress.cpp)

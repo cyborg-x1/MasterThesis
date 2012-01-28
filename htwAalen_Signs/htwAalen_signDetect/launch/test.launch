@@ -1,0 +1,34 @@
+<launch>
+	<include file="$(find openni_launch)/launch/openni.launch" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" required="true" />
+
+	<node pkg="htwAalen_signDetect" type="toCompressFromCompress" name="compressNode" output="screen" respawn="true" > 
+ 		<remap from="/comp" to="/comp" />
+ 		<remap from="/uncomp" to="/uncomp" />
+ 		<remap from="/in" to="/camera/depth_registered/image_rect_raw" />
+	</node>
+	
+	<node pkg="htwAalen_signDetect" type="toCompressFromCompress" name="uncompressNode2" output="screen" respawn="true" > 
+ 		<remap from="/comp" to="/comp" />
+ 		<remap from="/uncomp" to="/uncomp2" />
+ 		<remap from="/in" to="/comp" />
+	</node>
+	
+	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+	
+	<node pkg="nodelet" type="nodelet" name="PointCloudStandAlone"  args="manager" output="screen"/>
+
+		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_debug"
+	        args="load depth_image_proc/point_cloud_xyzrgb PointCloudStandAlone --no-bond">
+	    <!-- Explicit topic remappings, shouldn't need all of these -->
+	    <remap from="rgb/image_rect_color"        to="/camera/rgb/image_rect_color" />
+	    <remap from="rgb/camera_info"             to="/camera/rgb/camera_info" />
+	    <remap from="depth_registered/image_rect" to="/uncomp2" />
+	    <remap from="depth_registered/points"     to="/debug_points" />
+  	</node>      	
+  	
+  	
+	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="Modified" output="screen" >
+		<remap from="/depthImage" to="/uncomp2"/>
+	</node>
+</launch>
