@@ -1,21 +1,29 @@
 <launch>
+
+	<!-- Set compression format to png -->
+	<param name="/comp/compressed/format" value="png" />
+	<param name="/camera/driver/depth_registration" value="true" />	
+	
+
+	<!-- Start the camera-->
 	<include file="$(find openni_launch)/launch/openni.launch" />
 	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" required="true" />
 
-	<node pkg="htwAalen_signDetect" type="toCompressFromCompress" name="compressNode" output="screen" respawn="true" > 
+	
+	<!-- Compress Tunneling 1MB/s-->
+	<node pkg="htwAalen_signDetect" type="toCompress" name="compressNode" output="screen" respawn="true" > 
  		<remap from="/comp" to="/comp" />
- 		<remap from="/uncomp" to="/uncomp" />
  		<remap from="/in" to="/camera/depth_registered/image_rect_raw" />
+
 	</node>
 	
-	<node pkg="htwAalen_signDetect" type="toCompressFromCompress" name="uncompressNode2" output="screen" respawn="true" > 
- 		<remap from="/comp" to="/comp" />
+	<!-- Uncompress -->
+	<node pkg="htwAalen_signDetect" type="fromCompress" name="uncompressNode" output="screen" respawn="true" > 
  		<remap from="/uncomp" to="/uncomp2" />
  		<remap from="/in" to="/comp" />
 	</node>
 	
 	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
-	
 	<node pkg="nodelet" type="nodelet" name="PointCloudStandAlone"  args="manager" output="screen"/>
 
 		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_debug"
@@ -27,7 +35,12 @@
 	    <remap from="depth_registered/points"     to="/debug_points" />
   	</node>      	
   	
-  	
+  	<!-- Depth Image Analyzer (Input) -->
+	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="Modified" output="screen" >
+		<remap from="/depthImage" to="/uncomp2"/>
+	</node>
+	
+	<!-- Depth Image Analyzer (Output) -->
 	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="Modified" output="screen" >
 		<remap from="/depthImage" to="/uncomp2"/>
 	</node>
