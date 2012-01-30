@@ -73,9 +73,6 @@ public:
 				uchar lowerByte=img->image.at<Vec1shrt>(y,x)[0]&0xFF;
 				uchar upperByte=(img->image.at<Vec1shrt>(y,x)[0]&0xFF00)>>8;
 
-
-			//	if(x==100 && y==100) printf("Comp: %#x %#x %#x\n",upperByte, lowerByte, ~lowerByte);
-
 				out.at<Vec3char>(y,x)[0]=((!(upperByte%2)) || !upperByte)?lowerByte:~lowerByte;
 				out.at<Vec3char>(y,x)[1]=upperByte;
 				out.at<Vec3char>(y,x)[2]=0;
