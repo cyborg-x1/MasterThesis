@@ -82,7 +82,6 @@ public:
 
 					unsigned short currentShort=(upperByte<<8) | (lowerByte<<0);
 
-		//			if(x==100 && y==100) printf("Uncomp: %#x %#x %#x\n",upperByte, lowerByte, ~lowerByte);
 
 					out.at<Vec1flt>(y,x)[0]=(float)currentShort/1000;
 				}

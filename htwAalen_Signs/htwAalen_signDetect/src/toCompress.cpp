@@ -45,18 +45,43 @@ class toCompress
 
   //Mat for storage
   cv::Mat store;
-
+  cv::Mat disturb;
 
 public:
   toCompress()
-    : it_(nh_)
+    : nh_("~")
+    , it_(nh_)
     , image_count(0)
   	, store(480,640,CV_16UC1)
+  	, disturb(480,640,CV_16UC1)
   {
     depth_camera_compressed_out = it_.advertiseCamera("/comp", 1);
     depth_camera_in = it_.subscribeCamera("/in", 1, &toCompress::imageCb, this);
 
+    disturb=cv::Mat::zeros(disturb.rows,disturb.cols,CV_16UC1);
+
+
+
+
+	cv::Mat disturb_in=cv::imread("/home/cyborg-x1/disturbance.png",1);
+
+	for(int y = 0; y < disturb_in.rows; y++)
+	{
+		for(int x = 0; x < disturb_in.cols; x++)
+		{
+			if(disturb_in.at<Vec3char>(y,x)[0] || disturb_in.at<Vec3char>(y,x)[1])
+			{
+				disturb.at<Vec1shrt>(y,x)[0]=(disturb_in.at<Vec3char>(y,x)[0] | disturb_in.at<Vec3char>(y,x)[1]<<8);
+				printf("%i,", disturb.at<Vec1shrt>(y,x)[0]);
+			}
+		}
+	}
+	cv::medianBlur(disturb,disturb,3);
+	printf("\n");
+
+
     cv::namedWindow(WINDOW); //TODO Remove
+
   }
 
   ~toCompress()
@@ -81,7 +106,6 @@ public:
 
 
 
-
 		//Update non zero pixels
 		for(int y = 0; y < store.rows; y++)
 		{
@@ -89,24 +113,14 @@ public:
 			{
 				if(img->image.at<Vec1shrt>(y,x)[0])
 				{
-					store.at<Vec1shrt>(y,x)[0]=img->image.at<Vec1shrt>(y,x)[0];
+					store.at<Vec1shrt>(y,x)[0]=img->image.at<Vec1shrt>(y,x)[0]-disturb.at<Vec1shrt>(y,x)[0];
 				}
 			}
 		}
 
 
-
-
-//		int blackpixLimit=90;
-//		for(int y = 0; y < store.rows; y++)
-//		{
-//			for(int x = 0; x < store.cols; x++)
-//			{
-//
-//			}
-//		}
-
-
+//		 cv::imshow(WINDOW, disturb);
+//		 cv::waitKey(3);
 
 
 
