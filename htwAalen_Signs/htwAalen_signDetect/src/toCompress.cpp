@@ -76,7 +76,7 @@ public:
 			}
 		}
 	}
-	cv::medianBlur(disturb,disturb,3);
+
 	printf("\n");
 
 
@@ -105,6 +105,9 @@ public:
 		}
 
 
+		cv::medianBlur(disturb,img->image,3);
+
+
 
 		//Update non zero pixels
 		for(int y = 0; y < store.rows; y++)
@@ -117,6 +120,7 @@ public:
 				}
 			}
 		}
+
 
 
 //		 cv::imshow(WINDOW, disturb);
@@ -145,6 +149,7 @@ public:
 				out.at<Vec3char>(y,x)[2]=0;
 			}
 		}
+
 
 		//Set new image and encoding
 		img->image=out;

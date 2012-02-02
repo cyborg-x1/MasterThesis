@@ -27,7 +27,7 @@ class fromCompress
   int count;
   int distance_mm;
 
-  cv::Mat store;
+  cv::Mat disturb;
 
 
   typedef cv::Vec<float, 1> Vec1flt;
@@ -39,13 +39,13 @@ public:
   fromCompress()
     : it_(nh_)
     ,count(0)
-  	,store(480,640,CV_8UC3)
+  	,disturb(480,640,CV_8UC3)
   {
 	std::string tp_hint;
 
     depth_camera_in = it_.subscribeCamera("/camera/depth_registered/image_rect_raw", 1, &fromCompress::imageCb, this);
-    nh_.param("distance",distance_mm, 935);
-    store=cv::Mat::zeros(store.rows,store.cols,CV_8UC3);
+    nh_.param("distance",distance_mm, 1173);
+    disturb=cv::Mat::zeros(disturb.rows,disturb.cols,CV_8UC3);
 
     printf("Using distance: %i \n ",distance_mm);
 
@@ -73,12 +73,13 @@ public:
 		  return;
 		}
 
+
 		count++;
 		if(count >= 3)
 		{
-			for(int y = 0; y < store.rows; y++)
+			for(int y = 0; y < disturb.rows; y++)
 			{
-				for(int x = 0; x < store.cols; x++)
+				for(int x = 0; x < disturb.cols; x++)
 				{
 					if(img->image.at<Vec1shrt>(y,x)[0]>100)
 					{
@@ -86,28 +87,28 @@ public:
 						//printf("%i \n", value);
 						if(value<0)printf("d___\n");
 
-						store.at<Vec3char>(y,x)[0]=value&0x00FF;
-						store.at<Vec3char>(y,x)[1]=(value&0xFF00)>>8;
-						store.at<Vec3char>(y,x)[2]=0;
+						disturb.at<Vec3char>(y,x)[0]=value&0x00FF;
+						disturb.at<Vec3char>(y,x)[1]=(value&0xFF00)>>8;
+						disturb.at<Vec3char>(y,x)[2]=0;
 					}
 					else
 					{
-						store.at<Vec3char>(y,x)[0]=0;
-						store.at<Vec3char>(y,x)[1]=0;
+						disturb.at<Vec3char>(y,x)[0]=0;
+						disturb.at<Vec3char>(y,x)[1]=0;
 						if(img->image.at<Vec1shrt>(y,x)[0]!=0)
 						{
 							printf("Found strange pixel at (%i/%i) with Value (%i) \n",x,y,img->image.at<Vec1shrt>(y,x)[0]);
-							store.at<Vec3char>(y,x)[2]=0xFF;
+							disturb.at<Vec3char>(y,x)[2]=0xFF;
 						}
 						else
 						{
-							store.at<Vec3char>(y,x)[2]=0;
+							disturb.at<Vec3char>(y,x)[2]=0;
 						}
 					}
 				}
 			}
 
-			cv::imwrite("disturbance.png",store);
+			cv::imwrite("disturbance.png",disturb);
 
 			//successfull end
 			printf("Finished... End!\n");
