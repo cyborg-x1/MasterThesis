@@ -1,0 +1,94 @@
+//
+//			int blackpixLimit=90;
+//			for(int y = 0; y < store.image.rows; y++)
+//			{
+//				for(int x = 0; x < store.cols; x++)
+//				{
+//
+//					//Check if current pixel is black and if we are not at the boarder
+//					if(!store->image.at<Vec1shrt>(y,x)[0] && x!=0)
+//					{
+//
+//						//If the pixel before was black continue with next loop
+//						if(!store->image.at<Vec1shrt>(y,x-1)[0])
+//						{
+//							continue;
+//						}
+//						else	//Seek the next non zero pixel
+//						{
+//
+//							unsigned short value; //Stores the value of the next pixel
+//							int x2;
+//
+//							for(x2 = x; x < store->image.cols; x2++)
+//							{
+//								value=store->image.at<Vec1shrt>(y,x)[0];
+//								if(value || (x2-x) > blackpixLimit) //if found exit loop
+//								{
+//									break;
+//								}
+//							}
+//							if(!value)
+//							{
+//
+//								x=x2;
+//							}
+//							else
+//							{
+//								for(; (x<store->image.cols) && !(store->image.at<Vec1shrt>(y,x)[0]);x++ )
+//								{
+//									printf("replace %i %i \n", y,x);
+//									store->image.at<Vec1shrt>(y,x)[0]=0xFFFF;
+//								}
+//							}
+//
+//						}
+//					}
+//
+//
+//
+//
+//
+//				}
+//			}
+
+//
+//	    abnormal=cv::Mat::zeros(disturb.rows,disturb.cols,CV_16UC1);
+//		//Search abnormal pixels
+//		for(int y = 0; y < img->image.rows; y++)
+//		{
+//			for(int x = 0; x < img->image.cols; x++)
+//			{
+//				if(img->image.at<Vec1shrt>(y,x)[0] != 0 &&(img->image.at<Vec1shrt>(y,x)[0]<10 || img->image.at<Vec1shrt>(y,x)[0]>10000))
+//				{
+//					abnormal.at<Vec1shrt>(y,x)[0]=0xFFFF;
+//				}
+//			}
+//		}
+//
+//
+//
+//
+//
+
+
+
+
+//		int blackpixLimit=90;
+//		for(int y = 0; y < store.rows; y++)
+//		{
+//			for(int x = 0; x < store.cols; x++)
+//			{
+//
+//			}
+//		}
+
+
+//		cv::medianBlur(store, store,  5.5);
+
+	//	cv::GaussianBlur(store,store,cv::Size(dyn0,dyn1),dyn2,dyn3,dyn4);
+	//	cv::medianBlur(store,store,3);
+	
+				array.channels(1);
+			array.depth()
+			cv::filter2D(store,store,dyn0,array,cv::Point(-1,-1),dyn1,dyn2);

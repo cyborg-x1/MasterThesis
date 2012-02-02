@@ -2,10 +2,11 @@
 	<include file="$(find openni_camera)/launch/openni_node.launch" />
 	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" required="true" />
 	
+	<!--
 	<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
 		<remap from="in" to="/camera/depth_registered/image_rect_raw"/>
 	</node>
-	
+	-->
 	
 	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
 	

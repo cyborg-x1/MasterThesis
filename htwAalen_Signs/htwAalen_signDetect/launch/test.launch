@@ -5,22 +5,14 @@
 	<param name="/camera/driver/depth_registration" value="true" />	
 	
 
+	<!-- Launch a reconfigure GUI -->
+	<node pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui" output="screen" respawn="true"  />
+	
+	
 	<!-- Start the camera-->
 	<include file="$(find openni_launch)/launch/openni.launch" />
-	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" required="true" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" respawn="true"  />
 
-		
-	<!--<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
-		<remap from="in" to="/camera/depth_registered/image_rect_raw"/>
-	</node>-->
-	
-	<!-- Compress Tunneling 1MB/s-->
-	<node pkg="htwAalen_signDetect" type="toCompress" name="compressNode" output="screen" respawn="true" > 
- 		<remap from="/comp" to="/comp" />
- 		<remap from="/in" to="/camera/depth_registered/image_rect_raw" />
-
-	</node>
-	
 	<!-- Uncompress -->
 	<node pkg="htwAalen_signDetect" type="fromCompress" name="uncompressNode" output="screen" respawn="true" > 
  		<remap from="/uncomp" to="/uncomp2" />
@@ -39,13 +31,13 @@
 	    <remap from="depth_registered/points"     to="/debug_points" />
   	</node>      	
   	
-  	<!-- Depth Image Analyzer (Input) -->
+  	<!-- Depth Image Analyzer (Input) 
 	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="DepthImageAnalyzerIn" output="screen" >
 		<remap from="/depthImage" to="/camera/depth_registered/image"/>
 	</node>
-	
-	<!-- Depth Image Analyzer (Output) -->
+	-->
+	<!-- Depth Image Analyzer (Output) 
 	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="DepthImageAnalyzerOut" output="screen" >
 		<remap from="/depthImage" to="/uncomp2"/>
-	</node>
+	</node>-->
 </launch>

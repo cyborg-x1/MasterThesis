@@ -15,25 +15,39 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <math.h>
+#include <ros/ros.h>
+#include <dynamic_reconfigure/server.h>
+#include <htwAalen_signDetect/toCompressConfig.h>
+
 
 namespace enc = sensor_msgs::image_encodings;
+
 
 
 static const char WINDOW[] = "Image window";
 
 class toCompress
 {
+
+
+
+
+
   ros::NodeHandle nh_;
+
+  //Dynamic reconfigure
+   dynamic_reconfigure::Server<htwAalen_signDetect::toCompressConfig> reconfServer;
+   dynamic_reconfigure::Server<htwAalen_signDetect::toCompressConfig>::CallbackType reconfCbType;
+
+
+   int dyn0, dyn1, dyn2, dyn3, dyn4;
+
+
+  //Image transport
   image_transport::ImageTransport it_;
   image_transport::CameraSubscriber depth_camera_in;
   image_transport::CameraSubscriber rgb_camera_in;
   image_transport::CameraPublisher depth_camera_compressed_out;
-
-
-
-
-
-
 
   //Counter for images
   unsigned int image_count;
@@ -58,27 +72,8 @@ public:
     depth_camera_compressed_out = it_.advertiseCamera("/comp", 1);
     depth_camera_in = it_.subscribeCamera("/in", 1, &toCompress::imageCb, this);
 
-    disturb=cv::Mat::zeros(disturb.rows,disturb.cols,CV_16UC1);
-
-
-
-
-	cv::Mat disturb_in=cv::imread("/home/cyborg-x1/disturbance.png",1);
-
-	for(int y = 0; y < disturb_in.rows; y++)
-	{
-		for(int x = 0; x < disturb_in.cols; x++)
-		{
-			if(disturb_in.at<Vec3char>(y,x)[0] || disturb_in.at<Vec3char>(y,x)[1])
-			{
-				disturb.at<Vec1shrt>(y,x)[0]=(disturb_in.at<Vec3char>(y,x)[0] | disturb_in.at<Vec3char>(y,x)[1]<<8);
-				printf("%i,", disturb.at<Vec1shrt>(y,x)[0]);
-			}
-		}
-	}
-
-	printf("\n");
-
+    reconfCbType = boost::bind(&toCompress::reconfigCb, this ,_1, _2);
+    reconfServer.setCallback(reconfCbType);
 
     cv::namedWindow(WINDOW); //TODO Remove
 
@@ -87,6 +82,19 @@ public:
   ~toCompress()
   {
     cv::destroyWindow(WINDOW); //TODO Remove
+  }
+
+
+
+  void reconfigCb(htwAalen_signDetect::toCompressConfig &config, uint32_t level)
+  {
+   // ROS_INFO("Reconfigure Request: %d %d %d %d %d", config.int_param0,config.int_param1,config.int_param2,config.int_param3,config.int_param4);
+
+    dyn0=config.int_param0;
+    dyn1=config.int_param1;
+    dyn2=config.int_param2;
+    dyn3=config.int_param3;
+    dyn4=config.int_param4;
   }
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg,const sensor_msgs::CameraInfoConstPtr& info)
@@ -105,8 +113,6 @@ public:
 		}
 
 
-		cv::medianBlur(disturb,img->image,3);
-
 
 
 		//Update non zero pixels
@@ -116,7 +122,7 @@ public:
 			{
 				if(img->image.at<Vec1shrt>(y,x)[0])
 				{
-					store.at<Vec1shrt>(y,x)[0]=img->image.at<Vec1shrt>(y,x)[0]-disturb.at<Vec1shrt>(y,x)[0];
+					store.at<Vec1shrt>(y,x)[0]=img->image.at<Vec1shrt>(y,x)[0];
 				}
 			}
 		}
@@ -125,6 +131,13 @@ public:
 
 //		 cv::imshow(WINDOW, disturb);
 //		 cv::waitKey(3);
+
+		for (int var = 0; var < dyn4; ++var) {
+
+
+			cv::boxFilter(store,store,dyn0,cv::Size(dyn1,dyn2),cv::Point(-1,-1),1,0);
+			cv::medianBlur(store,store,dyn3);
+		}
 
 
 
@@ -179,7 +192,7 @@ public:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "image_converter");
+  ros::init(argc, argv, "toCompress");
   toCompress ic;
   ros::spin();
   return 0;

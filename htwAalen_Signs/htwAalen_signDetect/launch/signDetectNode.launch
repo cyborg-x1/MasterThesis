@@ -1,7 +1,15 @@
 <launch>
+	<!--<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
+		<remap from="in" to="/camera/depth_registered/image_rect_raw"/>
+	</node>
+		-->
 
-	<node pkg="htwAalen_signDetect" type="surfaceDetect" name="signDetect" output="screen" respawn="true" > 
-		<remap from="in" to="camera/depth/image"/>
+	<node pkg="htwAalen_signDetect" type="toCompress" name="compressNode" output="screen" respawn="true" > 
+ 		<remap from="/comp" to="/comp" />
+ 		<remap from="/in" to="/camera/depth_registered/image_rect_raw" />
+
 	</node>
 
+	
+	
 </launch>
