@@ -40,7 +40,7 @@ class toCompress
    dynamic_reconfigure::Server<htwAalen_signDetect::toCompressConfig>::CallbackType reconfCbType;
 
 
-   int dyn0, dyn1, dyn2, dyn3, dyn4;
+   double dyn0, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7;
    bool en;
 
 
@@ -89,16 +89,32 @@ public:
 
   void reconfigCb(htwAalen_signDetect::toCompressConfig &config, uint32_t level)
   {
-   // ROS_INFO("Reconfigure Request: %d %d %d %d %d", config.int_param0,config.int_param1,config.int_param2,config.int_param3,config.int_param4);
 
-    dyn0=config.int_param0;
-    dyn1=config.int_param1;
-    dyn2=config.int_param2;
-    dyn3=config.int_param3;
-    dyn4=config.int_param4;
+
+    dyn0=config.double_param0;
+    dyn1=config.double_param1;
+    dyn2=config.double_param2;
+    dyn3=config.double_param3;
+    dyn4=config.double_param4;
+    dyn5=config.double_param5;
+    dyn6=config.double_param6;
+    dyn7=config.double_param7;
     en=config.enable_filter;
 
   }
+
+  void from16UC1to32FC1(cv::Mat &src, cv::Mat &dst)
+  {
+		for(int y = 0; y < 480; y++)
+		{
+			for(int x = 0; x < 640; x++)
+			{
+				dst.at<Vec1flt>(y,x)[0]=((float)src.at<Vec1shrt>(y,x)[0])/1000.0;
+			}
+		}
+  }
+
+
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg,const sensor_msgs::CameraInfoConstPtr& info)
   {
@@ -116,12 +132,17 @@ public:
 		}
 
 
+		cv::Mat filtered_in(480,640,CV_32FC1);
+		cv::Mat filtered(480,640,CV_32FC1);
 
-		cv::Mat filtered=img->image.clone();
+		from16UC1to32FC1(img->image,filtered_in);
+
 		if(en)
 		{
-				cv::boxFilter(filtered,filtered,3,cv::Size(6,2),cv::Point(-1,-1),1,0);
-				cv::medianBlur(filtered,filtered,dyn3);
+			//	cv::boxFilter(filtered,filtered,3,cv::Size(6,2),cv::Point(-1,-1),1,0);
+			//	cv::medianBlur(filtered,filtered,dyn3);
+
+			cv::bilateralFilter(filtered_in,filtered, dyn0,dyn1,dyn2,cv::BORDER_DEFAULT);
 		}
 
 
@@ -131,16 +152,16 @@ public:
 			for(int x = 0; x < store.cols; x++)
 			{
 				short realValue=img->image.at<Vec1shrt>(y,x)[0];
-				short filteredValue=filtered.at<Vec1shrt>(y,x)[0];
+				short filteredValue=filtered.at<Vec1flt>(y,x)[0]*1000;
 				if(realValue)
 				{//dyn0=12
-					if(abs(realValue - filteredValue)<=(pow(realValue,2)/(dyn0*10000))) //Limit difference from filtered and real points
+					if((1 && filteredValue) || abs(realValue - filteredValue)<=(pow(realValue,2)/(dyn0*10000))) //Limit difference from filtered and real points
 					{
 						store.at<Vec1shrt>(y,x)[0]=filteredValue;
 					}
 					else
 					{
-						store.at<Vec1shrt>(y,x)[0]=realValue;
+						store.at<Vec1shrt>(y,x)[0]=filtered_in.at<Vec1flt>(y,x)[0]*1000;
 					}
 				}
 			}
@@ -148,12 +169,12 @@ public:
 
 		if(en)
 		{
-			cv::medianBlur(store,store,3);
+		//	cv::medianBlur(store,store,3);
 		}
 
 
 		image_count++;
-		if(image_count>=3)
+		if(image_count>=1)
 		{
 
 		//Create output mat
