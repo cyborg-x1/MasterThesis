@@ -133,8 +133,8 @@ public:
 				short realValue=img->image.at<Vec1shrt>(y,x)[0];
 				short filteredValue=filtered.at<Vec1shrt>(y,x)[0];
 				if(realValue)
-				{//dyn0=9
-					if(abs(realValue - filteredValue)<=(pow(realValue,2)/(dyn0*10000)))
+				{//dyn0=12
+					if(abs(realValue - filteredValue)<=(pow(realValue,2)/(dyn0*10000))) //Limit difference from filtered and real points
 					{
 						store.at<Vec1shrt>(y,x)[0]=filteredValue;
 					}
