@@ -133,15 +133,17 @@ namespace htwAalen_signDetect
       }
     };
 
-//#line 9 "cfg/toCompress.cfg"
-      int int_param0;
 //#line 10 "cfg/toCompress.cfg"
-      int int_param1;
-//#line 11 "cfg/toCompress.cfg"
-      int int_param2;
-//#line 12 "cfg/toCompress.cfg"
-      int int_param3;
+      bool enable_filter;
 //#line 13 "cfg/toCompress.cfg"
+      int int_param0;
+//#line 14 "cfg/toCompress.cfg"
+      int int_param1;
+//#line 15 "cfg/toCompress.cfg"
+      int int_param2;
+//#line 16 "cfg/toCompress.cfg"
+      int int_param3;
+//#line 17 "cfg/toCompress.cfg"
       int int_param4;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
@@ -243,45 +245,53 @@ namespace htwAalen_signDetect
     
     toCompressConfigStatics()
     {
-//#line 9 "cfg/toCompress.cfg"
+//#line 10 "cfg/toCompress.cfg"
+      __min__.enable_filter = 0;
+//#line 10 "cfg/toCompress.cfg"
+      __max__.enable_filter = 1;
+//#line 10 "cfg/toCompress.cfg"
+      __default__.enable_filter = 0;
+//#line 10 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<bool>("enable_filter", "bool", 0, "Enable Filters", "", &toCompressConfig::enable_filter)));
+//#line 13 "cfg/toCompress.cfg"
       __min__.int_param0 = 0;
-//#line 9 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __max__.int_param0 = 100;
-//#line 9 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __default__.int_param0 = 1;
-//#line 9 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param0", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param0)));
-//#line 10 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __min__.int_param1 = 0;
-//#line 10 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __max__.int_param1 = 100;
-//#line 10 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __default__.int_param1 = 1;
-//#line 10 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param1", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param1)));
-//#line 11 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __min__.int_param2 = 0;
-//#line 11 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __max__.int_param2 = 100;
-//#line 11 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __default__.int_param2 = 1;
-//#line 11 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param2", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param2)));
-//#line 12 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __min__.int_param3 = 0;
-//#line 12 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __max__.int_param3 = 100;
-//#line 12 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __default__.int_param3 = 1;
-//#line 12 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param3", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param3)));
-//#line 13 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __min__.int_param4 = 0;
-//#line 13 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __max__.int_param4 = 100;
-//#line 13 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __default__.int_param4 = 1;
-//#line 13 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param4", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param4)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     

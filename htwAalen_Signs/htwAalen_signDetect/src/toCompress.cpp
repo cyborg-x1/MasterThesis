@@ -41,6 +41,7 @@ class toCompress
 
 
    int dyn0, dyn1, dyn2, dyn3, dyn4;
+   bool en;
 
 
   //Image transport
@@ -95,6 +96,8 @@ public:
     dyn2=config.int_param2;
     dyn3=config.int_param3;
     dyn4=config.int_param4;
+    en=config.enable_filter;
+
   }
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg,const sensor_msgs::CameraInfoConstPtr& info)
@@ -114,32 +117,39 @@ public:
 
 
 
+		cv::Mat filtered=img->image.clone();
+		if(en)
+		{
+				cv::boxFilter(filtered,filtered,3,cv::Size(6,2),cv::Point(-1,-1),1,0);
+				cv::medianBlur(filtered,filtered,dyn3);
+		}
+
 
 		//Update non zero pixels
 		for(int y = 0; y < store.rows; y++)
 		{
 			for(int x = 0; x < store.cols; x++)
 			{
-				if(img->image.at<Vec1shrt>(y,x)[0])
-				{
-					store.at<Vec1shrt>(y,x)[0]=img->image.at<Vec1shrt>(y,x)[0];
+				short realValue=img->image.at<Vec1shrt>(y,x)[0];
+				short filteredValue=filtered.at<Vec1shrt>(y,x)[0];
+				if(realValue)
+				{//dyn0=9
+					if(abs(realValue - filteredValue)<=(pow(realValue,2)/(dyn0*10000)))
+					{
+						store.at<Vec1shrt>(y,x)[0]=filteredValue;
+					}
+					else
+					{
+						store.at<Vec1shrt>(y,x)[0]=realValue;
+					}
 				}
 			}
 		}
 
-
-
-//		 cv::imshow(WINDOW, disturb);
-//		 cv::waitKey(3);
-
-		for (int var = 0; var < dyn4; ++var) {
-
-
-			cv::boxFilter(store,store,dyn0,cv::Size(dyn1,dyn2),cv::Point(-1,-1),1,0);
-			cv::medianBlur(store,store,dyn3);
+		if(en)
+		{
+			cv::medianBlur(store,store,3);
 		}
-
-
 
 
 		image_count++;
