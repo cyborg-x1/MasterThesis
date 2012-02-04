@@ -19,6 +19,13 @@
 #include <dynamic_reconfigure/server.h>
 #include <htwAalen_signDetect/toCompressConfig.h>
 
+#include <image_transport/image_transport.h>
+#include <image_transport/subscriber_filter.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <sensor_msgs/image_encodings.h>
+#include <image_geometry/pinhole_camera_model.h>
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -49,6 +56,9 @@ class toCompress
   image_transport::CameraSubscriber depth_camera_in;
   image_transport::CameraSubscriber rgb_camera_in;
   image_transport::CameraPublisher depth_camera_compressed_out;
+
+
+
 
   //Counter for images
   unsigned int image_count;
@@ -141,7 +151,7 @@ public:
 		{
 			//	cv::boxFilter(filtered,filtered,3,cv::Size(6,2),cv::Point(-1,-1),1,0);
 			//	cv::medianBlur(filtered,filtered,dyn3);
-
+			//4.7 0.1 6.8
 			cv::bilateralFilter(filtered_in,filtered, dyn0,dyn1,dyn2,cv::BORDER_DEFAULT);
 		}
 
@@ -169,12 +179,12 @@ public:
 
 		if(en)
 		{
-		//	cv::medianBlur(store,store,3);
+			//cv::medianBlur(store,store,3);
 		}
 
 
 		image_count++;
-		if(image_count>=1)
+		if(image_count>=3)
 		{
 
 		//Create output mat
