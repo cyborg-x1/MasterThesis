@@ -135,16 +135,22 @@ namespace htwAalen_signDetect
 
 //#line 10 "cfg/toCompress.cfg"
       bool enable_filter;
+//#line 12 "cfg/toCompress.cfg"
+      double double_param0;
 //#line 13 "cfg/toCompress.cfg"
-      int int_param0;
+      double double_param1;
 //#line 14 "cfg/toCompress.cfg"
-      int int_param1;
+      double double_param2;
 //#line 15 "cfg/toCompress.cfg"
-      int int_param2;
+      double double_param3;
 //#line 16 "cfg/toCompress.cfg"
-      int int_param3;
+      double double_param4;
 //#line 17 "cfg/toCompress.cfg"
-      int int_param4;
+      double double_param5;
+//#line 18 "cfg/toCompress.cfg"
+      double double_param6;
+//#line 19 "cfg/toCompress.cfg"
+      double double_param7;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -253,46 +259,70 @@ namespace htwAalen_signDetect
       __default__.enable_filter = 0;
 //#line 10 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<bool>("enable_filter", "bool", 0, "Enable Filters", "", &toCompressConfig::enable_filter)));
+//#line 12 "cfg/toCompress.cfg"
+      __min__.double_param0 = 0.0;
+//#line 12 "cfg/toCompress.cfg"
+      __max__.double_param0 = 10.0;
+//#line 12 "cfg/toCompress.cfg"
+      __default__.double_param0 = 0.01;
+//#line 12 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param0", "double", 0, "A double parameter", "", &toCompressConfig::double_param0)));
 //#line 13 "cfg/toCompress.cfg"
-      __min__.int_param0 = 0;
+      __min__.double_param1 = 0.0;
 //#line 13 "cfg/toCompress.cfg"
-      __max__.int_param0 = 100;
+      __max__.double_param1 = 10.0;
 //#line 13 "cfg/toCompress.cfg"
-      __default__.int_param0 = 1;
+      __default__.double_param1 = 0.01;
 //#line 13 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param0", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param0)));
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param1", "double", 0, "A double parameter", "", &toCompressConfig::double_param1)));
 //#line 14 "cfg/toCompress.cfg"
-      __min__.int_param1 = 0;
+      __min__.double_param2 = 0.0;
 //#line 14 "cfg/toCompress.cfg"
-      __max__.int_param1 = 100;
+      __max__.double_param2 = 10.0;
 //#line 14 "cfg/toCompress.cfg"
-      __default__.int_param1 = 1;
+      __default__.double_param2 = 0.01;
 //#line 14 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param1", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param1)));
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param2", "double", 0, "A double parameter", "", &toCompressConfig::double_param2)));
 //#line 15 "cfg/toCompress.cfg"
-      __min__.int_param2 = 0;
+      __min__.double_param3 = 0.0;
 //#line 15 "cfg/toCompress.cfg"
-      __max__.int_param2 = 100;
+      __max__.double_param3 = 10.0;
 //#line 15 "cfg/toCompress.cfg"
-      __default__.int_param2 = 1;
+      __default__.double_param3 = 0.01;
 //#line 15 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param2", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param2)));
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param3", "double", 0, "A double parameter", "", &toCompressConfig::double_param3)));
 //#line 16 "cfg/toCompress.cfg"
-      __min__.int_param3 = 0;
+      __min__.double_param4 = 0.0;
 //#line 16 "cfg/toCompress.cfg"
-      __max__.int_param3 = 100;
+      __max__.double_param4 = 10.0;
 //#line 16 "cfg/toCompress.cfg"
-      __default__.int_param3 = 1;
+      __default__.double_param4 = 0.01;
 //#line 16 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param3", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param3)));
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param4", "double", 0, "A double parameter", "", &toCompressConfig::double_param4)));
 //#line 17 "cfg/toCompress.cfg"
-      __min__.int_param4 = 0;
+      __min__.double_param5 = 0.0;
 //#line 17 "cfg/toCompress.cfg"
-      __max__.int_param4 = 100;
+      __max__.double_param5 = 10.0;
 //#line 17 "cfg/toCompress.cfg"
-      __default__.int_param4 = 1;
+      __default__.double_param5 = 0.01;
 //#line 17 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("int_param4", "int", 0, "An Integer parameter", "", &toCompressConfig::int_param4)));
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param5", "double", 0, "A double parameter", "", &toCompressConfig::double_param5)));
+//#line 18 "cfg/toCompress.cfg"
+      __min__.double_param6 = 0.0;
+//#line 18 "cfg/toCompress.cfg"
+      __max__.double_param6 = 10.0;
+//#line 18 "cfg/toCompress.cfg"
+      __default__.double_param6 = 0.01;
+//#line 18 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param6", "double", 0, "A double parameter", "", &toCompressConfig::double_param6)));
+//#line 19 "cfg/toCompress.cfg"
+      __min__.double_param7 = 0.0;
+//#line 19 "cfg/toCompress.cfg"
+      __max__.double_param7 = 10.0;
+//#line 19 "cfg/toCompress.cfg"
+      __default__.double_param7 = 0.01;
+//#line 19 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param7", "double", 0, "A double parameter", "", &toCompressConfig::double_param7)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     
       for (std::vector<toCompressConfig::AbstractParamDescriptionConstPtr>::const_iterator i = __param_descriptions__.begin(); i != __param_descriptions__.end(); i++)

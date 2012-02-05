@@ -99,8 +99,6 @@ public:
 
   void reconfigCb(htwAalen_signDetect::toCompressConfig &config, uint32_t level)
   {
-
-
     dyn0=config.double_param0;
     dyn1=config.double_param1;
     dyn2=config.double_param2;
@@ -123,8 +121,6 @@ public:
 			}
 		}
   }
-
-
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg,const sensor_msgs::CameraInfoConstPtr& info)
   {
