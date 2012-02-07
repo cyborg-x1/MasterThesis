@@ -5,11 +5,10 @@
 		-->
 
 	<node pkg="htwAalen_signDetect" type="toCompress" name="compressNode" output="screen" respawn="true" > 
- 		<remap from="/comp" to="/comp" />
- 		<remap from="/in" to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/compressNode/compressed" to="/comp" />
+ 		<remap from="/compressNode/depth_registered/image_rect" to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/compressNode/rgb/image_rect_color" to="/camera/rgb/image_rect_color" />
+ 		<remap from="/compressNode/rgb/camera_info" to="/camera/rgb/camera_info" />
 
 	</node>
-
-	
-	
 </launch>
