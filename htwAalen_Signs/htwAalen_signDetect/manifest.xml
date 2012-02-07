@@ -14,6 +14,11 @@
   <depend package="image_geometry"/>
   <depend package="image_transport"/>
   <depend package="openni_camera"/>
+  <depend package="dynamic_reconfigure"/>
+  <depend package="message_filters"/>
+  <depend package="sensor_msgs"/>
+  <depend package="stereo_msgs"/>
+  <depend package="tf"/>
 </package>
 
 

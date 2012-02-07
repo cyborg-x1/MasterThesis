@@ -133,24 +133,28 @@ namespace htwAalen_signDetect
       }
     };
 
-//#line 10 "cfg/toCompress.cfg"
-      bool enable_filter;
+//#line 11 "cfg/toCompress.cfg"
+      bool Measure_Performance;
 //#line 12 "cfg/toCompress.cfg"
-      double double_param0;
+      bool MyOwn_NopenCV;
 //#line 13 "cfg/toCompress.cfg"
-      double double_param1;
+      double double_param0;
 //#line 14 "cfg/toCompress.cfg"
-      double double_param2;
+      double double_param1;
 //#line 15 "cfg/toCompress.cfg"
-      double double_param3;
+      double double_param2;
 //#line 16 "cfg/toCompress.cfg"
-      double double_param4;
+      double double_param3;
 //#line 17 "cfg/toCompress.cfg"
-      double double_param5;
+      double double_param4;
 //#line 18 "cfg/toCompress.cfg"
-      double double_param6;
+      double double_param5;
 //#line 19 "cfg/toCompress.cfg"
+      double double_param6;
+//#line 20 "cfg/toCompress.cfg"
       double double_param7;
+//#line 22 "cfg/toCompress.cfg"
+      int maxdiv;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -251,78 +255,94 @@ namespace htwAalen_signDetect
     
     toCompressConfigStatics()
     {
-//#line 10 "cfg/toCompress.cfg"
-      __min__.enable_filter = 0;
-//#line 10 "cfg/toCompress.cfg"
-      __max__.enable_filter = 1;
-//#line 10 "cfg/toCompress.cfg"
-      __default__.enable_filter = 0;
-//#line 10 "cfg/toCompress.cfg"
-      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<bool>("enable_filter", "bool", 0, "Enable Filters", "", &toCompressConfig::enable_filter)));
+//#line 11 "cfg/toCompress.cfg"
+      __min__.Measure_Performance = 0;
+//#line 11 "cfg/toCompress.cfg"
+      __max__.Measure_Performance = 1;
+//#line 11 "cfg/toCompress.cfg"
+      __default__.Measure_Performance = 0;
+//#line 11 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<bool>("Measure_Performance", "bool", 0, "Measure time needed to filter images", "", &toCompressConfig::Measure_Performance)));
 //#line 12 "cfg/toCompress.cfg"
+      __min__.MyOwn_NopenCV = 0;
+//#line 12 "cfg/toCompress.cfg"
+      __max__.MyOwn_NopenCV = 1;
+//#line 12 "cfg/toCompress.cfg"
+      __default__.MyOwn_NopenCV = 0;
+//#line 12 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<bool>("MyOwn_NopenCV", "bool", 0, "Enable Filters", "", &toCompressConfig::MyOwn_NopenCV)));
+//#line 13 "cfg/toCompress.cfg"
       __min__.double_param0 = 0.0;
-//#line 12 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __max__.double_param0 = 10.0;
-//#line 12 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __default__.double_param0 = 0.01;
-//#line 12 "cfg/toCompress.cfg"
+//#line 13 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param0", "double", 0, "A double parameter", "", &toCompressConfig::double_param0)));
-//#line 13 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __min__.double_param1 = 0.0;
-//#line 13 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __max__.double_param1 = 10.0;
-//#line 13 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __default__.double_param1 = 0.01;
-//#line 13 "cfg/toCompress.cfg"
+//#line 14 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param1", "double", 0, "A double parameter", "", &toCompressConfig::double_param1)));
-//#line 14 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __min__.double_param2 = 0.0;
-//#line 14 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __max__.double_param2 = 10.0;
-//#line 14 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __default__.double_param2 = 0.01;
-//#line 14 "cfg/toCompress.cfg"
+//#line 15 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param2", "double", 0, "A double parameter", "", &toCompressConfig::double_param2)));
-//#line 15 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __min__.double_param3 = 0.0;
-//#line 15 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __max__.double_param3 = 10.0;
-//#line 15 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __default__.double_param3 = 0.01;
-//#line 15 "cfg/toCompress.cfg"
+//#line 16 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param3", "double", 0, "A double parameter", "", &toCompressConfig::double_param3)));
-//#line 16 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __min__.double_param4 = 0.0;
-//#line 16 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __max__.double_param4 = 10.0;
-//#line 16 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __default__.double_param4 = 0.01;
-//#line 16 "cfg/toCompress.cfg"
+//#line 17 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param4", "double", 0, "A double parameter", "", &toCompressConfig::double_param4)));
-//#line 17 "cfg/toCompress.cfg"
+//#line 18 "cfg/toCompress.cfg"
       __min__.double_param5 = 0.0;
-//#line 17 "cfg/toCompress.cfg"
+//#line 18 "cfg/toCompress.cfg"
       __max__.double_param5 = 10.0;
-//#line 17 "cfg/toCompress.cfg"
+//#line 18 "cfg/toCompress.cfg"
       __default__.double_param5 = 0.01;
-//#line 17 "cfg/toCompress.cfg"
+//#line 18 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param5", "double", 0, "A double parameter", "", &toCompressConfig::double_param5)));
-//#line 18 "cfg/toCompress.cfg"
+//#line 19 "cfg/toCompress.cfg"
       __min__.double_param6 = 0.0;
-//#line 18 "cfg/toCompress.cfg"
+//#line 19 "cfg/toCompress.cfg"
       __max__.double_param6 = 10.0;
-//#line 18 "cfg/toCompress.cfg"
+//#line 19 "cfg/toCompress.cfg"
       __default__.double_param6 = 0.01;
-//#line 18 "cfg/toCompress.cfg"
+//#line 19 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param6", "double", 0, "A double parameter", "", &toCompressConfig::double_param6)));
-//#line 19 "cfg/toCompress.cfg"
+//#line 20 "cfg/toCompress.cfg"
       __min__.double_param7 = 0.0;
-//#line 19 "cfg/toCompress.cfg"
+//#line 20 "cfg/toCompress.cfg"
       __max__.double_param7 = 10.0;
-//#line 19 "cfg/toCompress.cfg"
+//#line 20 "cfg/toCompress.cfg"
       __default__.double_param7 = 0.01;
-//#line 19 "cfg/toCompress.cfg"
+//#line 20 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param7", "double", 0, "A double parameter", "", &toCompressConfig::double_param7)));
+//#line 22 "cfg/toCompress.cfg"
+      __min__.maxdiv = 1;
+//#line 22 "cfg/toCompress.cfg"
+      __max__.maxdiv = 4800000;
+//#line 22 "cfg/toCompress.cfg"
+      __default__.maxdiv = 100000;
+//#line 22 "cfg/toCompress.cfg"
+      __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<int>("maxdiv", "int", 0, "maxdiv", "", &toCompressConfig::maxdiv)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     
       for (std::vector<toCompressConfig::AbstractParamDescriptionConstPtr>::const_iterator i = __param_descriptions__.begin(); i != __param_descriptions__.end(); i++)
