@@ -185,39 +185,15 @@ public:
 		}
 	}
 
-	void performance(bool endstate)
-	{
-		if (measure_performance)
-		{
-			static bool secondCall;
-			static ros::Time begin;
-			if (!endstate)
-			{
-				if (secondCall)
-					ROS_INFO("Reset begin time!\n");
-				ros::Time begin = ros::Time::now();
-				secondCall = 1;
-			}
-			else if (endstate && secondCall)
-			{
-				secondCall = 0;
 
-				ROS_INFO("Filtering took %f s \n", (begin.nsec-ros::Time::now().nsec)/1000000000.0);
-			}
-			else
-			{
-				secondCall = 0;
-				ROS_INFO(
-						"Called for result without setting the beginning time!\n");
-			}
-		}
-	}
 
 	void myFilter(const cv::Mat &src, cv::Mat &dst)
 	{
+
+		ros::Time begin = ros::Time::now();
+
 		if (src.type() == CV_16UC1)
 		{
-			performance(0);
 			cv::Mat filter = src.clone();
 			cv::boxFilter(filter, filter, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
 			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
@@ -246,16 +222,20 @@ public:
 			}
 			cv::medianBlur(dst, dst, 3);
 
-			performance(1);
 		}
 		else
 		{
 			ROS_ERROR("MyFilter: Wrong Image Type");
 		}
+
+		ROS_INFO("Filtering took %f \n", (begin.nsec-ros::Time::now().nsec)/1000000000.0);
 	}
 
 	void OpenCVBilateralFilter(const cv::Mat &src, cv::Mat &dst)
 	{
+
+
+
 		cv::Mat filtered_in;
 		cv::Mat filtered(480, 640, CV_32FC1);
 		dst=cv::Mat(480,640,CV_16UC1);
@@ -273,8 +253,7 @@ public:
 		{
 			ROS_INFO("OpenCVBilateralFilter: Unsupported format!");
 		}
-
-		performance(0);
+		ros::Time begin = ros::Time::now();
 		cv::bilateralFilter(filtered_in, filtered, dyn0, dyn1, dyn2, cv::BORDER_DEFAULT);
 
 
@@ -296,19 +275,33 @@ public:
 				}
 			}
 		}
-		performance(1);
+
+
+		ROS_INFO("Filtering took %f \n", (begin.nsec-ros::Time::now().nsec)/1000000000.0);
 	}
+
+
+
+
+
+
+
+
+
+
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
 			     const sensor_msgs::ImageConstPtr& rgb_msg,
 			     const sensor_msgs::CameraInfoConstPtr& info_msg)
 	{
-		cv_bridge::CvImagePtr img;
+		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
 		if (depth_msg->encoding == "16UC1") //Kinect raw image (millimeters)
 		{
 			try
 			{
-				img = cv_bridge::toCvCopy(depth_msg, "16UC1");
+				imgPtrDepth = cv_bridge::toCvCopy(depth_msg, "16UC1");
+				imgPtrRGB = cv_bridge::toCvCopy(rgb_msg, "mono8");
+
 			} catch (cv_bridge::Exception& e)
 			{
 				ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -318,11 +311,11 @@ public:
 			//Filter the current picture
 			if(MyOwn_NopenCV)
 			{
-				myFilter(img->image,store);
+				myFilter(imgPtrDepth->image,store);
 			}
 			else
 			{
-				OpenCVBilateralFilter(img->image,store);
+				OpenCVBilateralFilter(imgPtrDepth->image,store);
 			}
 
 
@@ -352,17 +345,37 @@ public:
 				}
 
 				//Set new image and encoding
-				img->image = out;
-				img->encoding = "bgr8";
+				imgPtrDepth->image = out;
+				imgPtrDepth->encoding = "bgr8";
 
 				//Publish image
 				sensor_msgs::CameraInfo infoOut = *info_msg;
-				depth_camera_compressed_out.publish(*img->toImageMsg(), infoOut,
+				depth_camera_compressed_out.publish(*imgPtrDepth->toImageMsg(), infoOut,
 						info_msg->header.stamp);
 
 				image_count = 0;
 				store = cv::Mat::zeros(store.rows, store.cols, CV_16U);
 			}
+
+
+			cv::Mat testin=imgPtrRGB->image;
+			cv::medianBlur(testin,testin,dyn5);
+			cv::Mat testout;
+
+			try
+			{
+//				cv::boxFilter(testin, testin, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
+				cv::Canny(testin,testout,dyn6,dyn7);
+			} catch (cv::Exception& e)
+			{
+				ROS_ERROR("cv_bridge exception: %s", e.what());
+				return;
+			}
+
+
+			cv::imshow(WINDOW,testout);
+			cv::waitKey(3);
+
 		}
 		else
 		{

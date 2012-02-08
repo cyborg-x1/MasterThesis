@@ -312,17 +312,17 @@ namespace htwAalen_signDetect
 //#line 17 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param4", "double", 0, "A double parameter", "", &toCompressConfig::double_param4)));
 //#line 18 "cfg/toCompress.cfg"
-      __min__.double_param5 = 0.0;
+      __min__.double_param5 = 1.0;
 //#line 18 "cfg/toCompress.cfg"
-      __max__.double_param5 = 10.0;
+      __max__.double_param5 = 101.0;
 //#line 18 "cfg/toCompress.cfg"
-      __default__.double_param5 = 0.01;
+      __default__.double_param5 = 2.0;
 //#line 18 "cfg/toCompress.cfg"
       __param_descriptions__.push_back(toCompressConfig::AbstractParamDescriptionConstPtr(new toCompressConfig::ParamDescription<double>("double_param5", "double", 0, "A double parameter", "", &toCompressConfig::double_param5)));
 //#line 19 "cfg/toCompress.cfg"
       __min__.double_param6 = 0.0;
 //#line 19 "cfg/toCompress.cfg"
-      __max__.double_param6 = 10.0;
+      __max__.double_param6 = 100.0;
 //#line 19 "cfg/toCompress.cfg"
       __default__.double_param6 = 0.01;
 //#line 19 "cfg/toCompress.cfg"
@@ -330,7 +330,7 @@ namespace htwAalen_signDetect
 //#line 20 "cfg/toCompress.cfg"
       __min__.double_param7 = 0.0;
 //#line 20 "cfg/toCompress.cfg"
-      __max__.double_param7 = 10.0;
+      __max__.double_param7 = 100.0;
 //#line 20 "cfg/toCompress.cfg"
       __default__.double_param7 = 0.01;
 //#line 20 "cfg/toCompress.cfg"
