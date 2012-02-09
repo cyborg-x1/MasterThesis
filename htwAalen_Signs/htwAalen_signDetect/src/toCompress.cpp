@@ -83,8 +83,7 @@ class toCompress
 
 public:
 	toCompress() :
-			nh_("~"), it_(nh_), image_count(0), store(480, 640, CV_16UC1), disturb(
-					480, 640, CV_16UC1)
+			nh_("~"), it_(nh_), image_count(0), store(480, 640, CV_16UC1), disturb(480, 640, CV_16UC1)
 	{
 		rgb_nh_.reset(new ros::NodeHandle(nh_, "rgb"));
 		ros::NodeHandle depth_nh(nh_, "depth_registered");
@@ -113,6 +112,9 @@ public:
 				connect_cb, connect_cb);
 		reconfCbType = boost::bind(&toCompress::reconfigCb, this, _1, _2);
 		reconfServer.setCallback(reconfCbType);
+
+
+		readDisturbanceImage();
 
 		cv::namedWindow(WINDOW); //TODO Remove
 
@@ -161,6 +163,34 @@ public:
 
 	}
 
+
+	void readDisturbanceImage()
+	{
+		try
+		{
+			cv::Mat disturb_in=cv::imread("/home/cyborg-x1/disturbance.png",1);
+			disturb=cv::Mat::zeros(disturb_in.rows,disturb_in.cols,CV_16UC1);
+			for(int y = 0; y < disturb_in.rows; y++)
+			{
+				for(int x = 0; x < disturb_in.cols; x++)
+				{
+					if(disturb_in.at<Vec3char>(y,x)[0] || disturb_in.at<Vec3char>(y,x)[1])
+					{
+						disturb.at<Vec1shrt>(y,x)[0]=((disturb_in.at<Vec3char>(y,x)[0]) | ((disturb_in.at<Vec3char>(y,x)[1])<<8));
+						printf("%i,", disturb.at<Vec1shrt>(y,x)[0]);
+					}
+				}
+			}
+		}
+		catch (cv::Exception& e)
+		{
+			ROS_ERROR("cv_bridge exception: %s", e.what());
+			return;
+		}
+
+	}
+
+
 	void from16UC1to32FC1(const cv::Mat &src, cv::Mat &dst)
 	{
 		for (int y = 0; y < 480; y++)
@@ -194,8 +224,30 @@ public:
 
 		if (src.type() == CV_16UC1)
 		{
-			cv::Mat filter = src.clone();
-			cv::boxFilter(filter, filter, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
+			cv::Mat filter_in = src.clone();
+
+
+
+			if(dyn0==6)
+			{
+				//Subtract disturbance
+				for (int y = 0; y < src.rows; y++)
+				{
+					for (int x = 0; x < src.cols; x++)
+					{
+						short a=filter_in.at<Vec1shrt>(y, x)[0];
+						short b=disturb.at<Vec1shrt>(y, x)[0];
+						short c=a-b;
+
+						filter_in.at<Vec1shrt>(y, x)[0]=c;
+					}
+				}
+
+			}
+			cv::Mat filter=filter_in.clone();
+
+
+			cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
 			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
 			cv::medianBlur(filter, filter, 3);
 
@@ -204,12 +256,12 @@ public:
 			{
 				for (int x = 0; x < src.cols; x++)
 				{
-					short realValue = src.at<Vec1shrt>(y, x)[0];
+					short realValue = filter_in.at<Vec1shrt>(y, x)[0];
 					short filteredValue = filter.at<Vec1shrt>(y, x)[0];
 					short maxDifference = pow(realValue, 2) / (480000); //Maximal difference from the real value
 					if (realValue>0)
 					{
-						if (abs(realValue - filteredValue) > maxDifference)
+						if(abs(realValue - filteredValue) > maxDifference)
 						{
 							dst.at<Vec1shrt>(y, x)[0] = realValue;// realValue; //TODO maybe we should use the maxdiff value here?
 						}
@@ -280,8 +332,10 @@ public:
 		ROS_INFO("Filtering took %f \n", (begin.nsec-ros::Time::now().nsec)/1000000000.0);
 	}
 
+	void OnePassFilter(const cv::Mat &src_depth, const cv::Mat &src_rgb, cv::Mat& dst)
+	{
 
-
+	}
 
 
 
@@ -319,9 +373,9 @@ public:
 			}
 
 
-			//combine 3 Pictures to one
+
 			image_count++;
-			if (image_count >= 3)
+			if (image_count >= 1)			//combine x Pictures to one
 			{
 
 				//Create output mat
@@ -373,7 +427,7 @@ public:
 			}
 
 
-			cv::imshow(WINDOW,testout);
+			cv::imshow(WINDOW,disturb);
 			cv::waitKey(3);
 
 		}

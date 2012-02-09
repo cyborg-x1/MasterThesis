@@ -44,7 +44,7 @@ public:
 	std::string tp_hint;
 
     depth_camera_in = it_.subscribeCamera("/camera/depth_registered/image_rect_raw", 1, &fromCompress::imageCb, this);
-    nh_.param("distance",distance_mm, 1173);
+    nh_.param("distance",distance_mm, 1182);
     disturb=cv::Mat::zeros(disturb.rows,disturb.cols,CV_8UC3);
 
     printf("Using distance: %i \n ",distance_mm);
@@ -98,7 +98,7 @@ public:
 						if(img->image.at<Vec1shrt>(y,x)[0]!=0)
 						{
 							printf("Found strange pixel at (%i/%i) with Value (%i) \n",x,y,img->image.at<Vec1shrt>(y,x)[0]);
-							disturb.at<Vec3char>(y,x)[2]=0xFF;
+							disturb.at<Vec3char>(y,x)[2]=0;
 						}
 						else
 						{
