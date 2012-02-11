@@ -11,4 +11,6 @@
  		<remap from="/compressNode/rgb/camera_info" to="/camera/rgb/camera_info" />
 
 	</node>
+	
+	
 </launch>

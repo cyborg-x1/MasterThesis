@@ -59,6 +59,8 @@ class toCompress
 	typedef cv::Vec<float, 1> Vec1flt;
 	typedef cv::Vec<uchar, 3> Vec3char;
 	typedef cv::Vec<short, 1> Vec1shrt;
+	typedef cv::Vec<uchar, 1> Vec1char;
+
 
 	//Mat for storage
 	cv::Mat store;
@@ -177,7 +179,7 @@ public:
 					if(disturb_in.at<Vec3char>(y,x)[0] || disturb_in.at<Vec3char>(y,x)[1])
 					{
 						disturb.at<Vec1shrt>(y,x)[0]=((disturb_in.at<Vec3char>(y,x)[0]) | ((disturb_in.at<Vec3char>(y,x)[1])<<8));
-						printf("%i,", disturb.at<Vec1shrt>(y,x)[0]);
+						//printf("%i,", disturb.at<Vec1shrt>(y,x)[0]);
 					}
 				}
 			}
@@ -285,9 +287,6 @@ public:
 
 	void OpenCVBilateralFilter(const cv::Mat &src, cv::Mat &dst)
 	{
-
-
-
 		cv::Mat filtered_in;
 		cv::Mat filtered(480, 640, CV_32FC1);
 		dst=cv::Mat(480,640,CV_16UC1);
@@ -332,13 +331,57 @@ public:
 		ROS_INFO("Filtering took %f \n", (begin.nsec-ros::Time::now().nsec)/1000000000.0);
 	}
 
+
+	void RangeFilter(const cv::Mat &src, cv::Mat &dst, short min_range, short max_range, bool ignore_bad_points=true)
+	{
+		if(src.type() == CV_16UC1)
+		{
+			dst = src.clone();
+			for (int y = 0; y < src.rows; y++)
+			{
+				for (int x = 0; x < src.cols; x++)
+				{
+					short value=src.at<Vec1shrt>(y,x)[0];
+					if(value<min_range || value>max_range)
+					{
+						if(!(ignore_bad_points&&(value<10 || value>10000)))
+						{
+							dst.at<Vec1shrt>(y,x)[0]=0;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			ROS_ERROR("RangeFilter: Wrong depth image type, supports only CV_16UC1!\n");
+		}
+	}
+
+
 	void OnePassFilter(const cv::Mat &src_depth, const cv::Mat &src_rgb, cv::Mat& dst)
 	{
 
 	}
 
 
-
+	void DetectSpecialPoints(const cv::Mat &src)
+	{
+		if(src.type() == CV_16UC1)
+		{
+			for (int y = 0; y < src.rows; y++)
+			{
+				for (int x = 0; x < src.cols; x++)
+				{
+					short value=src.at<Vec1shrt>(y,x)[0];
+					if(value<0 || value>10000)
+					{
+						printf("Start:(%i/%i//%i)",x,y,value);
+					}
+				}
+			}
+		}
+	}
 
 
 
@@ -348,6 +391,11 @@ public:
 			     const sensor_msgs::ImageConstPtr& rgb_msg,
 			     const sensor_msgs::CameraInfoConstPtr& info_msg)
 	{
+
+
+
+
+
 		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
 		if (depth_msg->encoding == "16UC1") //Kinect raw image (millimeters)
 		{
@@ -375,6 +423,54 @@ public:
 
 
 			image_count++;
+
+
+
+//			cv::Mat testin=imgPtrRGB->image;
+//			cv::medianBlur(testin,testin,dyn5);
+			cv::Mat testout;
+			cv::Mat testin=cv::Mat::zeros(480,640,CV_8UC1);
+			RangeFilter(store,store,400,2000);
+
+			for (int y = 0; y < store.rows; y++)
+			{
+				for (int x = 0; x < store.cols; x++)
+				{
+					if(store.at<Vec1shrt>(y,x)[0]>=0)testin.at<Vec1char>(y, x)[0] = (unsigned char)((store.at<Vec1shrt>(y,x)[0])/40);
+				}
+			}
+
+
+			std::vector<cv::Vec3f> circles;
+			try
+			{
+				cv::GaussianBlur( testin, testin, cv::Size(19, 19), 4, 4 );
+				cv::HoughCircles(testin, circles, CV_HOUGH_GRADIENT, 2, testin.rows/4, dyn0, dyn1,4,50 );
+//				cv::boxFilter(testin, testin, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
+//				cv::Canny(testin,testout,dyn6,dyn7);
+			} catch (cv::Exception& e)
+			{
+				ROS_ERROR("cv_bridge exception: %s", e.what());
+				return;
+			}
+
+
+		    for( size_t i = 0; i < circles.size(); i++ )
+		    {
+		         cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+		         int radius = cvRound(circles[i][2]);
+		         // draw the circle center
+		         cv::circle( testin, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+		         // draw the circle outline
+		         cv::circle( testin, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+		    }
+
+
+			cv::imshow(WINDOW,testin);
+			cv::waitKey(3);
+
+
+
 			if (image_count >= 1)			//combine x Pictures to one
 			{
 
@@ -411,31 +507,13 @@ public:
 				store = cv::Mat::zeros(store.rows, store.cols, CV_16U);
 			}
 
-
-			cv::Mat testin=imgPtrRGB->image;
-			cv::medianBlur(testin,testin,dyn5);
-			cv::Mat testout;
-
-			try
-			{
-//				cv::boxFilter(testin, testin, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
-				cv::Canny(testin,testout,dyn6,dyn7);
-			} catch (cv::Exception& e)
-			{
-				ROS_ERROR("cv_bridge exception: %s", e.what());
-				return;
-			}
-
-
-			cv::imshow(WINDOW,disturb);
-			cv::waitKey(3);
-
 		}
 		else
 		{
 			ROS_ERROR("Unsupported format: [%s]", depth_msg->encoding.c_str());
 			return;
 		}
+
 
 	}
 

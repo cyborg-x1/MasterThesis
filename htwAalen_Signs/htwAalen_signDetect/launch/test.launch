@@ -36,8 +36,8 @@
 		<remap from="/depthImage" to="/camera/depth_registered/image"/>
 	</node>
 	-->
-	<!-- Depth Image Analyzer (Output) 
+	<!-- Depth Image Analyzer (Output) -->
 	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="DepthImageAnalyzerOut" output="screen" >
 		<remap from="/depthImage" to="/uncomp2"/>
-	</node>-->
+	</node>
 </launch>
