@@ -402,7 +402,7 @@ public:
 			try
 			{
 				imgPtrDepth = cv_bridge::toCvCopy(depth_msg, "16UC1");
-				imgPtrRGB = cv_bridge::toCvCopy(rgb_msg, "mono8");
+				imgPtrRGB = cv_bridge::toCvCopy(rgb_msg, "bgr8");
 
 			} catch (cv_bridge::Exception& e)
 			{
@@ -411,14 +411,14 @@ public:
 			}
 
 			//Filter the current picture
-			if(MyOwn_NopenCV)
-			{
+//			if(MyOwn_NopenCV)
+//			{
 				myFilter(imgPtrDepth->image,store);
-			}
-			else
-			{
-				OpenCVBilateralFilter(imgPtrDepth->image,store);
-			}
+//			}
+//			else
+//			{
+//				OpenCVBilateralFilter(imgPtrDepth->image,store);
+//			}
 
 
 
@@ -430,7 +430,7 @@ public:
 //			cv::medianBlur(testin,testin,dyn5);
 			cv::Mat testout;
 			cv::Mat testin=cv::Mat::zeros(480,640,CV_8UC1);
-			RangeFilter(store,store,400,2000);
+			if(MyOwn_NopenCV)RangeFilter(store,store,400,2000);
 
 			for (int y = 0; y < store.rows; y++)
 			{
@@ -442,10 +442,11 @@ public:
 
 
 			std::vector<cv::Vec3f> circles;
+			cv::Mat imgRgb=imgPtrRGB->image.clone();
 			try
 			{
 				cv::GaussianBlur( testin, testin, cv::Size(19, 19), 4, 4 );
-				cv::HoughCircles(testin, circles, CV_HOUGH_GRADIENT, 2, testin.rows/4, dyn0, dyn1,4,50 );
+				cv::HoughCircles(testin, circles, CV_HOUGH_GRADIENT, 2, testin.rows/4, dyn6,dyn7,13,88 );
 //				cv::boxFilter(testin, testin, 3, cv::Size(6, 2), cv::Point(-1, -1), 1, 0);
 //				cv::Canny(testin,testout,dyn6,dyn7);
 			} catch (cv::Exception& e)
@@ -460,13 +461,13 @@ public:
 		         cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
 		         int radius = cvRound(circles[i][2]);
 		         // draw the circle center
-		         cv::circle( testin, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
+		         cv::circle( imgRgb, center, 3, cv::Scalar(0,255,0), -1, 8, 0 );
 		         // draw the circle outline
-		         cv::circle( testin, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+		         cv::circle( imgRgb, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
 		    }
 
 
-			cv::imshow(WINDOW,testin);
+			cv::imshow(WINDOW,imgRgb);
 			cv::waitKey(3);
 
 
