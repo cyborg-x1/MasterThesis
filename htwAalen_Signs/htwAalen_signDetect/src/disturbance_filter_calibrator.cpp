@@ -48,7 +48,7 @@ class disturbance_filter_calibrator
 	//Types for different mats
 	typedef cv::Vec<float, 1> Vec1flt;
 	typedef cv::Vec<uchar, 3> Vec3char;
-	typedef cv::Vec<short, 1> Vec1shrt;
+	typedef cv::Vec<ushort, 1> Vec1shrt;
 	typedef cv::Vec<uchar, 1> Vec1char;
 
 
@@ -107,7 +107,7 @@ public:
 
 		//Advertise rviz calibration advisor output
 		advisor_rgb_out = it_out.advertiseCamera("advise_rgb",1);
-		advisor_depth_out = it_out.advertiseCamera("advice_depth",1);
+		advisor_depth_out = it_out.advertiseCamera("advise_depth",1);
 
 
 		cv::namedWindow(WINDOW); //TODO Remove
@@ -218,7 +218,48 @@ public:
 				return;
 			}
 
-			ROS_INFO("Got Image!");
+
+			//Make a copy of the original pictures
+			cv::Mat orig_depth=imgPtrDepth->image.clone();
+			cv::Mat orig_rgb=imgPtrRGB->image.clone();
+
+
+
+			//Walk through
+			for(int y = 0; y < imgPtrDepth->image.rows; y++)
+			{
+				for(int x = 0; x < imgPtrDepth->image.cols; x++)
+				{
+
+					ushort currentDepth=imgPtrDepth->image.at<Vec1shrt>(y,x)[0];
+					if(currentDepth>0)
+					{
+						imgPtrRGB->image.at<Vec3char>(y,x)[0]=0;
+						if(abs(currentDepth-1000)<5)
+						{
+							imgPtrRGB->image.at<Vec3char>(y,x)[1]=255;
+							imgPtrRGB->image.at<Vec3char>(y,x)[2]=0;
+						}
+						else
+						{
+							imgPtrRGB->image.at<Vec3char>(y,x)[1]=0;
+							imgPtrRGB->image.at<Vec3char>(y,x)[2]=255;
+						}
+					}
+				}
+			}
+
+
+
+
+
+
+			//Publish image
+			advisor_rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
+			advisor_depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
+
+
+			//ROS_INFO("Got Image!");
 		}
 		else
 		{
