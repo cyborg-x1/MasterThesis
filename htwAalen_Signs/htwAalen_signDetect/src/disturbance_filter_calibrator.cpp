@@ -20,6 +20,8 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <sensor_msgs/image_encodings.h>
 #include <image_geometry/pinhole_camera_model.h>
+#include <sstream>
+
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -74,6 +76,27 @@ class disturbance_filter_calibrator
 	boost::shared_ptr<Synchronizer> sync_;
 
 	image_geometry::PinholeCameraModel model_;
+
+
+	//Advisor Variables
+	unsigned short advisor_distance;
+	int advisor_pcl_overlay;
+
+	int pcl_picture_grid;
+	int pcl_picture_grid_space;
+
+    bool pcl_highlight_row_enable;
+	int pcl_highlight_row;
+
+	bool pcl_highlight_col_enable;
+	int pcl_highlight_col;
+
+	bool pcl_zero_row_enable;
+	int pcl_zero_row;
+
+	bool pcl_zero_col_enable;
+	int pcl_zero_col;
+
 
 public:
 	disturbance_filter_calibrator() :
@@ -130,6 +153,35 @@ public:
 		dyn5 = config.double_param5;
 		dyn6 = config.double_param6;
 		dyn7 = config.double_param7;
+
+
+		if(config.use_custom_distance)
+		{
+			advisor_distance=config.custom_distance;
+		}
+		else
+		{
+			advisor_distance=config.distance;
+		}
+
+		advisor_pcl_overlay=config.pcl_picture;
+
+
+		pcl_picture_grid=config.pcl_picture_grid;
+
+		pcl_picture_grid_space=config.pcl_picture_grid_space;
+
+	    pcl_highlight_row_enable=config.pcl_highlight_row_enable;
+		pcl_highlight_row=config.pcl_highlight_row;
+
+		pcl_highlight_col_enable=config.pcl_highlight_col_enable;
+		pcl_highlight_col=config.pcl_highlight_col;
+
+		pcl_zero_row_enable=config.pcl_zero_row_enable;
+		pcl_zero_row=config.pcl_zero_row;
+
+		pcl_zero_col_enable=config.pcl_zero_col_enable;
+		pcl_zero_col=config.pcl_zero_col;
 	}
 
 	void from16UC1to32FC1(const cv::Mat &src, cv::Mat &dst)
@@ -225,29 +277,111 @@ public:
 
 
 
-			//Walk through
-			for(int y = 0; y < imgPtrDepth->image.rows; y++)
-			{
-				for(int x = 0; x < imgPtrDepth->image.cols; x++)
-				{
 
-					ushort currentDepth=imgPtrDepth->image.at<Vec1shrt>(y,x)[0];
-					if(currentDepth>0)
+				//Walk through
+				int pixelright=0,pixelamount=0;
+				for(int y = 0; y < imgPtrDepth->image.rows; y++)
+				{
+					for(int x = 0; x < imgPtrDepth->image.cols; x++)
 					{
-						imgPtrRGB->image.at<Vec3char>(y,x)[0]=0;
-						if(abs(currentDepth-1000)<5)
+						ushort currentDepth=imgPtrDepth->image.at<Vec1shrt>(y,x)[0];
+
+						//ADVISOR OVERLAY
+						if(advisor_pcl_overlay==0)
 						{
-							imgPtrRGB->image.at<Vec3char>(y,x)[1]=255;
-							imgPtrRGB->image.at<Vec3char>(y,x)[2]=0;
+							if(currentDepth>0)
+							{
+								imgPtrRGB->image.at<Vec3char>(y,x)[0]=0;
+								if(abs(currentDepth-advisor_distance)<5)
+								{
+									imgPtrRGB->image.at<Vec3char>(y,x)[1]=255;
+									imgPtrRGB->image.at<Vec3char>(y,x)[2]=0;
+									pixelright++;
+								}
+								else
+								{
+									imgPtrRGB->image.at<Vec3char>(y,x)[1]=0;
+									imgPtrRGB->image.at<Vec3char>(y,x)[2]=255;
+								}
+								pixelamount++;
+							}
 						}
-						else
+
+						//Grid and line highlighting/zeroing
+						switch(pcl_picture_grid)
 						{
-							imgPtrRGB->image.at<Vec3char>(y,x)[1]=0;
-							imgPtrRGB->image.at<Vec3char>(y,x)[2]=255;
+							case 0: break;
+
+							case 1:
+							{
+								if(!(x%pcl_picture_grid_space))
+								{
+									imgPtrRGB->image.at<Vec3char>(y,x)[0]=255;
+								}
+								break;
+							}
+							case 2:
+							{
+								if(!(y%pcl_picture_grid_space))
+								{
+									imgPtrRGB->image.at<Vec3char>(y,x)[0]=255;
+								}
+								break;
+							}
+
+							case 3:
+							{
+								if((!(y%pcl_picture_grid_space)) || (!(x%pcl_picture_grid_space)))
+								{
+									imgPtrRGB->image.at<Vec3char>(y,x)[0]=255;
+								}
+								break;
+							}
 						}
+
+						if(pcl_highlight_row_enable && y == pcl_highlight_row )
+						{
+							imgPtrRGB->image.at<Vec3char>(y,x)[0]=255;
+						}
+
+						if(pcl_highlight_col_enable && x == pcl_highlight_col)
+						{
+							imgPtrRGB->image.at<Vec3char>(y,x)[0]=255;
+						}
+
+
+						if(pcl_zero_row_enable && y == pcl_zero_row )
+						{
+							imgPtrDepth->image.at<Vec1shrt>(y,x)[0]=0;
+						}
+
+						if(pcl_zero_col_enable && x == pcl_zero_col)
+						{
+							imgPtrDepth->image.at<Vec1shrt>(y,x)[0]=0;
+						}
+
 					}
 				}
-			}
+
+				//Draw percent of green pixels
+				if(advisor_pcl_overlay==0)//Advisor Image
+				{
+					double percent=((double)pixelright)/((double)pixelamount)*100;
+					std::ostringstream percent_ss;
+					percent_ss << percent << "%";
+					cv::putText(imgPtrRGB->image,percent_ss.str(),cv::Point(100,300),cv::FONT_HERSHEY_COMPLEX,5,CV_RGB(255,255,255));
+				}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
