@@ -149,6 +149,34 @@ namespace htwAalen_signDetect
       double double_param6;
 //#line 16 "cfg/disturbance_filter_calibrator.cfg"
       double double_param7;
+//#line 19 "cfg/disturbance_filter_calibrator.cfg"
+      bool use_custom_distance;
+//#line 20 "cfg/disturbance_filter_calibrator.cfg"
+      int custom_distance;
+//#line 32 "cfg/disturbance_filter_calibrator.cfg"
+      int distance;
+//#line 39 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_picture;
+//#line 48 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_picture_grid;
+//#line 49 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_picture_grid_space;
+//#line 53 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_highlight_row_enable;
+//#line 54 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_highlight_row;
+//#line 57 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_highlight_col_enable;
+//#line 58 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_highlight_col;
+//#line 61 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_zero_row_enable;
+//#line 62 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_zero_row;
+//#line 65 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_zero_col_enable;
+//#line 66 "cfg/disturbance_filter_calibrator.cfg"
+      int pcl_zero_col;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -313,6 +341,118 @@ namespace htwAalen_signDetect
       __default__.double_param7 = 0.01;
 //#line 16 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<double>("double_param7", "double", 0, "A double parameter", "", &disturbance_filter_calibratorConfig::double_param7)));
+//#line 19 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.use_custom_distance = 0;
+//#line 19 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.use_custom_distance = 1;
+//#line 19 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.use_custom_distance = 0;
+//#line 19 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("use_custom_distance", "bool", 0, "Use a custom distance for advisor", "", &disturbance_filter_calibratorConfig::use_custom_distance)));
+//#line 20 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.custom_distance = 0;
+//#line 20 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.custom_distance = 10000;
+//#line 20 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.custom_distance = 5000;
+//#line 20 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("custom_distance", "int", 0, "Enter a custom distance", "", &disturbance_filter_calibratorConfig::custom_distance)));
+//#line 32 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.distance = 0;
+//#line 32 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.distance = 10000;
+//#line 32 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.distance = 500;
+//#line 32 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("distance", "int", 0, "Select Distance", "{'enum_description': 'Distance Selector', 'enum': [{'srcline': 22, 'description': '0.5 meter', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 500, 'ctype': 'int', 'type': 'int', 'name': '0_5meter'}, {'srcline': 23, 'description': '1 meter', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 1000, 'ctype': 'int', 'type': 'int', 'name': '1meter '}, {'srcline': 24, 'description': '2 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 2000, 'ctype': 'int', 'type': 'int', 'name': '2meter'}, {'srcline': 25, 'description': '3 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 3000, 'ctype': 'int', 'type': 'int', 'name': '3meter'}, {'srcline': 26, 'description': '4 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 4000, 'ctype': 'int', 'type': 'int', 'name': '4meter'}, {'srcline': 27, 'description': '5 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 5000, 'ctype': 'int', 'type': 'int', 'name': '5meter'}, {'srcline': 28, 'description': '6 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 6000, 'ctype': 'int', 'type': 'int', 'name': '6meter'}, {'srcline': 29, 'description': '7 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 7000, 'ctype': 'int', 'type': 'int', 'name': '7meter'}, {'srcline': 30, 'description': '8 meters', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 8000, 'ctype': 'int', 'type': 'int', 'name': '8meter'}]}", &disturbance_filter_calibratorConfig::distance)));
+//#line 39 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_picture = 0;
+//#line 39 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_picture = 1;
+//#line 39 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_picture = 0;
+//#line 39 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_picture", "int", 0, "Select PCLPicture", "{'enum_description': 'PCLPicture', 'enum': [{'srcline': 35, 'description': 'Advisor', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 0, 'ctype': 'int', 'type': 'int', 'name': 'Advisor'}, {'srcline': 36, 'description': 'RGB', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 1, 'ctype': 'int', 'type': 'int', 'name': 'RGB'}]}", &disturbance_filter_calibratorConfig::pcl_picture)));
+//#line 48 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_picture_grid = 0;
+//#line 48 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_picture_grid = 3;
+//#line 48 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_picture_grid = 0;
+//#line 48 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_picture_grid", "int", 0, "Select PCL Picture Grid", "{'enum_description': 'PCLPictureGrid', 'enum': [{'srcline': 42, 'description': 'Off', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 0, 'ctype': 'int', 'type': 'int', 'name': 'Off'}, {'srcline': 43, 'description': 'Columns', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 1, 'ctype': 'int', 'type': 'int', 'name': 'Columns'}, {'srcline': 44, 'description': 'Lines', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 2, 'ctype': 'int', 'type': 'int', 'name': 'Lines'}, {'srcline': 45, 'description': 'Both', 'srcfile': 'cfg/disturbance_filter_calibrator.cfg', 'cconsttype': 'const int', 'value': 3, 'ctype': 'int', 'type': 'int', 'name': 'Both'}]}", &disturbance_filter_calibratorConfig::pcl_picture_grid)));
+//#line 49 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_picture_grid_space = 2;
+//#line 49 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_picture_grid_space = 100;
+//#line 49 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_picture_grid_space = 50;
+//#line 49 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_picture_grid_space", "int", 0, "Enter grid spacing", "", &disturbance_filter_calibratorConfig::pcl_picture_grid_space)));
+//#line 53 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_highlight_row_enable = 0;
+//#line 53 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_highlight_row_enable = 1;
+//#line 53 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_highlight_row_enable = 0;
+//#line 53 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_highlight_row_enable", "bool", 0, "Enable single row highlight", "", &disturbance_filter_calibratorConfig::pcl_highlight_row_enable)));
+//#line 54 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_highlight_row = 0;
+//#line 54 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_highlight_row = 480;
+//#line 54 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_highlight_row = 0;
+//#line 54 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_highlight_row", "int", 0, "Select specific row", "", &disturbance_filter_calibratorConfig::pcl_highlight_row)));
+//#line 57 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_highlight_col_enable = 0;
+//#line 57 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_highlight_col_enable = 1;
+//#line 57 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_highlight_col_enable = 0;
+//#line 57 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_highlight_col_enable", "bool", 0, "Enable single column highlight", "", &disturbance_filter_calibratorConfig::pcl_highlight_col_enable)));
+//#line 58 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_highlight_col = 0;
+//#line 58 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_highlight_col = 640;
+//#line 58 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_highlight_col = 0;
+//#line 58 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_highlight_col", "int", 0, "Select specific column", "", &disturbance_filter_calibratorConfig::pcl_highlight_col)));
+//#line 61 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_zero_row_enable = 0;
+//#line 61 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_zero_row_enable = 1;
+//#line 61 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_zero_row_enable = 0;
+//#line 61 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_zero_row_enable", "bool", 0, "Enable setting one row to zero", "", &disturbance_filter_calibratorConfig::pcl_zero_row_enable)));
+//#line 62 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_zero_row = 0;
+//#line 62 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_zero_row = 480;
+//#line 62 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_zero_row = 0;
+//#line 62 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_zero_row", "int", 0, "Select specific row", "", &disturbance_filter_calibratorConfig::pcl_zero_row)));
+//#line 65 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_zero_col_enable = 0;
+//#line 65 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_zero_col_enable = 1;
+//#line 65 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_zero_col_enable = 0;
+//#line 65 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_zero_col_enable", "bool", 0, "Enable setting one column to zero", "", &disturbance_filter_calibratorConfig::pcl_zero_col_enable)));
+//#line 66 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_zero_col = 0;
+//#line 66 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_zero_col = 640;
+//#line 66 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_zero_col = 0;
+//#line 66 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_zero_col", "int", 0, "Select specific column", "", &disturbance_filter_calibratorConfig::pcl_zero_col)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     
       for (std::vector<disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr>::const_iterator i = __param_descriptions__.begin(); i != __param_descriptions__.end(); i++)
@@ -379,7 +519,36 @@ namespace htwAalen_signDetect
     return statics;
   }
 
-
+//#line 22 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_0_5meter = 500;
+//#line 23 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_1meter  = 1000;
+//#line 24 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_2meter = 2000;
+//#line 25 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_3meter = 3000;
+//#line 26 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_4meter = 4000;
+//#line 27 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_5meter = 5000;
+//#line 28 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_6meter = 6000;
+//#line 29 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_7meter = 7000;
+//#line 30 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_8meter = 8000;
+//#line 35 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_Advisor = 0;
+//#line 36 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_RGB = 1;
+//#line 42 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_Off = 0;
+//#line 43 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_Columns = 1;
+//#line 44 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_Lines = 2;
+//#line 45 "cfg/disturbance_filter_calibrator.cfg"
+      const int disturbance_filter_calibrator_Both = 3;
 }
 
 #endif // __DISTURBANCE_FILTER_CALIBRATORRECONFIGURATOR_H__
