@@ -21,11 +21,17 @@
 #include <sensor_msgs/image_encodings.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <sstream>
-
+#include <set>
+#include <iterator>
 
 namespace enc = sensor_msgs::image_encodings;
 
 static const char WINDOW[] = "Image window";
+
+static const short KinectValues[]=
+{
+#include "../data/Kinectvalues"
+};
 
 class disturbance_filter_calibrator
 {
@@ -97,6 +103,17 @@ class disturbance_filter_calibrator
 	bool pcl_zero_col_enable;
 	int pcl_zero_col;
 
+	bool pcl_filter_test;
+
+	bool pcl_stop_output;
+
+	bool pcl_value_print;
+
+	bool pcl_gather_values;
+
+
+	//Values
+	std::set<short> values;
 
 public:
 	disturbance_filter_calibrator() :
@@ -107,9 +124,19 @@ public:
 		rgb_it_.reset(new image_transport::ImageTransport(*rgb_nh_));
 		depth_it_.reset(new image_transport::ImageTransport(depth_nh));
 
+
+		pcl_value_print=false;
+
 		// Read parameters
 		int queue_size;
 		nh_.param("queue_size", queue_size, 5);
+
+
+		//Read kinect values
+		for (unsigned int v = 0; v < sizeof(KinectValues)/2; ++v)
+		{
+			values.insert(KinectValues[v]);
+		}
 
 		// Synchronize inputs. Topic subscriptions happen on demand in the connection callback.
 		sync_.reset(
@@ -134,7 +161,6 @@ public:
 
 
 		cv::namedWindow(WINDOW); //TODO Remove
-
 	}
 
 	~disturbance_filter_calibrator()
@@ -182,6 +208,20 @@ public:
 
 		pcl_zero_col_enable=config.pcl_zero_col_enable;
 		pcl_zero_col=config.pcl_zero_col;
+
+		pcl_stop_output=config.pcl_stop_output;
+
+		pcl_filter_test=config.pcl_filter_test;
+
+		if(config.pcl_value_print)
+		{
+			pcl_value_print=config.pcl_value_print;
+			config.pcl_value_print=false;
+		}
+
+
+		pcl_gather_values=config.pcl_gather_values;
+
 	}
 
 	void from16UC1to32FC1(const cv::Mat &src, cv::Mat &dst)
@@ -251,10 +291,37 @@ public:
 		}
 	}
 
+	void filter_test(const cv::Mat &src, cv::Mat &dest)
+	{
+		cv::Mat orig=src.clone();
+		if(src.type()!=CV_16UC1)
+		{
+			ROS_ERROR("Filter Test: Unsupported Mat Type: %i!",src.type());
+			return;
+		}
+
+
+		//We only need the variables for one image so we do not need new member variables.
+		short value_before_step, value_after_step;
+		int step_x, step_y;
+
+		cv::Mat replace=cv::Mat::zeros(src.rows,src.cols,CV_8UC1); //Bitfield for starting replace
+
+		for (int y = 0; y < src.rows; y++)
+		{
+			for (int x = 0; x < src.cols; x++)
+			{
+
+			}
+		}
+
+	}
+
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
 			     const sensor_msgs::ImageConstPtr& rgb_msg,
 			     const sensor_msgs::CameraInfoConstPtr& info_msg)
 	{
+
 
 		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
 		if (depth_msg->encoding == "16UC1") //Kinect raw image (millimeters)
@@ -285,6 +352,16 @@ public:
 					for(int x = 0; x < imgPtrDepth->image.cols; x++)
 					{
 						ushort currentDepth=imgPtrDepth->image.at<Vec1shrt>(y,x)[0];
+
+
+						//Gather new values
+						if(pcl_gather_values)
+						{
+							if(values.insert(imgPtrDepth->image.at<Vec1shrt>(y,x)[0]).second)//Is it new?
+							{
+								ROS_WARN("NEW VALUE FOUND!: %i",imgPtrDepth->image.at<Vec1shrt>(y,x)[0]);
+							}
+						}
 
 						//ADVISOR OVERLAY
 						if(advisor_pcl_overlay==0)
@@ -374,26 +451,30 @@ public:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+				if(pcl_filter_test)filter_test(imgPtrDepth->image, imgPtrDepth->image);
 
 
 			//Publish image
-			advisor_rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
-			advisor_depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
+			if(!pcl_stop_output)
+			{
+				advisor_rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
+				advisor_depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
+			}
 
 
-			//ROS_INFO("Got Image!");
+			if(pcl_value_print)
+			{
+				int i=0;
+				for(std::set<short>::iterator it=values.begin();it != values.end();it++)
+				{
+					i++;
+					printf("%i, ",*it);
+				}
+
+				pcl_value_print=0;
+				printf("(Values: %i)\n",i);
+			}
+
 		}
 		else
 		{

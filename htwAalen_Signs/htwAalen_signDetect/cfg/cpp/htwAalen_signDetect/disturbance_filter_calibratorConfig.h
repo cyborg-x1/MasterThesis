@@ -177,6 +177,14 @@ namespace htwAalen_signDetect
       bool pcl_zero_col_enable;
 //#line 66 "cfg/disturbance_filter_calibrator.cfg"
       int pcl_zero_col;
+//#line 70 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_filter_test;
+//#line 73 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_stop_output;
+//#line 76 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_gather_values;
+//#line 79 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_value_print;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -453,6 +461,38 @@ namespace htwAalen_signDetect
       __default__.pcl_zero_col = 0;
 //#line 66 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<int>("pcl_zero_col", "int", 0, "Select specific column", "", &disturbance_filter_calibratorConfig::pcl_zero_col)));
+//#line 70 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_filter_test = 0;
+//#line 70 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_filter_test = 1;
+//#line 70 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_filter_test = 0;
+//#line 70 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_filter_test", "bool", 0, "Enable Filtertest", "", &disturbance_filter_calibratorConfig::pcl_filter_test)));
+//#line 73 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_stop_output = 0;
+//#line 73 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_stop_output = 1;
+//#line 73 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_stop_output = 0;
+//#line 73 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_stop_output", "bool", 0, "Stop output of new point clouds", "", &disturbance_filter_calibratorConfig::pcl_stop_output)));
+//#line 76 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_gather_values = 0;
+//#line 76 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_gather_values = 1;
+//#line 76 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_gather_values = 1;
+//#line 76 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_gather_values", "bool", 0, "Print values", "", &disturbance_filter_calibratorConfig::pcl_gather_values)));
+//#line 79 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_value_print = 0;
+//#line 79 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_value_print = 1;
+//#line 79 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_value_print = 0;
+//#line 79 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_value_print", "bool", 0, "Print values", "", &disturbance_filter_calibratorConfig::pcl_value_print)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     
       for (std::vector<disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr>::const_iterator i = __param_descriptions__.begin(); i != __param_descriptions__.end(); i++)
