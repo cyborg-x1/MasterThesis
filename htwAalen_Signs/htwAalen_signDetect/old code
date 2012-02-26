@@ -92,3 +92,15 @@
 				array.channels(1);
 			array.depth()
 			cv::filter2D(store,store,dyn0,array,cv::Point(-1,-1),dyn1,dyn2);
+
+			
+			
+			
+			
+						//We only need the variables for one image so we do not need new member variables.
+			short value_before_step, value_after_step;
+			int step_x, step_y;
+			bool begin=true; //specifies if a first value is already available
+			bool zero; //specifies if filtering zeros or filtering disturbance
+						cv::Mat replace=cv::Mat::zeros(src.rows,src.cols,CV_8UC1); //Bitfield for starting replace
+			

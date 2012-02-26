@@ -226,7 +226,7 @@ public:
 
 	void from16UC1to32FC1(const cv::Mat &src, cv::Mat &dst)
 	{
-		for (int y = 0; y < 480; y++)
+		for (int y = 0; y < 480; y++) //TODO replace with image width and height
 		{
 			for (int x = 0; x < 640; x++)
 			{
@@ -237,7 +237,7 @@ public:
 
 	void from32FC1to16UC1(const cv::Mat &src, cv::Mat &dst)
 	{
-		for (int y = 0; y < 480; y++)
+		for (int y = 0; y < 480; y++) //TODO replace with image width and height
 		{
 			for (int x = 0; x < 640; x++)
 			{
@@ -291,30 +291,109 @@ public:
 		}
 	}
 
-	void filter_test(const cv::Mat &src, cv::Mat &dest)
+	cv::Rect roiFinder(const cv::Mat &src)
 	{
-		cv::Mat orig=src.clone();
-		if(src.type()!=CV_16UC1)
+		int size_x=src.cols, size_y=src.rows;
+		int roi_xs=-1,roi_ys=-1,roi_xe=-1,roi_ye=-1;
+
+		for (int i = 0; i < (size_x*size_y); i++)
 		{
-			ROS_ERROR("Filter Test: Unsupported Mat Type: %i!",src.type());
-			return;
-		}
+			//Forward direction x -
+			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
 
+			//Forward direction y
+			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
 
-		//We only need the variables for one image so we do not need new member variables.
-		short value_before_step, value_after_step;
-		int step_x, step_y;
+			//Backward direction x
+			int x_xbw=size_x-x_xfw-1, y_xbw=size_y-y_xfw-1;
 
-		cv::Mat replace=cv::Mat::zeros(src.rows,src.cols,CV_8UC1); //Bitfield for starting replace
+			//Backward direction y
+			int x_ybw=size_x-x_yfw-1, y_ybw=size_y-y_yfw-1;
 
-		for (int y = 0; y < src.rows; y++)
-		{
-			for (int x = 0; x < src.cols; x++)
+			//ROI Seek
+			if(src.at<Vec1shrt>(y_xfw,x_xfw)[0]>0 && roi_ys<0)
 			{
-
+				roi_ys=y_xfw;
+			}
+			if(src.at<Vec1shrt>(y_yfw,x_yfw)[0]>0 && roi_xs<0)
+			{
+				roi_xs=x_yfw;
+			}
+			if(src.at<Vec1shrt>(y_xbw,x_xbw)[0]>0 && roi_ye<0)
+			{
+				roi_ye=y_xbw;
+			}
+			if(src.at<Vec1shrt>(y_ybw,x_ybw)[0]>0 && roi_xe<0)
+			{
+				roi_xe=x_ybw;
 			}
 		}
 
+		return cv::Rect(roi_xs,roi_ys,roi_xe-roi_xs,roi_ye-roi_ys);
+	}
+
+
+
+
+
+
+
+
+	void filter_test(const cv::Mat &src, cv::Mat &dst)
+	{
+
+		if(src.type()!=CV_16UC1)
+		{
+			ROS_ERROR("Filter Test: Unsupported Mat Type: %i!",src.type());
+		}
+		else
+		{
+			cv::Mat orig;
+
+			//Check if src and dst reference the same object
+			if(&src == &dst)
+			{
+				printf("src and dst are the same\n");
+				orig=src.clone();
+			}
+			else
+			{
+				orig=src;
+				dst=src.clone();
+			}
+
+			//Get the space where the interesting information is
+			cv::Rect roi=roiFinder(orig);
+
+			if(roi.height==0 || roi.width==0 || roi.x==-1 || roi.y==-1)return;
+
+
+			cv::Mat in=orig(roi);
+			cv::Mat out=dst(roi);
+
+
+
+			int size_x=in.cols, size_y=in.rows;
+
+			for (int i = 0; i < (size_x*size_y); i++)
+			{
+				//Forward direction x -
+				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+
+				//Forward direction y
+				int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
+
+				//Backward direction x
+				int x_xbw=size_x-x_xfw-1, y_xbw=size_y-y_xfw-1;
+
+				//Backward direction y
+				int x_ybw=size_x-x_yfw-1, y_ybw=size_y-y_yfw-1;
+
+			}
+
+
+
+		}///TYPE CHECK END
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
