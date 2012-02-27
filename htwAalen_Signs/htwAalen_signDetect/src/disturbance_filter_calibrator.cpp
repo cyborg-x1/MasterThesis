@@ -22,7 +22,10 @@
 #include <image_geometry/pinhole_camera_model.h>
 #include <sstream>
 #include <set>
+#include <vector>
 #include <iterator>
+#include <fstream>
+#include <iostream>
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -30,7 +33,7 @@ static const char WINDOW[] = "Image window";
 
 static const short KinectValues[]=
 {
-#include "../data/Kinectvalues"
+	#include "../data/Kinectvalues"
 };
 
 class disturbance_filter_calibrator
@@ -83,6 +86,9 @@ class disturbance_filter_calibrator
 
 	image_geometry::PinholeCameraModel model_;
 
+	std::vector<cv::Point> statistics;
+
+
 
 	//Advisor Variables
 	unsigned short advisor_distance;
@@ -111,6 +117,10 @@ class disturbance_filter_calibrator
 
 	bool pcl_gather_values;
 
+	bool fetchValues;
+
+	bool outputValues;
+
 
 	//Values
 	std::set<short> values;
@@ -126,6 +136,8 @@ public:
 
 
 		pcl_value_print=false;
+		fetchValues = false;
+		outputValues = false;
 
 		// Read parameters
 		int queue_size;
@@ -219,6 +231,17 @@ public:
 			config.pcl_value_print=false;
 		}
 
+		if(config.fetchValues)
+		{
+			fetchValues=config.fetchValues;
+			config.fetchValues=false;
+		}
+
+		if(config.outputValues)
+		{
+			outputValues=config.outputValues;
+			config.outputValues=false;
+		}
 
 		pcl_gather_values=config.pcl_gather_values;
 
@@ -327,17 +350,12 @@ public:
 			{
 				roi_xe=x_ybw;
 			}
+
+			if(roi_xs>=0 && roi_ys>=0 && roi_xe>=0 && roi_ye>=0) break;
 		}
 
 		return cv::Rect(roi_xs,roi_ys,roi_xe-roi_xs,roi_ye-roi_ys);
 	}
-
-
-
-
-
-
-
 
 	void filter_test(const cv::Mat &src, cv::Mat &dst)
 	{
@@ -422,7 +440,41 @@ public:
 			cv::Mat orig_rgb=imgPtrRGB->image.clone();
 
 
+			if(fetchValues)
+			{
+				cv::Rect roi=roiFinder(imgPtrRGB->image);
 
+				int each=50;
+				cv::Mat testzone=orig_rgb(roi);
+				int size_x=testzone.cols, size_y=testzone.rows;
+				for (int i = 0; i < (size_x*size_y); i++)
+				{
+					//Forward direction x -
+					int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+					if(!(x_xfw%each) && !(y_xfw%each))
+					{
+						statistics.push_back(cv::Point(advisor_distance,testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]));
+						std::cout<<x_xfw<<" "<<y_xfw<<":"<<advisor_distance<<" - "<<testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]<<std::endl;
+					}
+				}
+				std::cout<<std::endl;
+				fetchValues=false;
+			}
+
+			if(outputValues)
+			{
+				std::ofstream outputfile;
+				 outputfile.open ("/home/cyborg-x1/kinect_stats.csv");
+				 outputfile << "Laser;Kinect"<<std::endl;
+				 for(std::vector<cv::Point>::iterator it=statistics.begin(); it != statistics.end(); it++)
+				 {
+					 cv::Point current=*it;
+					 outputfile<<current.x<<";"<<current.y<<std::endl;
+				 }
+				 outputfile.close();
+				outputValues=false;
+
+			}
 
 				//Walk through
 				int pixelright=0,pixelamount=0;
@@ -549,10 +601,14 @@ public:
 					i++;
 					printf("%i, ",*it);
 				}
-
 				pcl_value_print=0;
 				printf("(Values: %i)\n",i);
 			}
+
+
+
+
+
 
 		}
 		else

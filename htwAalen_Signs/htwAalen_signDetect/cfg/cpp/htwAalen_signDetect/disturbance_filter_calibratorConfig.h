@@ -185,6 +185,10 @@ namespace htwAalen_signDetect
       bool pcl_gather_values;
 //#line 79 "cfg/disturbance_filter_calibrator.cfg"
       bool pcl_value_print;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      bool fetchValues;
+//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+      bool outputValues;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -493,6 +497,22 @@ namespace htwAalen_signDetect
       __default__.pcl_value_print = 0;
 //#line 79 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_value_print", "bool", 0, "Print values", "", &disturbance_filter_calibratorConfig::pcl_value_print)));
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.fetchValues = 0;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.fetchValues = 1;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.fetchValues = 0;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("fetchValues", "bool", 0, "Fetch values for statistics", "", &disturbance_filter_calibratorConfig::fetchValues)));
+//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.outputValues = 0;
+//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.outputValues = 1;
+//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.outputValues = 0;
+//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("outputValues", "bool", 0, "Output values for statistics", "", &disturbance_filter_calibratorConfig::outputValues)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     
       for (std::vector<disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr>::const_iterator i = __param_descriptions__.begin(); i != __param_descriptions__.end(); i++)
