@@ -445,16 +445,20 @@ public:
 				cv::Rect roi=roiFinder(imgPtrRGB->image);
 
 				int each=50;
-				cv::Mat testzone=orig_rgb(roi);
+				cv::Mat testzone=orig_depth(roi);
 				int size_x=testzone.cols, size_y=testzone.rows;
 				for (int i = 0; i < (size_x*size_y); i++)
 				{
+
 					//Forward direction x -
 					int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
 					if(!(x_xfw%each) && !(y_xfw%each))
 					{
-						statistics.push_back(cv::Point(advisor_distance,testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]));
-						std::cout<<x_xfw<<" "<<y_xfw<<":"<<advisor_distance<<" - "<<testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]<<std::endl;
+						if(testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]!=0)
+						{
+							statistics.push_back(cv::Point(advisor_distance,testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]));
+							std::cout<<x_xfw<<" "<<y_xfw<<":"<<advisor_distance<<" - "<<testzone.at<Vec1shrt>(y_xfw,x_xfw)[0]<<std::endl;
+						}
 					}
 				}
 				std::cout<<std::endl;
@@ -604,11 +608,6 @@ public:
 				pcl_value_print=0;
 				printf("(Values: %i)\n",i);
 			}
-
-
-
-
-
 
 		}
 		else
