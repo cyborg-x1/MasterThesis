@@ -27,6 +27,9 @@
 #include <fstream>
 #include <iostream>
 
+#include "kinectStepLUT.h"
+#include "DiscreteFillAndSmoothFilter.h"
+
 namespace enc = sensor_msgs::image_encodings;
 
 static const char WINDOW[] = "Image window";
@@ -59,9 +62,11 @@ class disturbance_filter_calibrator
 	//Types for different mats
 	typedef cv::Vec<float, 1> Vec1flt;
 	typedef cv::Vec<uchar, 3> Vec3char;
-	typedef cv::Vec<ushort, 1> Vec1shrt;
+	typedef cv::Vec<short, 1> Vec1shrt;
 	typedef cv::Vec<uchar, 1> Vec1char;
 
+
+	DiscreteFillAndSmoothFilter test;//TODO REMOVE
 
 	//Mat for storage
 	cv::Mat store;
@@ -139,6 +144,9 @@ public:
 		fetchValues = false;
 		outputValues = false;
 
+
+
+
 		// Read parameters
 		int queue_size;
 		nh_.param("queue_size", queue_size, 5);
@@ -149,6 +157,10 @@ public:
 		{
 			values.insert(KinectValues[v]);
 		}
+
+
+
+
 
 		// Synchronize inputs. Topic subscriptions happen on demand in the connection callback.
 		sync_.reset(
@@ -296,6 +308,68 @@ public:
 		}
 	}
 
+	void KinectDepthToSteps(const cv::Mat &src, cv::Mat &dst)
+	{
+		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
+		{
+			int size_x=src.cols, size_y=src.rows;
+
+			for (int i = 0; i < (size_x*size_y); i++)
+			{
+				//Forward direction x -
+				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+				short current=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
+				if(current>=0 && current < kinect_step_to_depth_LUT_size)
+				{
+					if(kinect_depth_to_step_LUT[current]>=0)
+					{
+						dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=kinect_depth_to_step_LUT[current];
+					}
+					else
+					{
+						dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=0;
+						ROS_ERROR("KinectDepthToSteps: Unregistered Depth Value(%i:%i)!!!",current,kinect_depth_to_step_LUT[current]);
+					}
+				}
+				else
+				{
+					ROS_ERROR("KinectStepsToDepth: Depth too large!!!: %i", current);
+				}
+			}
+		}
+		else
+		{
+			ROS_ERROR("KinectStepsToDepth wrong type! Expects CV_16UC1");
+		}
+	}
+
+	void KinectStepsToDepth(const cv::Mat &src, cv::Mat &dst)
+	{
+		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
+		{
+			int size_x=src.cols, size_y=src.rows;
+
+			for (int i = 0; i < (size_x*size_y); i++)
+			{
+				//Forward direction x -
+				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+				short current=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
+				if(current>=0 && current < kinect_depth_to_step_LUT_size)
+				{
+					dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=kinect_step_to_depth_LUT[current];
+				}
+				else
+				{
+					ROS_ERROR("KinectStepsToDepth: Step value to large! %i",current);
+				}
+			}
+		}
+		else
+		{
+			ROS_ERROR("KinectStepsToDepth: Wrong type! Expects CV_16UC1");
+		}
+	}
+
 	void DetectSpecialPoints(const cv::Mat &src)
 	{
 		if(src.type() == CV_16UC1)
@@ -359,59 +433,11 @@ public:
 
 	void filter_test(const cv::Mat &src, cv::Mat &dst)
 	{
-
-		if(src.type()!=CV_16UC1)
-		{
-			ROS_ERROR("Filter Test: Unsupported Mat Type: %i!",src.type());
-		}
-		else
-		{
-			cv::Mat orig;
-
-			//Check if src and dst reference the same object
-			if(&src == &dst)
-			{
-				printf("src and dst are the same\n");
-				orig=src.clone();
-			}
-			else
-			{
-				orig=src;
-				dst=src.clone();
-			}
-
-			//Get the space where the interesting information is
-			cv::Rect roi=roiFinder(orig);
-
-			if(roi.height==0 || roi.width==0 || roi.x==-1 || roi.y==-1)return;
-
-
-			cv::Mat in=orig(roi);
-			cv::Mat out=dst(roi);
-
-
-
-			int size_x=in.cols, size_y=in.rows;
-
-			for (int i = 0; i < (size_x*size_y); i++)
-			{
-				//Forward direction x -
-				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
-
-				//Forward direction y
-				int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
-
-				//Backward direction x
-				int x_xbw=size_x-x_xfw-1, y_xbw=size_y-y_xfw-1;
-
-				//Backward direction y
-				int x_ybw=size_x-x_yfw-1, y_ybw=size_y-y_yfw-1;
-
-			}
-
-
-
-		}///TYPE CHECK END
+		cv::Mat orig=src.clone();
+		dst=src.clone();
+		KinectDepthToSteps(orig,dst);
+		DiscreteFillAndSmoothFilter::test();
+		KinectStepsToDepth(dst,dst);
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,

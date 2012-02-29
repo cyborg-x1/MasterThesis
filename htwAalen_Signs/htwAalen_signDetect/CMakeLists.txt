@@ -20,8 +20,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 rosbuild_add_executable(surfaceDetect src/surfaceDetect.cpp)
 rosbuild_add_executable(fromCompress src/fromCompress.cpp)
 rosbuild_add_executable(toCompress src/toCompress.cpp)
-rosbuild_add_executable(disturbance_filter_calibrator src/disturbance_filter_calibrator.cpp)
-rosbuild_add_library(DiscreteFillAndSmoothFilter src/DiscreteFillAndSmoothFilter.cpp)
+
+rosbuild_add_executable(disturbance_filter_calibrator src/disturbance_filter_calibrator.cpp src/DiscreteFillAndSmoothFilter.cpp)
+
 
 #add dynamic reconfigure api
 rosbuild_find_ros_package(dynamic_reconfigure)
