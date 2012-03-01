@@ -1,13 +1,8 @@
 #include "DiscreteFillAndSmoothFilter.h"
-#include "kinectStepLUT.h"
+#include "kinectStepLUT"
 
-
-const int DiscreteFillAndSmoothFilter::blub=5;
-
-
-DiscreteFillAndSmoothFilter::DiscreteFillAndSmoothFilter()
+DiscreteFillAndSmoothFilter::DiscreteFillAndSmoothFilter(const cv::Mat &src, cv::Mat &dst, scan_direction_t dir)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
@@ -18,8 +13,7 @@ DiscreteFillAndSmoothFilter::~DiscreteFillAndSmoothFilter()
 
 
 
-void DiscreteFillAndSmoothFilter::resetSeek()
+void DiscreteFillAndSmoothFilter::filter()
 {
 
 }
-

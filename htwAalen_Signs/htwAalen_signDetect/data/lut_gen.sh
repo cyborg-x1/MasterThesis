@@ -46,22 +46,14 @@ out2="${out2} -2"
 
 
 #Write header
-echo "/** Lookup table to convert Kinect depth value to steps **/" > ../include/kinectStepLUT.h
-echo -e "const short kinect_depth_to_step_LUT[] = { $out };" >> ../include/kinectStepLUT.h
-echo >> ../include/kinectStepLUT.h
+echo -e "const short DiscreteFillAndSmoothFilter::kinect_depth_to_step_LUT[] = { $out };" >> ../include/kinectStepLUT
 
-echo "/** Size of lookup table for Kinect depth value to steps **/" >> ../include/kinectStepLUT.h
-echo -e "const int kinect_step_to_depth_LUT_size = $j;" >> ../include/kinectStepLUT.h
-echo >> ../include/kinectStepLUT.h		
-echo >> ../include/kinectStepLUT.h					
+echo -e "const short DiscreteFillAndSmoothFilter::kinect_depths_count = $j;" >> ../include/kinectStepLUT
 	
-echo "/** Lookup table to convert Kinect steps to depth **/"  >> ../include/kinectStepLUT.h
-echo -e "const short kinect_step_to_depth_LUT[] = { $out2 };" >> ../include/kinectStepLUT.h
-echo >> ../include/kinectStepLUT.h		
+echo -e "const short DiscreteFillAndSmoothFilter::kinect_step_to_depth_LUT[] = { $out2 };" >> ../include/kinectStepLUT
 
-echo "/** Size of lookup table for Kinect steps to depth value **/" >> ../include/kinectStepLUT.h
-echo -e "const int kinect_depth_to_step_LUT_size = $i;" >> ../include/kinectStepLUT.h
+echo -e "const short DiscreteFillAndSmoothFilter::kinect_steps_count = $i;" >> ../include/kinectStepLUT
 
 
-indent ../include/kinectStepLUT.h 
-rm ../include/kinectStepLUT.h.orig
+indent ../include/kinectStepLUT 
+rm ../include/kinectStepLUT~

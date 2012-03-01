@@ -430,14 +430,86 @@ public:
 
 		return cv::Rect(roi_xs,roi_ys,roi_xe-roi_xs,roi_ye-roi_ys);
 	}
+	void myFilter1(const cv::Mat &src, cv::Mat &dst)
+	{
+
+		if (src.type() == CV_16UC1)
+		{
+			cv::Mat filter_in = src.clone();
+
+
+
+			if(dyn0==6)
+			{
+				//Subtract disturbance
+				for (int y = 0; y < src.rows; y++)
+				{
+					for (int x = 0; x < src.cols; x++)
+					{
+						short a=filter_in.at<Vec1shrt>(y, x)[0];
+						short b=disturb.at<Vec1shrt>(y, x)[0];
+						short c=a-b;
+
+						filter_in.at<Vec1shrt>(y, x)[0]=c;
+					}
+				}
+
+			}
+			cv::Mat filter=filter_in.clone();
+
+
+			cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
+			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
+			cv::medianBlur(filter, filter, 3);
+
+			//Update non zero pixels
+			for (int y = 0; y < src.rows; y++)
+			{
+				for (int x = 0; x < src.cols; x++)
+				{
+					short realValue = filter_in.at<Vec1shrt>(y, x)[0];
+					short filteredValue = filter.at<Vec1shrt>(y, x)[0];
+					short maxDifference = pow(realValue, 2) / (480000); //Maximal difference from the real value
+					if (realValue>0)
+					{
+						if(abs(realValue - filteredValue) > maxDifference)
+						{
+							dst.at<Vec1shrt>(y, x)[0] = realValue;// realValue; //TODO maybe we should use the maxdiff value here?
+						}
+						else
+						{
+							dst.at<Vec1shrt>(y, x)[0] = filteredValue;
+						}
+					}
+				}
+			}
+			cv::medianBlur(dst, dst, 3);
+
+		}
+		else
+		{
+			ROS_ERROR("MyFilter: Wrong Image Type");
+		}
+
+	}
 
 	void filter_test(const cv::Mat &src, cv::Mat &dst)
 	{
 		cv::Mat orig=src.clone();
 		dst=src.clone();
-		KinectDepthToSteps(orig,dst);
-		DiscreteFillAndSmoothFilter::test();
-		KinectStepsToDepth(dst,dst);
+		DiscreteFillAndSmoothFilter::convertKinectRawToSteps(orig,dst);
+		for (int y = 0; y < src.rows; y++)
+		{
+			for (int x = 0; x < src.cols; x++)
+			{
+				if(dst.at<Vec1shrt>(y,x)[0]%4)
+				{
+					dst.at<Vec1shrt>(y,x)[0]-=dst.at<Vec1shrt>(y,x)[0]%4;
+				}
+			}
+		}
+		DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(dst,dst);
+		//myFilter1(dst,dst);
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
