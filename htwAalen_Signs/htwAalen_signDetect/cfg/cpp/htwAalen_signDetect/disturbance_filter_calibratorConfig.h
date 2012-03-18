@@ -186,8 +186,12 @@ namespace htwAalen_signDetect
 //#line 79 "cfg/disturbance_filter_calibrator.cfg"
       bool pcl_value_print;
 //#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_value_catch;
+//#line 85 "cfg/disturbance_filter_calibrator.cfg"
+      bool pcl_subtr_disturb;
+//#line 90 "cfg/disturbance_filter_calibrator.cfg"
       bool fetchValues;
-//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+//#line 91 "cfg/disturbance_filter_calibrator.cfg"
       bool outputValues;
 //#line 138 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
 
@@ -340,9 +344,9 @@ namespace htwAalen_signDetect
 //#line 15 "cfg/disturbance_filter_calibrator.cfg"
       __min__.double_param6 = 0.0;
 //#line 15 "cfg/disturbance_filter_calibrator.cfg"
-      __max__.double_param6 = 100.0;
+      __max__.double_param6 = 10000.0;
 //#line 15 "cfg/disturbance_filter_calibrator.cfg"
-      __default__.double_param6 = 0.01;
+      __default__.double_param6 = 1.0;
 //#line 15 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<double>("double_param6", "double", 0, "A double parameter", "", &disturbance_filter_calibratorConfig::double_param6)));
 //#line 16 "cfg/disturbance_filter_calibrator.cfg"
@@ -498,20 +502,36 @@ namespace htwAalen_signDetect
 //#line 79 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_value_print", "bool", 0, "Print values", "", &disturbance_filter_calibratorConfig::pcl_value_print)));
 //#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_value_catch = 0;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_value_catch = 1;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_value_catch = 0;
+//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_value_catch", "bool", 0, "Capture step map subtracted from distance value", "", &disturbance_filter_calibratorConfig::pcl_value_catch)));
+//#line 85 "cfg/disturbance_filter_calibrator.cfg"
+      __min__.pcl_subtr_disturb = 0;
+//#line 85 "cfg/disturbance_filter_calibrator.cfg"
+      __max__.pcl_subtr_disturb = 1;
+//#line 85 "cfg/disturbance_filter_calibrator.cfg"
+      __default__.pcl_subtr_disturb = 0;
+//#line 85 "cfg/disturbance_filter_calibrator.cfg"
+      __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("pcl_subtr_disturb", "bool", 0, "Subtract saved disturbance map", "", &disturbance_filter_calibratorConfig::pcl_subtr_disturb)));
+//#line 90 "cfg/disturbance_filter_calibrator.cfg"
       __min__.fetchValues = 0;
-//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+//#line 90 "cfg/disturbance_filter_calibrator.cfg"
       __max__.fetchValues = 1;
-//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+//#line 90 "cfg/disturbance_filter_calibrator.cfg"
       __default__.fetchValues = 0;
-//#line 82 "cfg/disturbance_filter_calibrator.cfg"
+//#line 90 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("fetchValues", "bool", 0, "Fetch values for statistics", "", &disturbance_filter_calibratorConfig::fetchValues)));
-//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+//#line 91 "cfg/disturbance_filter_calibrator.cfg"
       __min__.outputValues = 0;
-//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+//#line 91 "cfg/disturbance_filter_calibrator.cfg"
       __max__.outputValues = 1;
-//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+//#line 91 "cfg/disturbance_filter_calibrator.cfg"
       __default__.outputValues = 0;
-//#line 83 "cfg/disturbance_filter_calibrator.cfg"
+//#line 91 "cfg/disturbance_filter_calibrator.cfg"
       __param_descriptions__.push_back(disturbance_filter_calibratorConfig::AbstractParamDescriptionConstPtr(new disturbance_filter_calibratorConfig::ParamDescription<bool>("outputValues", "bool", 0, "Output values for statistics", "", &disturbance_filter_calibratorConfig::outputValues)));
 //#line 239 "/opt/ros/electric/stacks/driver_common/dynamic_reconfigure/templates/ConfigType.h"
     

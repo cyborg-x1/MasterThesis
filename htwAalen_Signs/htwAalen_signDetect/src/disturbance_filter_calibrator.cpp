@@ -93,7 +93,7 @@ class disturbance_filter_calibrator
 
 	std::vector<cv::Point> statistics;
 
-
+	cv::Mat stepDisturb;
 
 	//Advisor Variables
 	unsigned short advisor_distance;
@@ -126,7 +126,11 @@ class disturbance_filter_calibrator
 
 	bool outputValues;
 
+	bool fetchStepDistubMap;
 
+	bool subtractStepDisturbMap;
+
+	cv::Rect dataframe;
 	//Values
 	std::set<short> values;
 
@@ -145,7 +149,10 @@ public:
 		outputValues = false;
 
 
-
+		dataframe.height=0;
+		dataframe.width=0;
+		dataframe.x=0xFFFF;
+		dataframe.y=0xFFFF;
 
 		// Read parameters
 		int queue_size;
@@ -182,6 +189,9 @@ public:
 		//Advertise rviz calibration advisor output
 		advisor_rgb_out = it_out.advertiseCamera("advise_rgb",1);
 		advisor_depth_out = it_out.advertiseCamera("advise_depth",1);
+
+
+		stepDisturb=cv::Mat::zeros(480,640,CV_16UC1);
 
 
 		cv::namedWindow(WINDOW); //TODO Remove
@@ -257,6 +267,14 @@ public:
 
 		pcl_gather_values=config.pcl_gather_values;
 
+		if(config.pcl_value_catch)
+		{
+			fetchStepDistubMap=config.pcl_value_catch;
+			config.pcl_value_catch=false;
+		}
+
+		subtractStepDisturbMap=config.pcl_subtr_disturb;
+
 	}
 
 	void from16UC1to32FC1(const cv::Mat &src, cv::Mat &dst)
@@ -282,154 +300,6 @@ public:
 		}
 	}
 
-	void RangeFilter(const cv::Mat &src, cv::Mat &dst, short min_range, short max_range, bool ignore_bad_points=true)
-	{
-		if(src.type() == CV_16UC1)
-		{
-			dst = src.clone();
-			for (int y = 0; y < src.rows; y++)
-			{
-				for (int x = 0; x < src.cols; x++)
-				{
-					short value=src.at<Vec1shrt>(y,x)[0];
-					if(value<min_range || value>max_range)
-					{
-						if(!(ignore_bad_points&&(value<10 || value>10000)))
-						{
-							dst.at<Vec1shrt>(y,x)[0]=0;
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			ROS_ERROR("RangeFilter: Wrong depth image type, node supports only CV_16UC1 (Rectified raw!) !\n");
-		}
-	}
-
-	void KinectDepthToSteps(const cv::Mat &src, cv::Mat &dst)
-	{
-		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
-		{
-			int size_x=src.cols, size_y=src.rows;
-
-			for (int i = 0; i < (size_x*size_y); i++)
-			{
-				//Forward direction x -
-				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
-				short current=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
-				if(current>=0 && current < kinect_step_to_depth_LUT_size)
-				{
-					if(kinect_depth_to_step_LUT[current]>=0)
-					{
-						dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=kinect_depth_to_step_LUT[current];
-					}
-					else
-					{
-						dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=0;
-						ROS_ERROR("KinectDepthToSteps: Unregistered Depth Value(%i:%i)!!!",current,kinect_depth_to_step_LUT[current]);
-					}
-				}
-				else
-				{
-					ROS_ERROR("KinectStepsToDepth: Depth too large!!!: %i", current);
-				}
-			}
-		}
-		else
-		{
-			ROS_ERROR("KinectStepsToDepth wrong type! Expects CV_16UC1");
-		}
-	}
-
-	void KinectStepsToDepth(const cv::Mat &src, cv::Mat &dst)
-	{
-		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
-		{
-			int size_x=src.cols, size_y=src.rows;
-
-			for (int i = 0; i < (size_x*size_y); i++)
-			{
-				//Forward direction x -
-				int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
-				short current=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
-				if(current>=0 && current < kinect_depth_to_step_LUT_size)
-				{
-					dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=kinect_step_to_depth_LUT[current];
-				}
-				else
-				{
-					ROS_ERROR("KinectStepsToDepth: Step value to large! %i",current);
-				}
-			}
-		}
-		else
-		{
-			ROS_ERROR("KinectStepsToDepth: Wrong type! Expects CV_16UC1");
-		}
-	}
-
-	void DetectSpecialPoints(const cv::Mat &src)
-	{
-		if(src.type() == CV_16UC1)
-		{
-			for (int y = 0; y < src.rows; y++)
-			{
-				for (int x = 0; x < src.cols; x++)
-				{
-					short value=src.at<Vec1shrt>(y,x)[0];
-					if(value<0 || value>10000)
-					{
-						printf("Start:(%i/%i//%i)",x,y,value);
-					}
-				}
-			}
-		}
-	}
-
-	cv::Rect roiFinder(const cv::Mat &src)
-	{
-		int size_x=src.cols, size_y=src.rows;
-		int roi_xs=-1,roi_ys=-1,roi_xe=-1,roi_ye=-1;
-
-		for (int i = 0; i < (size_x*size_y); i++)
-		{
-			//Forward direction x -
-			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
-
-			//Forward direction y
-			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
-
-			//Backward direction x
-			int x_xbw=size_x-x_xfw-1, y_xbw=size_y-y_xfw-1;
-
-			//Backward direction y
-			int x_ybw=size_x-x_yfw-1, y_ybw=size_y-y_yfw-1;
-
-			//ROI Seek
-			if(src.at<Vec1shrt>(y_xfw,x_xfw)[0]>0 && roi_ys<0)
-			{
-				roi_ys=y_xfw;
-			}
-			if(src.at<Vec1shrt>(y_yfw,x_yfw)[0]>0 && roi_xs<0)
-			{
-				roi_xs=x_yfw;
-			}
-			if(src.at<Vec1shrt>(y_xbw,x_xbw)[0]>0 && roi_ye<0)
-			{
-				roi_ye=y_xbw;
-			}
-			if(src.at<Vec1shrt>(y_ybw,x_ybw)[0]>0 && roi_xe<0)
-			{
-				roi_xe=x_ybw;
-			}
-
-			if(roi_xs>=0 && roi_ys>=0 && roi_xe>=0 && roi_ye>=0) break;
-		}
-
-		return cv::Rect(roi_xs,roi_ys,roi_xe-roi_xs,roi_ye-roi_ys);
-	}
 	void myFilter1(const cv::Mat &src, cv::Mat &dst)
 	{
 
@@ -495,20 +365,44 @@ public:
 
 	void filter_test(const cv::Mat &src, cv::Mat &dst)
 	{
+
+		cv::Rect currentdata_ROI=DiscreteFillAndSmoothFilter::roiFinder(src);
+		if((currentdata_ROI.x<dataframe.x) && currentdata_ROI.x != -1)
+		{
+			dataframe.x=currentdata_ROI.x;
+		}
+		if(currentdata_ROI.y<dataframe.y && currentdata_ROI.y != -1)
+		{
+			dataframe.y=currentdata_ROI.y;
+		}
+		if(currentdata_ROI.height>dataframe.height)
+		{
+			dataframe.height=currentdata_ROI.height;
+		}
+		if(currentdata_ROI.width>dataframe.width)
+		{
+			dataframe.width=currentdata_ROI.width;
+		}
+		ROS_INFO("(%i/%i) %ix%i",dataframe.x, dataframe.y, dataframe.width, dataframe.height);
+
+
 		cv::Mat orig=src.clone();
 		dst=src.clone();
 		DiscreteFillAndSmoothFilter::convertKinectRawToSteps(orig,dst);
-		for (int y = 0; y < src.rows; y++)
-		{
-			for (int x = 0; x < src.cols; x++)
-			{
-				if(dst.at<Vec1shrt>(y,x)[0]%4)
-				{
-					dst.at<Vec1shrt>(y,x)[0]-=dst.at<Vec1shrt>(y,x)[0]%4;
-				}
-			}
-		}
-		DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(dst,dst);
+//		for (int y = 0; y < src.rows; y++)
+//		{
+//			for (int x = 0; x < src.cols; x++)
+//			{
+//				if(dst.at<Vec1shrt>(y,x)[0]%((int)dyn0))
+//				{
+//					dst.at<Vec1shrt>(y,x)[0]-=dst.at<Vec1shrt>(y,x)[0]%4;
+//				}
+//			}
+//		}
+		//DiscreteFillAndSmoothFilter::verticalsFinder(dst);
+
+
+		//DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(dst,dst);
 		//myFilter1(dst,dst);
 	}
 
@@ -519,7 +413,12 @@ public:
 
 
 		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
-		if (depth_msg->encoding == "16UC1") //Kinect raw image (millimeters)
+
+
+
+
+		//Kinect raw image (millimeters)
+		if (depth_msg->encoding == "16UC1")
 		{
 			try
 			{
@@ -538,9 +437,26 @@ public:
 			cv::Mat orig_rgb=imgPtrRGB->image.clone();
 
 
+
+			if(fetchStepDistubMap)
+			{
+				fetchStepDistubMap=false;
+				DiscreteFillAndSmoothFilter::captureDifferenceStepMap(orig_depth,stepDisturb,1000);
+			}
+
+
+
+			if(subtractStepDisturbMap)
+			{
+				DiscreteFillAndSmoothFilter::convertKinectRawToSteps(imgPtrDepth->image,imgPtrDepth->image);
+				imgPtrDepth->image-=stepDisturb;
+				DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(imgPtrDepth->image,imgPtrDepth->image);
+			}
+
+			//Fetch New Unknown Values
 			if(fetchValues)
 			{
-				cv::Rect roi=roiFinder(imgPtrRGB->image);
+				cv::Rect roi=DiscreteFillAndSmoothFilter::roiFinder(imgPtrRGB->image);
 
 				int each=50;
 				cv::Mat testzone=orig_depth(roi);
@@ -563,6 +479,7 @@ public:
 				fetchValues=false;
 			}
 
+			//Save Values to disk ...
 			if(outputValues)
 			{
 				std::ofstream outputfile;
@@ -577,6 +494,7 @@ public:
 				outputValues=false;
 
 			}
+
 
 				//Walk through
 				int pixelright=0,pixelamount=0;
@@ -684,15 +602,37 @@ public:
 
 
 
-				if(pcl_filter_test)filter_test(imgPtrDepth->image, imgPtrDepth->image);
+//				if(pcl_filter_test && !pcl_stop_output)DiscreteFillAndSmoothFilter::hardEtchFinder(imgPtrDepth->image,imgPtrRGB->image);
 
+				if(pcl_filter_test && !pcl_stop_output)
+				{
+
+					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(imgPtrDepth->image,imgPtrDepth->image);
+
+
+					DiscreteFillAndSmoothFilter::stepMapBlur(imgPtrDepth->image,imgPtrDepth->image,4);
+					DiscreteFillAndSmoothFilter::stepMapFlatten(imgPtrDepth->image,imgPtrDepth->image,dyn0,dyn1);
+
+
+
+					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(imgPtrDepth->image,imgPtrDepth->image);
+					myFilter1(imgPtrDepth->image,imgPtrDepth->image);
+				}
 
 			//Publish image
 			if(!pcl_stop_output)
 			{
+
+				cv::Mat out=cv::Mat(480,640,CV_32FC1);
+				from16UC1to32FC1(imgPtrDepth->image,out);
+				imgPtrDepth->image=out;
+				imgPtrDepth->encoding="32FC1";
+
+
 				advisor_rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 				advisor_depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 			}
+
 
 
 			if(pcl_value_print)
