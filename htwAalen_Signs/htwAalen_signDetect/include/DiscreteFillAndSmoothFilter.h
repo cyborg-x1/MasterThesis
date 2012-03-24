@@ -6,8 +6,43 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "frequency.hpp"
 #include <iostream>
+#include <vector>
 #include <iterator>
 #include <math.h>
+#include <boost/accumulators/statistics/median.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <pcl/segmentation/extract_polygonal_prism_data.h>
+
+
+class Blob : public cv::Rect
+{
+private:
+	int _pixels;
+
+public:
+	Blob(int x, int y,int width, int height, int pixelsize)
+	{
+		cv::Rect(x,y,width,height);
+	}
+
+	int getPixelSize()
+	{
+		return _pixels;
+	}
+
+	void setPixelSize(int pixelsize)
+	{
+		_pixels=pixelsize;
+	}
+
+	double getBlobComplexity()
+	{
+		return (double)(cv::Rect::width*cv::Rect::height)/(double)(_pixels);
+	}
+};
+
 
 
 class DiscreteFillAndSmoothFilter
@@ -243,14 +278,20 @@ public:
 		}
 	}
 
-	static void hardEtchFinder(cv::Mat &src, cv::Mat &display)
+	static void hardEtchFinder(cv::Mat &src, cv::Mat &display, unsigned short threshold)
 	{
 		int size_x=src.cols, size_y=src.rows;
 
 		display=cv::Mat::zeros(480,640,CV_8UC3);
 
-		DiscreteFillAndSmoothFilter::convertKinectRawToSteps(src,src);
+		   using namespace boost::accumulators;
+		   accumulator_set<double, stats<
+		       tag::median,
+		       tag::mean
 
+		   > > stats;
+
+		   short last_hdiff=0,last_vdiff=0;
 										/*-1 Coll*/
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
@@ -261,6 +302,49 @@ public:
 			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
 
 
+			int len=20;
+			if(y_yfw<(size_y-len))
+			{
+				short left=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
+				short right=src.at<Vec1shrt>(y_yfw+len,x_yfw)[0];
+
+				if(left != 0 && right != 0)
+				{
+					short diff=abs(left-right);
+					if(y_yfw!=0)
+					{
+						display.at<Vec3char>(y_yfw+len/2,x_yfw)[0]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
+						display.at<Vec3char>(y_yfw+len/2,x_yfw)[1]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
+						display.at<Vec3char>(y_yfw+len/2,x_yfw)[2]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
+					}
+					last_vdiff=diff;
+				}
+			}
+
+
+
+
+			if(x_xfw<(size_x-len))
+			{
+				short left=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
+				short right=src.at<Vec1shrt>(y_xfw,x_xfw+len)[0];
+				short diff=abs(left-right);
+
+				if(left != 0 && right != 0)
+				{
+					if(x_xfw!=0)
+					{
+						display.at<Vec3char>(y_xfw,x_xfw+len/2)[0]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
+						display.at<Vec3char>(y_xfw,x_xfw+len/2)[1]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
+						display.at<Vec3char>(y_xfw,x_xfw+len/2)[2]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
+					}
+					last_hdiff=diff;
+				}
+			}
+
+			continue;
+///////////////////////////////////////
+			//HardEtches
 			if(y_yfw<(size_y-1))
 			{
 				short left=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
@@ -268,7 +352,17 @@ public:
 
 				unsigned short diff=abs(left-right);
 
-				display.at<Vec3char>(y_yfw,x_yfw)[2]+=(diff>3)?255:0;
+				if(diff>threshold)
+				{
+					display.at<Vec3char>(y_yfw,x_yfw)[2]=255;
+					display.at<Vec3char>(y_yfw,x_yfw+1)[2]=255;
+					display.at<Vec3char>(y_yfw,x_yfw)[1]=0;
+					display.at<Vec3char>(y_yfw,x_yfw+1)[1]=0;
+					display.at<Vec3char>(y_yfw,x_yfw)[0]=0;
+					display.at<Vec3char>(y_yfw,x_yfw+1)[0]=0;
+				}
+
+
 			}
 
 			if(x_xfw<(size_x-1))
@@ -278,11 +372,18 @@ public:
 
 				unsigned short diff=abs(up-down);
 
-				display.at<Vec3char>(y_xfw,x_xfw)[2]+=(diff>3)?255:0;
+				if(diff>threshold)
+				{
+					display.at<Vec3char>(y_xfw,x_xfw)[2]=255;
+					display.at<Vec3char>(y_xfw,x_xfw+1)[2]=255;
+					display.at<Vec3char>(y_xfw,x_xfw)[1]=0;
+					display.at<Vec3char>(y_xfw,x_xfw+1)[1]=0;
+					display.at<Vec3char>(y_xfw,x_xfw)[0]=0;
+					display.at<Vec3char>(y_xfw,x_xfw+1)[0]=0;
+				}
 			}
 
 		}
-		DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(src,src);
 	}
 
 	/**
@@ -519,6 +620,14 @@ public:
 				}
 			}
 		}
+
+	}
+
+
+
+
+	static std::vector<cv::Rect> blobStepDetector(const cv::Mat &src, cv::Mat &out, unsigned short threshold=4)
+	{
 
 	}
 
