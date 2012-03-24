@@ -60,6 +60,16 @@ class DiscreteFillAndSmoothFilter
 	}scan_direction_t;
 
 
+	typedef enum
+	{
+		fromNAN,
+		toNAN,
+		flat,
+		toDepth,
+		fromDepth
+	}depth_direction;
+
+
 	cv::Mat cache;
 	cv::Mat orig;
 	cv::Mat dst;
@@ -278,7 +288,9 @@ public:
 		}
 	}
 
-	static void hardEtchFinder(cv::Mat &src, cv::Mat &display, unsigned short threshold)
+
+
+	static void hardEtchFinder(cv::Mat &src, cv::Mat &display, unsigned int flat_recog)
 	{
 		int size_x=src.cols, size_y=src.rows;
 
@@ -291,9 +303,18 @@ public:
 
 		   > > stats;
 
-		   short last_hdiff=0,last_vdiff=0;
-										/*-1 Coll*/
-		for (int i = 0; i < (size_x*size_y); i++)
+
+
+
+		depth_direction c_dir=toNAN; //current (active) direction
+		depth_direction lc_dir=toNAN; // last direction
+		unsigned int lc_x=0; //x direction
+		unsigned int lc_y=0; //y direction
+		unsigned int lc_cnt=0; //count of this direction
+
+
+
+		for (int i = 0; i < (size_x*(size_y-1)); i++)
 		{
 			//Forward direction x -
 			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
@@ -302,86 +323,92 @@ public:
 			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
 
 
-			int len=20;
-			if(y_yfw<(size_y-len))
-			{
-				short left=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
-				short right=src.at<Vec1shrt>(y_yfw+len,x_yfw)[0];
 
-				if(left != 0 && right != 0)
-				{
-					short diff=abs(left-right);
-					if(y_yfw!=0)
-					{
-						display.at<Vec3char>(y_yfw+len/2,x_yfw)[0]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
-						display.at<Vec3char>(y_yfw+len/2,x_yfw)[1]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
-						display.at<Vec3char>(y_yfw+len/2,x_yfw)[2]=(abs(diff-last_vdiff)>threshold)?diff*20:0;
-					}
-					last_vdiff=diff;
-				}
+			if(y_yfw==0)
+			{
+				c_dir=toNAN; //current (active) direction
+				lc_dir=toNAN; // last direction
+				lc_x=0; //x direction
+				lc_y=0; //y direction
+				lc_cnt=0; //count of this direction
 			}
 
 
 
 
-			if(x_xfw<(size_x-len))
-			{
-				short left=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
-				short right=src.at<Vec1shrt>(y_xfw,x_xfw+len)[0];
-				short diff=abs(left-right);
 
-				if(left != 0 && right != 0)
-				{
-					if(x_xfw!=0)
-					{
-						display.at<Vec3char>(y_xfw,x_xfw+len/2)[0]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
-						display.at<Vec3char>(y_xfw,x_xfw+len/2)[1]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
-						display.at<Vec3char>(y_xfw,x_xfw+len/2)[2]+=(abs(diff-last_hdiff)>threshold)?diff*20:0;
-					}
-					last_hdiff=diff;
-				}
-			}
+			//Columns
 
-			continue;
-///////////////////////////////////////
-			//HardEtches
 			if(y_yfw<(size_y-1))
 			{
-				short left=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
-				short right=src.at<Vec1shrt>(y_yfw+1,x_yfw)[0];
+				//Values
+				short first=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
+				short second=src.at<Vec1shrt>(y_yfw+1,x_yfw)[0];
+				short diff=first-second;
 
-				unsigned short diff=abs(left-right);
-
-				if(diff>threshold)
+				if(!first && second) //If current is NAN
 				{
-					display.at<Vec3char>(y_yfw,x_yfw)[2]=255;
-					display.at<Vec3char>(y_yfw,x_yfw+1)[2]=255;
-					display.at<Vec3char>(y_yfw,x_yfw)[1]=0;
-					display.at<Vec3char>(y_yfw,x_yfw+1)[1]=0;
-					display.at<Vec3char>(y_yfw,x_yfw)[0]=0;
-					display.at<Vec3char>(y_yfw,x_yfw+1)[0]=0;
+					display.at<Vec3char>(y_yfw,x_yfw)[1]=255; //From NAN
+					c_dir=fromNAN;
+
 				}
+				else if(first && !second) //If next is NAN
+				{
+					display.at<Vec3char>(y_yfw+1,x_yfw)[1]=255; //From NAN
+					c_dir=toNAN;
+
+				}
+				else if(first && second) //If both are good values
+				{
+
+					depth_direction dir;
+					if(diff==0) dir=flat;
+					else if(diff<0) dir=fromDepth;
+					else if(diff>0) dir=toDepth;
+
+
+					if(c_dir==fromNAN)//If last was NAN
+					{
+						lc_dir=dir;
+						c_dir=dir;
+						lc_cnt=0;
+					}
+					else
+					{
+
+						if(c_dir!=dir && dir==lc_dir)
+						{
+							lc_cnt++;
+							if( (c_dir==flat && lc_cnt==flat_recog) || (c_dir!=flat && lc_cnt==2) )
+							{
+								display.at<Vec3char>(lc_y,lc_x)[1]=255;
+								c_dir=lc_dir;
+								lc_cnt=0;
+							}
+
+						}
+						else
+						{
+							lc_dir=dir;
+							lc_x=x_yfw;
+							lc_y=y_yfw;
+							lc_cnt=0;
+						}
+					}
+
+
+
+
+				}
+				
 
 
 			}
 
-			if(x_xfw<(size_x-1))
-			{
-				short up=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
-				short down=src.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
 
-				unsigned short diff=abs(up-down);
 
-				if(diff>threshold)
-				{
-					display.at<Vec3char>(y_xfw,x_xfw)[2]=255;
-					display.at<Vec3char>(y_xfw,x_xfw+1)[2]=255;
-					display.at<Vec3char>(y_xfw,x_xfw)[1]=0;
-					display.at<Vec3char>(y_xfw,x_xfw+1)[1]=0;
-					display.at<Vec3char>(y_xfw,x_xfw)[0]=0;
-					display.at<Vec3char>(y_xfw,x_xfw+1)[0]=0;
-				}
-			}
+
+
 
 		}
 	}
@@ -625,11 +652,11 @@ public:
 
 
 
-
-	static std::vector<cv::Rect> blobStepDetector(const cv::Mat &src, cv::Mat &out, unsigned short threshold=4)
-	{
-
-	}
+//
+//	static std::vector<cv::Rect> blobStepDetector(const cv::Mat &src, cv::Mat &out, unsigned short threshold=4)
+//	{
+//
+//	}
 
 private:
 
