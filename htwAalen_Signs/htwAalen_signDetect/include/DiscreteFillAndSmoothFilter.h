@@ -14,7 +14,7 @@
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <pcl/segmentation/extract_polygonal_prism_data.h>
-
+#include <image_geometry/pinhole_camera_model.h>
 
 class Blob : public cv::Rect
 {
@@ -78,6 +78,8 @@ class DiscreteFillAndSmoothFilter
 	short stored_value;
 
 	typedef cv::Vec<uchar, 3> Vec3char;
+	typedef cv::Vec<uchar, 2> Vec2char;
+	typedef cv::Vec<ushort, 2> Vec2short;
 
 public:
 
@@ -289,6 +291,234 @@ public:
 	}
 
 
+	/**
+	 * This function fills holes in the depth map, but only if the difference
+	 * between the pixel to the pixel on the end of the gap is
+	 * smaller or equal to the amount o pixels between them.
+	 */
+	static void gapStepMapGapFiller(const cv::Mat &src, cv::Mat &dst, uchar max_size)
+	{
+
+		int size_x=src.cols, size_y=src.rows;
+
+		//Copy src into dst ...
+		dst=src.clone();
+
+		//These will contain the the length and the value of the pixel on the end of each gap (for the filler)
+		//First short value: Value of the pixel at the end of the gap
+		//Second: Pixels to be filled
+		cv::Mat h_mark=cv::Mat::zeros(size_y,size_x,CV_16UC2); //horizontal
+		cv::Mat v_mark=cv::Mat::zeros(size_y,size_x,CV_16UC2); //vertical
+
+
+		//These variables will be true after the first pixel in each row/col
+		bool h_start=0; //hor
+		bool v_start=0; //vert
+
+		//These variables will store the coordinates for the begin of the current gap (last non NAN pixel)
+		int h_gap_start=-1;
+		int v_gap_start=-1;
+
+		//These variables are true if we are inside a gap
+		bool h_inside_gap=false;
+		bool v_inside_gap=false;
+
+		//These variables are the counters for the gap length
+		int h_gap_len=0;
+		int v_gap_len=0;
+
+		//Locate the gaps
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Scanning horizontal...
+			int y_H=i/size_x, x_H=i-y_H*size_x;
+
+			//Scanning vertical
+			int x_V=i/size_y, y_V=i-x_V*size_y;
+
+			//Reset the start condition at the begin of each col/row
+			if(x_H==0)
+			{
+				h_start=false;
+				h_gap_len=0;
+				h_inside_gap=false;
+			}
+
+
+
+			//Grab the current values of the source image
+			if(x_H < size_x-1) //Horizontal
+			{
+				//Found first pixel?
+				if(!h_start && src.at<Vec1shrt>(y_H,x_H+1)[0]) h_start=true;
+
+				if(h_start)
+				{
+					short next=src.at<Vec1shrt>(y_H,x_H+1)[0];
+
+					if(!next && !h_inside_gap)//Next pixel is NAN
+					{
+						h_inside_gap=true;
+						h_gap_start=x_H;
+						h_gap_len=0;
+					}
+					else if(h_inside_gap)
+					{
+						h_gap_len++; //increase count
+						if(next!=0)//next pixel is not NAN
+						{
+							h_mark.at<Vec2short>(y_H,h_gap_start)[0]=next; 		//End Value
+						    h_mark.at<Vec2short>(y_H,h_gap_start)[1]=h_gap_len; //Pixels to be filled
+						    h_gap_len=0; //Clear the gap length
+						    h_inside_gap=false; //Back to outside gap
+						}
+					}
+				}
+			}
+
+
+
+			///////////
+			///Vertical
+			///////////
+
+
+			//Reset the start condition at the begin of each col/row
+			if(y_V==0)
+			{
+				v_start=false;
+				v_gap_len=0;
+				v_inside_gap=false;
+			}
+
+			//Grab the current values of the source image
+			if(y_V < size_y-1) //Horizontal
+			{
+				//Found first pixel?
+				if(!v_start && src.at<Vec1shrt>(y_V+1,x_V)[0]) v_start=true;
+
+				if(v_start)
+				{
+					short next=src.at<Vec1shrt>(y_V+1,x_V)[0];
+
+					if(!next && !v_inside_gap)//Next pixel is NAN
+					{
+						v_inside_gap=true;
+						v_gap_start=y_V;
+						v_gap_len=0;
+					}
+					else if(v_inside_gap)
+					{
+						v_gap_len++; //increase count
+						if(next!=0)//next pixel is not NAN
+						{
+							v_mark.at<Vec2short>(v_gap_start,x_V)[0]=next; 		//End Value
+						    v_mark.at<Vec2short>(v_gap_start,x_V)[1]=v_gap_len; //Pixels to be filled
+						    v_gap_len=0; //Clear the gap length
+						    v_inside_gap=false; //Back to outside gap
+						}
+					}
+				}
+			}
+
+		}
+
+
+		///////////////
+		//Fill the gaps
+		///////////////
+
+		h_inside_gap=false;
+		v_inside_gap=false;
+
+
+		//These variables keep the values for the current gap extracted from the gap location map
+		short h_end_val=0;
+		short h_start_val=0;
+		short v_end_val=0;
+	    short v_start_val=0;
+
+	    //These variables store the difference between start and endpixel
+	    short h_gap_diff=0;
+	    short v_gap_diff=0;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Scanning horizontal...
+			int y_H=i/size_x, x_H=i-y_H*size_x;
+
+			//Scanning vertical
+			int x_V=i/size_y, y_V=i-x_V*size_y;
+
+
+
+
+
+
+
+			//HORIZONTAL
+			if(!h_inside_gap && h_mark.at<Vec2short>(y_H,x_H)[0])
+			{
+				//Getting all values of the current positon
+				h_end_val = h_mark.at<Vec2short>(y_H,x_H)[0];
+				h_gap_len = h_mark.at<Vec2short>(y_H,x_H)[1];
+				h_start_val = src.at<Vec1shrt>(y_H,x_H)[0];
+				h_gap_diff = h_end_val-h_start_val;
+				h_gap_start=x_H;
+
+				//Do we fill the gap?
+				//Difference between start and and smaller then gap size?
+				//Gap smaller than max_size parameter?
+				if(h_gap_len>abs(h_gap_diff)&&  abs(h_gap_diff) < 10 && h_gap_len<max_size)
+				h_inside_gap = true;
+			}
+			else if(h_inside_gap)
+			{
+				//Create a gradient according to the current position
+											//DifferenceStartEnd*CurrentPos/GapLength+StartValue
+				int h_fill_pos=x_H-h_gap_start;
+				int value = h_gap_diff*(h_fill_pos)/h_gap_len+h_start_val;
+				dst.at<Vec1shrt>(y_H,x_H)[0]=value;
+				if(h_fill_pos>(h_gap_len-1))h_inside_gap=false;
+			}
+
+			//VERTICAL
+			if(!v_inside_gap && v_mark.at<Vec2short>(y_V,x_V)[0])
+			{
+				//Getting all values of the current positon
+				v_end_val = v_mark.at<Vec2short>(y_V,x_V)[0];
+				v_gap_len = v_mark.at<Vec2short>(y_V,x_V)[1];
+				v_start_val = src.at<Vec1shrt>(y_V,x_V)[0];
+				v_gap_diff = v_end_val-v_start_val;
+				v_gap_start=y_V;
+
+				//Do we fill the gap?
+				//Difference between start and and smaller then gap size?
+				//Gap smaller than max_size parameter?
+				if(v_gap_len>abs(v_gap_diff)&&  abs(v_gap_diff) < 10 && v_gap_len<max_size)
+				v_inside_gap = true;
+			}
+			else if(v_inside_gap)
+			{
+				//Create a gradient according to the current position
+											//DifferenceStartEnd*CurrentPos/GapLength+StartValue
+				int v_fill_pos=y_V-v_gap_start;
+				int value = v_gap_diff*(v_fill_pos)/v_gap_len+v_start_val;
+				dst.at<Vec1shrt>(y_V,x_V)[0]=value;
+				if(v_fill_pos>(v_gap_len-1))v_inside_gap=false;
+			}
+
+
+
+
+
+		}
+
+
+
+	}
+
+
 
 	static void hardEtchFinder(cv::Mat &src, cv::Mat &display, unsigned int flat_recog)
 	{
@@ -311,6 +541,11 @@ public:
 		unsigned int lc_x=0; //x direction
 		unsigned int lc_y=0; //y direction
 		unsigned int lc_cnt=0; //count of this direction
+
+
+
+
+
 
 
 
@@ -649,6 +884,15 @@ public:
 		}
 
 	}
+
+
+	static void normalCalculation(const cv::Mat &src, cv::Mat &dst, image_geometry::PinholeCameraModel &model)
+	{
+		model.binningX();
+
+	}
+
+
 
 
 
