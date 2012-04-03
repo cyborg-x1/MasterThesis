@@ -12,6 +12,7 @@
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
 #include <htwAalen_signDetect/disturbance_filter_calibratorConfig.h>
+#include <image_geometry/pinhole_camera_model.h>
 
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
@@ -339,7 +340,7 @@ public:
 				{
 					short realValue = filter_in.at<Vec1shrt>(y, x)[0];
 					short filteredValue = filter.at<Vec1shrt>(y, x)[0];
-					short maxDifference = pow(realValue, 2) / (480000); //Maximal difference from the real value
+					short maxDifference = pow((float)realValue, 2) / (480000); //Maximal difference from the real value
 					if (realValue>0)
 					{
 						if(abs(realValue - filteredValue) > maxDifference)
@@ -417,6 +418,7 @@ public:
 
 
 
+
 		//Kinect raw image (millimeters)
 		if (depth_msg->encoding == "16UC1")
 		{
@@ -480,20 +482,20 @@ public:
 			}
 
 			//Save Values to disk ...
-			if(outputValues)
-			{
-				std::ofstream outputfile;
-				 outputfile.open ("/home/cyborg-x1/kinect_stats.csv");
-				 outputfile << "Laser;Kinect"<<std::endl;
-				 for(std::vector<cv::Point>::iterator it=statistics.begin(); it != statistics.end(); it++)
-				 {
-					 cv::Point current=*it;
-					 outputfile<<current.x<<";"<<current.y<<std::endl;
-				 }
-				 outputfile.close();
-				outputValues=false;
-
-			}
+//			if(outputValues)
+//			{
+//				std::ofstream outputfile;
+//				 outputfile.open ("/home/cyborg-x1/kinect_stats.csv");
+//				 outputfile << "Laser;Kinect"<<std::endl;
+//				 for(std::vector<cv::Point>::iterator it=statistics.begin(); it != statistics.end(); it++)
+//				 {
+//					 cv::Point current=*it;
+//					 outputfile<<current.x<<";"<<current.y<<std::endl;
+//				 }
+//				 outputfile.close();
+//				outputValues=false;
+//
+//			}
 
 
 				//Walk through
@@ -591,6 +593,8 @@ public:
 					}
 				}
 
+
+
 				//Draw percent of green pixels
 				if(advisor_pcl_overlay==0)//Advisor Image
 				{
@@ -607,22 +611,58 @@ public:
 				if(pcl_filter_test && !pcl_stop_output)
 				{
 
+					cv::Mat normals;
+					image_geometry::PinholeCameraModel model;
+					model.fromCameraInfo(info_msg);
+
+
+					DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image,imgPtrDepth->image, 0, 4600);
+
 					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(imgPtrDepth->image,imgPtrDepth->image);
 
-
 					DiscreteFillAndSmoothFilter::stepMapBlur(imgPtrDepth->image,imgPtrDepth->image,4);
-					DiscreteFillAndSmoothFilter::stepMapFlatten(imgPtrDepth->image,imgPtrDepth->image,dyn0,dyn1);
 
-
+					DiscreteFillAndSmoothFilter::gapStepMapGapFiller(imgPtrDepth->image,imgPtrDepth->image,dyn6);
 
 					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(imgPtrDepth->image,imgPtrDepth->image);
-					myFilter1(imgPtrDepth->image,imgPtrDepth->image);
+
+					DiscreteFillAndSmoothFilter::normalCalculation(imgPtrDepth->image, normals, model);
+
+
+
+
+
+					//myFilter1(imgPtrDepth->image,imgPtrDepth->image);
+
+
+//					cv::rectangle(imgPtrRGB->image,model.rawRoi(),cv::Scalar(255,0,0,0),3,8,0);
+//					cv::circle(imgPtrRGB->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(255,0,0,0),2);
+//
+					cv::circle(imgPtrDepth->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(0),5);
+
+				}
+
+
+
+
+				if(outputValues)
+				{
+					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(imgPtrDepth->image,imgPtrDepth->image);
+					DiscreteFillAndSmoothFilter::stepMapBlur(imgPtrDepth->image,imgPtrDepth->image,4);
+					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(imgPtrDepth->image,imgPtrDepth->image);
+
+					for(int y = 0; y < imgPtrDepth->image.rows; y++)
+					{
+						for(int x = 0; x < imgPtrDepth->image.cols; x++)
+						{
+							if(pcl_highlight_row==y)cout<<(unsigned short)imgPtrDepth->image.at<Vec1shrt>(y,x)[0]<<";"<<(unsigned short)kinect_depth_to_step_LUT[imgPtrDepth->image.at<Vec1shrt>(y,x)[0]]<<endl;
+						}
+					}
 				}
 
 			//Publish image
 			if(!pcl_stop_output)
 			{
-
 				cv::Mat out=cv::Mat(480,640,CV_32FC1);
 				from16UC1to32FC1(imgPtrDepth->image,out);
 				imgPtrDepth->image=out;
@@ -634,6 +674,11 @@ public:
 			}
 
 
+			if(outputValues)
+			{
+				pcl_stop_output=true;
+				outputValues=false;
+			}
 
 			if(pcl_value_print)
 			{
