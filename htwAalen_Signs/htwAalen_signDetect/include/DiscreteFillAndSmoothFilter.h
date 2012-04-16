@@ -2,6 +2,7 @@
 #define DISCRETEFILLANDSMOOTHFILTER_H_
 
 #include <set>
+#include <iomanip>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "frequency.hpp"
@@ -121,8 +122,10 @@ public:
 	 */
 	static void convertKinectRawToSteps(const cv::Mat &src, cv::Mat &dst)
 	{
-		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
+		if(src.type() == CV_16UC1)
 		{
+			dst=src.clone();
+
 			int size_x=src.cols, size_y=src.rows;
 
 			for (int i = 0; i < (size_x*size_y); i++)
@@ -269,24 +272,6 @@ public:
 		else
 		{
 			std::cerr<<"RangeFilter: Wrong depth image type, node supports only CV_16UC1 (Rectified raw!) !"<<std::endl;
-		}
-	}
-
-
-	/**
-	 * This creates a
-	 */
-	static void captureDifferenceStepMap(const cv::Mat &src, cv::Mat &dst, short distance)
-	{
-		if(src.type() == CV_16UC1 && CV_16UC1 == dst.type())
-		{
-
-			DiscreteFillAndSmoothFilter::convertKinectRawToSteps(src,dst);
-			dst=dst-kinect_depth_to_step_LUT[distance];
-		}
-		else
-		{
-			std::cerr<<"Only CV_16UC1 images are supported for in- and output"<<std::endl;
 		}
 	}
 
@@ -519,135 +504,6 @@ public:
 	}
 
 
-
-	static void hardEtchFinder(cv::Mat &src, cv::Mat &display, unsigned int flat_recog)
-	{
-		int size_x=src.cols, size_y=src.rows;
-
-		display=cv::Mat::zeros(480,640,CV_8UC3);
-
-		   using namespace boost::accumulators;
-		   accumulator_set<double, stats<
-		       tag::median,
-		       tag::mean
-
-		   > > stats;
-
-
-
-
-		depth_direction c_dir=toNAN; //current (active) direction
-		depth_direction lc_dir=toNAN; // last direction
-		unsigned int lc_x=0; //x direction
-		unsigned int lc_y=0; //y direction
-		unsigned int lc_cnt=0; //count of this direction
-
-
-
-
-
-
-
-
-		for (int i = 0; i < (size_x*(size_y-1)); i++)
-		{
-			//Forward direction x -
-			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
-
-			//Forward direction y
-			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
-
-
-
-			if(y_yfw==0)
-			{
-				c_dir=toNAN; //current (active) direction
-				lc_dir=toNAN; // last direction
-				lc_x=0; //x direction
-				lc_y=0; //y direction
-				lc_cnt=0; //count of this direction
-			}
-
-
-
-
-
-			//Columns
-
-			if(y_yfw<(size_y-1))
-			{
-				//Values
-				short first=src.at<Vec1shrt>(y_yfw,x_yfw)[0];
-				short second=src.at<Vec1shrt>(y_yfw+1,x_yfw)[0];
-				short diff=first-second;
-
-				if(!first && second) //If current is NAN
-				{
-					display.at<Vec3char>(y_yfw,x_yfw)[1]=255; //From NAN
-					c_dir=fromNAN;
-
-				}
-				else if(first && !second) //If next is NAN
-				{
-					display.at<Vec3char>(y_yfw+1,x_yfw)[1]=255; //From NAN
-					c_dir=toNAN;
-
-				}
-				else if(first && second) //If both are good values
-				{
-
-					depth_direction dir;
-					if(diff==0) dir=flat;
-					else if(diff<0) dir=fromDepth;
-					else if(diff>0) dir=toDepth;
-
-
-					if(c_dir==fromNAN)//If last was NAN
-					{
-						lc_dir=dir;
-						c_dir=dir;
-						lc_cnt=0;
-					}
-					else
-					{
-
-						if(c_dir!=dir && dir==lc_dir)
-						{
-							lc_cnt++;
-							if( (c_dir==flat && lc_cnt==flat_recog) || (c_dir!=flat && lc_cnt==2) )
-							{
-								display.at<Vec3char>(lc_y,lc_x)[1]=255;
-								c_dir=lc_dir;
-								lc_cnt=0;
-							}
-
-						}
-						else
-						{
-							lc_dir=dir;
-							lc_x=x_yfw;
-							lc_y=y_yfw;
-							lc_cnt=0;
-						}
-					}
-
-
-
-
-				}
-				
-
-
-			}
-
-
-
-
-
-
-		}
-	}
-
 	/**
 	 * Blur Filter for a step map
 	 * @param[in] src input depth image (must be a step map!)
@@ -663,7 +519,7 @@ public:
 		int size_x=src.cols, size_y=src.rows;
 
 
-		int th=threshold;
+
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
@@ -682,7 +538,6 @@ public:
 			bool _IsNotRightCol=(x<size_x);
 
 			short avg=curValue;
-			short lS=0;
 			short cnt=1;
 			if(curValue>0)
 			{
@@ -693,9 +548,8 @@ public:
 					if(_IsNotLeftCol)
 					{
 						int C_TL=dst.at<Vec1shrt>(y_xfw-1,x_xfw-1)[0];
-						if(C_TL>0) if(abs(C_TL-curValue)<th)
+						if(C_TL>0) if(abs(C_TL-curValue)<threshold)
 						{
-							if(abs(curValue-C_TL)==1)lS++;
 							avg+=C_TL;
 							cnt++;
 						}
@@ -703,7 +557,7 @@ public:
 
 					//Middle Top Cell
 					int C_TM=dst.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
-					if(C_TM>0) if(abs(C_TM-curValue)<th)
+					if(C_TM>0) if(abs(C_TM-curValue)<threshold)
 					{
 						avg+=C_TM;
 						cnt++;
@@ -713,7 +567,7 @@ public:
 					if(_IsNotRightCol)
 					{
 						int C_TR=dst.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
-						if(C_TR>0) if(abs(C_TR-curValue)<th)
+						if(C_TR>0) if(abs(C_TR-curValue)<threshold)
 						{
 							avg+=C_TR;
 							cnt++;
@@ -728,9 +582,8 @@ public:
 				if(_IsNotLeftCol)
 				{
 					int C_ML=dst.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
-					if(C_ML>0) if(abs(C_ML-curValue)<th)
+					if(C_ML>0) if(abs(C_ML-curValue)<threshold)
 					{
-						if(abs(curValue-C_ML)==1)lS++;
 						avg+=C_ML;
 						cnt++;
 					}
@@ -740,7 +593,7 @@ public:
 				if(_IsNotRightCol)
 				{
 					int C_MR=dst.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
-					if(C_MR>0) if(abs(C_MR-curValue)<th)
+					if(C_MR>0) if(abs(C_MR-curValue)<threshold)
 					{
 						avg+=C_MR;
 						cnt++;
@@ -754,9 +607,8 @@ public:
 					if(_IsNotLeftCol)
 					{
 						int C_BL=dst.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
-						if(C_BL>0) if(abs(C_BL-curValue)<th)
+						if(C_BL>0) if(abs(C_BL-curValue)<threshold)
 						{
-							if(abs(curValue-C_BL)==1)lS++;
 							avg+=C_BL;
 							cnt++;
 						}
@@ -764,7 +616,7 @@ public:
 
 					//Middle Bottom Cell
 					int C_BM=dst.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
-					if(C_BM>0) if(abs(C_BM-curValue)<th)
+					if(C_BM>0) if(abs(C_BM-curValue)<threshold)
 					{
 						avg+=C_BM;
 						cnt++;
@@ -774,7 +626,7 @@ public:
 					if(_IsNotRightCol)
 					{
 						int C_BR=dst.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
-						if(C_BR>0) if(abs(C_BR-curValue)<th)
+						if(C_BR>0) if(abs(C_BR-curValue)<threshold)
 						{
 							avg+=C_BR;
 							cnt++;
@@ -793,102 +645,300 @@ public:
 		}
 	}
 
+
+
+
 	/**
-	 *
+	 * Blur Filter for a step map for a already available neighbormap
+	 * @param[in] src input depth image (must be a step map!)
+	 * @param[in] dst output depth image (step map)
+	 * @param[in] neighbors The neigbormap
 	 */
-	static void stepMapFlatten(const cv::Mat &src, cv::Mat &dst,  unsigned short threshold=4, unsigned short threshold2=8)
+	static void stepMapBlur(const cv::Mat &src, cv::Mat &neigbors ,cv::Mat &dst)
 	{
-		dst=src.clone();
 
+		dst = src.clone();
 		int size_x=src.cols, size_y=src.rows;
-
-		int storeVal=0;
-		int overwriteVal=0;
+		int x,y,avg;
+		uchar nb;
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
-			//Forward direction x -
+			y=i/size_x;
+			x=i-y*size_x;
+			nb=neigbors.at<Vec2char>(y,x)[0];
+			avg=dst.at<Vec1shrt>(y,x)[0];
+
+			if(nb>0)
+			{
+				if(nb&0x01)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x-1)[0];
+				}
+				if(nb&0x02)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x)[0];
+				}
+				if(nb&0x04)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x+1)[0];
+				}
+				if(nb&0x08)
+				{
+					avg+=dst.at<Vec1shrt>(y,x+1)[0];
+				}
+				if(nb&0x10)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x+1)[0];
+				}
+				if(nb&0x20)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x)[0];
+				}
+				if(nb&0x40)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x-1)[0];
+				}
+				if(nb&0x80)
+				{
+					avg+=dst.at<Vec1shrt>(y,x-1)[0];
+				}
+
+
+				//Create average
+				avg/=neigbors.at<Vec2char>(y,x)[1]+1;
+
+				//Save back
+				dst.at<Vec1shrt>(y,x)[0]=avg;
+
+			}
+		}
+	}
+
+
+	/**
+	 * This function creates a neighborhood map of the step map
+	 * In the first value of each pixel there will be a 8 bit value
+	 * indicating which pixel is a close neighbor and belongs to the
+	 * same object as the current pixel.
+	 *
+	 * The are for the following pixels: <br/>
+	 * <table>
+	 * 	<tr>
+	 * 		<td>0</td><td>1</td><td>2</td>
+	 * 	</tr>
+	 * <tr>
+	 * 		<td>7</td><td>X</td><td>3</td>
+	 * 	</tr>
+	 * 	<tr>
+	 * 		<td>6</td><td>5</td><td>4</td>
+	 * 	</tr>
+	 * </table>
+	 *
+	 * <br/>
+	 *
+	 * The second value is the amount of neighbors belonging to the same object as the current pixel.
+	 *
+	 * @param src The source image
+	 * @param map_out The neighborhood map
+	 * @param threshold The biggest difference a pixel from the current can have to be a close neighbor.
+	 *
+	 */
+	static void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, unsigned short threshold=4)
+	{
+
+		map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC2);
+
+		int size_x=src.cols, size_y=src.rows;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+//			//Forward direction x
 			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
 
 			int x=x_xfw;
 			int y=y_xfw;
 
-
-			if(!x_xfw)
-			{
-				storeVal=0;
-			}
-
 			int curValue=src.at<Vec1shrt>(y,x)[0];
-			int diff=abs(curValue-storeVal);
-			int diff2=abs(curValue-overwriteVal);
 
-			if(!storeVal && curValue)
+
+			bool _IsNotTopRow=(y>0);
+			bool _IsNotLeftCol=(x>0);
+			bool _IsNotBottomRow=(y<(size_y-1));
+			bool _IsNotRightCol=(x<(size_x-1));
+
+			short cnt=0;
+			unsigned char neighbors=0;
+
+			if(curValue>0)
 			{
-				storeVal=curValue;
-				overwriteVal=curValue;
-			}
-			else if(curValue)
-			{
-				if(diff<threshold && diff2<threshold2)
+				//Top Row
+				if(_IsNotTopRow)
 				{
-					storeVal=curValue;
-					dst.at<Vec1shrt>(y,x)[0]=overwriteVal;
+					//Left Top Cell
+					if(_IsNotLeftCol)
+					{
+						int C_TL=src.at<Vec1shrt>(y_xfw-1,x_xfw-1)[0]; //Get top left cell
+						if(C_TL>0) if(abs(C_TL-curValue)<threshold) //Bigger then zero and difference to current pixel smaller threshold?
+						{
+							neighbors|=0x01;
+							cnt++;
+						}
+					}
+
+					//Middle Top Cell
+					int C_TM=src.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
+					if(C_TM>0) if(abs(C_TM-curValue)<threshold)
+					{
+						neighbors|=0x02;
+						cnt++;
+					}
+
+					//Right Top Cell
+					if(_IsNotRightCol)
+					{
+						int C_TR=src.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
+						if(C_TR>0) if(abs(C_TR-curValue)<threshold)
+						{
+							neighbors|=0x04;
+							cnt++;
+						}
+					}
+
 				}
-				else
+
+
+				//Middle Row
+
+				//Left Middle Cell
+				if(_IsNotLeftCol)
 				{
-					storeVal=curValue;
-					overwriteVal=curValue;
+					int C_ML=src.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
+					if(C_ML>0) if(abs(C_ML-curValue)<threshold)
+					{
+						neighbors|=0x80;
+						cnt++;
+					}
 				}
-			}
-		}
 
-
-
-		for (int i = 0; i < (size_x*size_y); i++)
-		{
-
-			//Forward direction y
-			int x_yfw=i/size_y, y_yfw=i-x_yfw*size_y;
-			int x=x_yfw;
-			int y=y_yfw;
-
-
-			if(!y_yfw)
-			{
-				storeVal=0;
-			}
-
-			int curValue=src.at<Vec1shrt>(y,x)[0];
-			int diff=abs(curValue-storeVal);
-			int diff2=abs(curValue-overwriteVal);
-
-			if(!storeVal && curValue)
-			{
-				storeVal=curValue;
-				overwriteVal=curValue;
-			}
-			else if(curValue)
-			{
-				if(diff<threshold && diff2<threshold2)
+				//Right Middle Cell
+				if(_IsNotRightCol)
 				{
-					storeVal=curValue;
-					dst.at<Vec1shrt>(y,x)[0]=overwriteVal;
+					int C_MR=src.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
+					if(C_MR>0) if(abs(C_MR-curValue)<threshold)
+					{
+						neighbors|=0x08;
+						cnt++;
+					}
 				}
-				else
-				{
-					storeVal=curValue;
-					overwriteVal=curValue;
-				}
-			}
-		}
 
+				//Bottom Row
+				if(_IsNotBottomRow)
+				{
+					//Left Bottom Cell
+					if(_IsNotLeftCol)
+					{
+						int C_BL=src.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
+						if(C_BL>0) if(abs(C_BL-curValue)<threshold)
+						{
+							neighbors|=0x40;
+							cnt++;
+						}
+					}
+
+					//Middle Bottom Cell
+					int C_BM=src.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
+					if(C_BM>0) if(abs(C_BM-curValue)<threshold)
+					{
+						neighbors|=0x20;
+						cnt++;
+					}
+
+					//Right Bottom Cell
+					if(_IsNotRightCol)
+					{
+						int C_BR=src.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
+						if(C_BR>0) if(abs(C_BR-curValue)<threshold)
+						{
+							neighbors|=0x10;
+							cnt++;
+						}
+					}
+
+				}
+
+			}//IF NOT NULL END
+
+			map_out.at<Vec2char>(y,x)[0]=neighbors;
+			map_out.at<Vec2char>(y,x)[1]=cnt;
+
+		}//FOR END
 	}
 
 
-	static void normalCalculation(const cv::Mat &src, cv::Mat &dst, image_geometry::PinholeCameraModel &model)
+	/**
+	 * This computes the normals out of the depth images, but requires a neighborhood map.
+	 *
+	 */
+	static void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map, cv::Mat &dst, image_geometry::PinholeCameraModel &model)
 	{
-		model.binningX();
+		dst=cv::Mat::zeros(src.rows,src.cols,CV_16UC3);
+		int size_x=src.cols, size_y=src.rows;
+		//bool variables
+		int y,x;
+		uchar nb=0;
+		short avg;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+			nb=neighbor_map.at<Vec2char>(y,x)[0];
+			avg=dst.at<Vec1shrt>(y,x)[0];
+
+			if(nb>0)
+			{
+				if(nb&0x01)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x-1)[0];
+				}
+				if(nb&0x02)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x)[0];
+				}
+				if(nb&0x04)
+				{
+					avg+=dst.at<Vec1shrt>(y-1,x+1)[0];
+				}
+				if(nb&0x08)
+				{
+					avg+=dst.at<Vec1shrt>(y,x+1)[0];
+				}
+				if(nb&0x10)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x+1)[0];
+				}
+				if(nb&0x20)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x)[0];
+				}
+				if(nb&0x40)
+				{
+					avg+=dst.at<Vec1shrt>(y+1,x-1)[0];
+				}
+				if(nb&0x80)
+				{
+					avg+=dst.at<Vec1shrt>(y,x-1)[0];
+				}
+
+
+				//Create average
+				avg/=neighbor_map.at<Vec2char>(y,x)[1]+1;
+
+				//Save back
+				dst.at<Vec1shrt>(y,x)[0]=avg;
+		}
+
 
 	}
 
