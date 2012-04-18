@@ -30,9 +30,5 @@
 	    <remap from="depth_registered/image_rect" to="/DisturbanceFilterCalibrator/advise_depth" />
 	    <remap from="depth_registered/points"     to="calibrator_advise" />
   	</node>      	
-  	<!--
-  	<node pkg="DepthImageAnalyzer" type="DepthImageAnalyzer" name="AdviseAnalyse" output="screen" >
-		<remap from="/depthImage" to="/DisturbanceFilterCalibrator/advise_depth"/>
-	</node>
-	 -->
+  	
 </launch>

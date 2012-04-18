@@ -19,6 +19,8 @@
   <depend package="sensor_msgs"/>
   <depend package="stereo_msgs"/>
   <depend package="tf"/>
+  <depend package="pcl"/>
+  <depend package="pcl_ros"/>
 </package>
 
 

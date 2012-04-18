@@ -67,7 +67,6 @@ class disturbance_filter_calibrator
 	typedef cv::Vec<uchar, 1> Vec1char;
 
 
-	DiscreteFillAndSmoothFilter test;//TODO REMOVE
 
 	//Mat for storage
 	cv::Mat store;
@@ -440,11 +439,11 @@ public:
 
 
 
-			if(fetchStepDistubMap)
-			{
-				fetchStepDistubMap=false;
-				DiscreteFillAndSmoothFilter::captureDifferenceStepMap(orig_depth,stepDisturb,1000);
-			}
+//			if(fetchStepDistubMap)
+//			{
+//				fetchStepDistubMap=false;
+//				DiscreteFillAndSmoothFilter::captureDifferenceStepMap(orig_depth,stepDisturb,1000);
+//			}
 
 
 
@@ -604,42 +603,36 @@ public:
 					cv::putText(imgPtrRGB->image,percent_ss.str(),cv::Point(100,300),cv::FONT_HERSHEY_COMPLEX,5,CV_RGB(255,255,255));
 				}
 
-
-
-//				if(pcl_filter_test && !pcl_stop_output)DiscreteFillAndSmoothFilter::hardEtchFinder(imgPtrDepth->image,imgPtrRGB->image);
-
 				if(pcl_filter_test && !pcl_stop_output)
 				{
 
-					cv::Mat normals;
+					cv::Mat normals, step, neighbors, range, raw;
 					image_geometry::PinholeCameraModel model;
 					model.fromCameraInfo(info_msg);
 
 
-					DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image,imgPtrDepth->image, 0, 4600);
+					DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image, range, 0, 4600);
 
-					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(imgPtrDepth->image,imgPtrDepth->image);
+					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(range,step);
 
-					DiscreteFillAndSmoothFilter::stepMapBlur(imgPtrDepth->image,imgPtrDepth->image,4);
+					DiscreteFillAndSmoothFilter::gapStepMapGapFiller(step,step,40);
 
-					DiscreteFillAndSmoothFilter::gapStepMapGapFiller(imgPtrDepth->image,imgPtrDepth->image,dyn6);
+					DiscreteFillAndSmoothFilter::createRelationNeighbourhoodMap(step,neighbors,4);
 
-					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(imgPtrDepth->image,imgPtrDepth->image);
+					DiscreteFillAndSmoothFilter::stepMapBlur(step,neighbors,step);
 
-					DiscreteFillAndSmoothFilter::normalCalculation(imgPtrDepth->image, normals, model);
+					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(step,imgPtrDepth->image);
 
-
-
-
-
-					//myFilter1(imgPtrDepth->image,imgPtrDepth->image);
+					DiscreteFillAndSmoothFilter::createNormalMap(imgPtrDepth->image, neighbors, normals, model);
 
 
-//					cv::rectangle(imgPtrRGB->image,model.rawRoi(),cv::Scalar(255,0,0,0),3,8,0);
-//					cv::circle(imgPtrRGB->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(255,0,0,0),2);
-//
-					cv::circle(imgPtrDepth->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(0),5);
+					//Bluring real image
+					myFilter1(imgPtrDepth->image,imgPtrDepth->image);
 
+					//cv::rectangle(imgPtrRGB->image,model.rawRoi(),cv::Scalar(255,0,0,0),3,8,0);
+					//cv::circle(imgPtrRGB->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(255,0,0,0),2);
+
+					//cv::circle(imgPtrDepth->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(0),5);
 				}
 
 

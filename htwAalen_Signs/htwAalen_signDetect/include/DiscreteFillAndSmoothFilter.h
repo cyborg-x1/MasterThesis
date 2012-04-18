@@ -746,10 +746,10 @@ public:
 	 */
 	static void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, unsigned short threshold=4)
 	{
+		cv::Mat in=src.clone();
+		map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
 
-		map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC2);
-
-		int size_x=src.cols, size_y=src.rows;
+		int size_x=in.cols, size_y=in.rows;
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
@@ -759,7 +759,7 @@ public:
 			int x=x_xfw;
 			int y=y_xfw;
 
-			int curValue=src.at<Vec1shrt>(y,x)[0];
+			int curValue=in.at<Vec1shrt>(y,x)[0];
 
 
 			bool _IsNotTopRow=(y>0);
@@ -768,7 +768,8 @@ public:
 			bool _IsNotRightCol=(x<(size_x-1));
 
 			short cnt=0;
-			unsigned char neighbors=0;
+			unsigned char neighbors_close=0;
+			unsigned char neighbors_nNAN=0;
 
 			if(curValue>0)
 			{
@@ -778,33 +779,44 @@ public:
 					//Left Top Cell
 					if(_IsNotLeftCol)
 					{
-						int C_TL=src.at<Vec1shrt>(y_xfw-1,x_xfw-1)[0]; //Get top left cell
-						if(C_TL>0) if(abs(C_TL-curValue)<threshold) //Bigger then zero and difference to current pixel smaller threshold?
+						int C_TL=in.at<Vec1shrt>(y_xfw-1,x_xfw-1)[0]; //Get top left cell
+						if(C_TL>0)
 						{
-							neighbors|=0x01;
-							cnt++;
+							neighbors_nNAN|=0x01;
+							if(abs(C_TL-curValue)<threshold) //Bigger then zero and difference to current pixel smaller threshold?
+							{
+								neighbors_close|=0x01;
+								cnt++;
+							}
 						}
 					}
 
 					//Middle Top Cell
-					int C_TM=src.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
-					if(C_TM>0) if(abs(C_TM-curValue)<threshold)
+					int C_TM=in.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
+					if(C_TM>0)
 					{
-						neighbors|=0x02;
-						cnt++;
+						neighbors_nNAN|=0x00;
+						if(abs(C_TM-curValue)<threshold)
+						{
+							neighbors_close|=0x02;
+							cnt++;
+						}
 					}
 
 					//Right Top Cell
 					if(_IsNotRightCol)
 					{
-						int C_TR=src.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
-						if(C_TR>0) if(abs(C_TR-curValue)<threshold)
+						int C_TR=in.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
+						if(C_TR>0)
 						{
-							neighbors|=0x04;
-							cnt++;
+							neighbors_nNAN|=0x00;
+							if(abs(C_TR-curValue)<threshold)
+							{
+								neighbors_close|=0x04;
+								cnt++;
+							}
 						}
 					}
-
 				}
 
 
@@ -813,22 +825,30 @@ public:
 				//Left Middle Cell
 				if(_IsNotLeftCol)
 				{
-					int C_ML=src.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
-					if(C_ML>0) if(abs(C_ML-curValue)<threshold)
+					int C_ML=in.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
+					if(C_ML>0)
 					{
-						neighbors|=0x80;
-						cnt++;
+						neighbors_nNAN|=0x00;
+						if(abs(C_ML-curValue)<threshold)
+						{
+							neighbors_close|=0x80;
+							cnt++;
+						}
 					}
 				}
 
 				//Right Middle Cell
 				if(_IsNotRightCol)
 				{
-					int C_MR=src.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
-					if(C_MR>0) if(abs(C_MR-curValue)<threshold)
+					int C_MR=in.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
+					if(C_MR>0)
 					{
-						neighbors|=0x08;
-						cnt++;
+						neighbors_nNAN|=0x00;
+						if(abs(C_MR-curValue)<threshold)
+						{
+							neighbors_close|=0x08;
+							cnt++;
+						}
 					}
 				}
 
@@ -838,30 +858,42 @@ public:
 					//Left Bottom Cell
 					if(_IsNotLeftCol)
 					{
-						int C_BL=src.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
-						if(C_BL>0) if(abs(C_BL-curValue)<threshold)
+						int C_BL=in.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
+						if(C_BL>0)
 						{
-							neighbors|=0x40;
-							cnt++;
+							neighbors_nNAN|=0x00;
+							if(abs(C_BL-curValue)<threshold)
+							{
+								neighbors_close|=0x40;
+								cnt++;
+							}
 						}
 					}
 
 					//Middle Bottom Cell
-					int C_BM=src.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
-					if(C_BM>0) if(abs(C_BM-curValue)<threshold)
+					int C_BM=in.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
+					if(C_BM>0)
 					{
-						neighbors|=0x20;
-						cnt++;
+						neighbors_nNAN|=0x00;
+						if(abs(C_BM-curValue)<threshold)
+						{
+							neighbors_close|=0x20;
+							cnt++;
+						}
 					}
 
 					//Right Bottom Cell
 					if(_IsNotRightCol)
 					{
-						int C_BR=src.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
-						if(C_BR>0) if(abs(C_BR-curValue)<threshold)
+						int C_BR=in.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
+						if(C_BR>0)
 						{
-							neighbors|=0x10;
-							cnt++;
+							neighbors_nNAN|=0x00;
+							if(abs(C_BR-curValue)<threshold)
+							{
+								neighbors_close|=0x10;
+								cnt++;
+							}
 						}
 					}
 
@@ -869,8 +901,8 @@ public:
 
 			}//IF NOT NULL END
 
-			map_out.at<Vec2char>(y,x)[0]=neighbors;
-			map_out.at<Vec2char>(y,x)[1]=cnt;
+			map_out.at<Vec3char>(y,x)[0]=neighbors_close;
+			map_out.at<Vec3char>(y,x)[1]=cnt;
 
 		}//FOR END
 	}
@@ -887,59 +919,89 @@ public:
 		//bool variables
 		int y,x;
 		uchar nb=0;
-		short avg;
+		short TL=0,TM=0,TR=0,ML=0,MR=0,BL=0,BM=0,BR=0;
+		short center=0, left=0,right=0,top=0,bottom=0;
+		short left_cnt=0,right_cnt=0,top_cnt=0,bottom_cnt=0;
+
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
 			y=i/size_x;
 			x=i-y*size_x;
 			nb=neighbor_map.at<Vec2char>(y,x)[0];
-			avg=dst.at<Vec1shrt>(y,x)[0];
+			center=src.at<Vec1shrt>(y,x)[0];
 
 			if(nb>0)
 			{
-				if(nb&0x01)
+				//Average generation for 9 pixels
+				if(nb&0x01) //TOP LEFT
 				{
-					avg+=dst.at<Vec1shrt>(y-1,x-1)[0];
+					TL=src.at<Vec1shrt>(y-1,x-1)[0];
+					top+=TL;
+					top_cnt++;
+					left+=TL;
+					left_cnt++;
 				}
-				if(nb&0x02)
+				if(nb&0x02) //TOP MIDDLE
 				{
-					avg+=dst.at<Vec1shrt>(y-1,x)[0];
+					TM=src.at<Vec1shrt>(y-1,x)[0];
+					top+=TM;
+					top_cnt++;
 				}
-				if(nb&0x04)
+				if(nb&0x04) //TOP RIGHT
 				{
-					avg+=dst.at<Vec1shrt>(y-1,x+1)[0];
+					TR=src.at<Vec1shrt>(y-1,x+1)[0];
+					top+=TR;
+					top_cnt++;
+					right+=TR;
+					right_cnt++;
 				}
-				if(nb&0x08)
+				if(nb&0x08) //VMIDDLE RIGHT
 				{
-					avg+=dst.at<Vec1shrt>(y,x+1)[0];
+					MR=src.at<Vec1shrt>(y,x+1)[0];
+					right+=MR;
+					right_cnt++;
 				}
-				if(nb&0x10)
+				if(nb&0x10) //BOTTOM RIGHT
 				{
-					avg+=dst.at<Vec1shrt>(y+1,x+1)[0];
+					BR=src.at<Vec1shrt>(y+1,x+1)[0];
+					bottom+=BR;
+					bottom_cnt++;
+					right+=BR;
+					right_cnt++;
 				}
-				if(nb&0x20)
+				if(nb&0x20) //BOTTOM MIDDLE
 				{
-					avg+=dst.at<Vec1shrt>(y+1,x)[0];
+					BM=src.at<Vec1shrt>(y+1,x)[0];
+					bottom+=BM;
+					bottom_cnt++;
 				}
-				if(nb&0x40)
+				if(nb&0x40) //BOTTOM LEFT
 				{
-					avg+=dst.at<Vec1shrt>(y+1,x-1)[0];
+					BL=src.at<Vec1shrt>(y+1,x-1)[0];
+					bottom+=BL;
+					bottom_cnt++;
+
+					left+=BL;
+					left_cnt++;
 				}
-				if(nb&0x80)
+				if(nb&0x80) //VMIDDLE LEFT
 				{
-					avg+=dst.at<Vec1shrt>(y,x-1)[0];
+					ML=src.at<Vec1shrt>(y,x-1)[0];
+
+					left+=ML;
+					left_cnt++;
 				}
 
 
-				//Create average
-				avg/=neighbor_map.at<Vec2char>(y,x)[1]+1;
 
-				//Save back
-				dst.at<Vec1shrt>(y,x)[0]=avg;
+
+				//Save
+				//dst.at<Vec1shrt>(y,x)[0]=avg;
+			}
+
+
 		}
-
-
 	}
 
 
