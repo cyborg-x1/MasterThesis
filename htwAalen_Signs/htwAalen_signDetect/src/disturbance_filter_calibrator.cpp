@@ -606,7 +606,7 @@ public:
 				if(pcl_filter_test && !pcl_stop_output)
 				{
 
-					cv::Mat normals, step, neighbors, range, raw;
+					cv::Mat normals, step, neighbors, range, raw, xy;
 					image_geometry::PinholeCameraModel model;
 					model.fromCameraInfo(info_msg);
 
@@ -617,13 +617,13 @@ public:
 
 					DiscreteFillAndSmoothFilter::gapStepMapGapFiller(step,step,40);
 
-					DiscreteFillAndSmoothFilter::createRelationNeighbourhoodMap(step,neighbors,4);
+					DiscreteFillAndSmoothFilter::createRelationNeighbourhoodMap(step,neighbors,xy,model,4);
 
 					DiscreteFillAndSmoothFilter::stepMapBlur(step,neighbors,step);
 
 					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(step,imgPtrDepth->image);
 
-					DiscreteFillAndSmoothFilter::createNormalMap(imgPtrDepth->image, neighbors, normals, model);
+					DiscreteFillAndSmoothFilter::createNormalMap(imgPtrDepth->image, neighbors, xy, normals);
 
 
 					//Bluring real image

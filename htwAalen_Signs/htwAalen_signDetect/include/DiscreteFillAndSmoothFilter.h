@@ -666,7 +666,7 @@ public:
 		{
 			y=i/size_x;
 			x=i-y*size_x;
-			nb=neigbors.at<Vec2char>(y,x)[0];
+			nb=neigbors.at<Vec3char>(y,x)[0];
 			avg=dst.at<Vec1shrt>(y,x)[0];
 
 			if(nb>0)
@@ -706,7 +706,7 @@ public:
 
 
 				//Create average
-				avg/=neigbors.at<Vec2char>(y,x)[1]+1;
+				avg/=neigbors.at<Vec3char>(y,x)[1]+1;
 
 				//Save back
 				dst.at<Vec1shrt>(y,x)[0]=avg;
@@ -742,12 +742,27 @@ public:
 	 * @param src The source image
 	 * @param map_out The neighborhood map
 	 * @param threshold The biggest difference a pixel from the current can have to be a close neighbor.
+	 * @param xy_coords outputs a map containing x and y coordinates of the pixels (mm)
 	 *
 	 */
-	static void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, unsigned short threshold=4)
+	static void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, cv::Mat &xy_coords, image_geometry::PinholeCameraModel &model,unsigned short threshold=4)
 	{
 		cv::Mat in=src.clone();
 		map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
+		xy_coords=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
+
+
+		//get the model stuff
+		float center_x = model.cx();					//319.5
+		float center_y = model.cy();					//239.5
+
+		 double unit_scaling = uint16_t(1) * 0.001f;
+		 float constant_x = unit_scaling / model.fx();  //0.001 / 525
+		 float constant_y = unit_scaling / model.fy();  //0.001 / 525
+
+
+
+
 
 		int size_x=in.cols, size_y=in.rows;
 
@@ -773,6 +788,9 @@ public:
 
 			if(curValue>0)
 			{
+			   xy_coords.at<Vec1shrt>(y,x)[0] = (x - center_x) * (curValue) / model.fx();
+			   xy_coords.at<Vec1shrt>(y,x)[1] = (y - center_y) * (curValue) / model.fy();
+
 				//Top Row
 				if(_IsNotTopRow)
 				{
@@ -795,7 +813,7 @@ public:
 					int C_TM=in.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
 					if(C_TM>0)
 					{
-						neighbors_nNAN|=0x00;
+						neighbors_nNAN|=0x02;
 						if(abs(C_TM-curValue)<threshold)
 						{
 							neighbors_close|=0x02;
@@ -809,7 +827,7 @@ public:
 						int C_TR=in.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
 						if(C_TR>0)
 						{
-							neighbors_nNAN|=0x00;
+							neighbors_nNAN|=0x04;
 							if(abs(C_TR-curValue)<threshold)
 							{
 								neighbors_close|=0x04;
@@ -828,7 +846,7 @@ public:
 					int C_ML=in.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
 					if(C_ML>0)
 					{
-						neighbors_nNAN|=0x00;
+						neighbors_nNAN|=0x80;
 						if(abs(C_ML-curValue)<threshold)
 						{
 							neighbors_close|=0x80;
@@ -843,7 +861,7 @@ public:
 					int C_MR=in.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
 					if(C_MR>0)
 					{
-						neighbors_nNAN|=0x00;
+						neighbors_nNAN|=0x08;
 						if(abs(C_MR-curValue)<threshold)
 						{
 							neighbors_close|=0x08;
@@ -861,7 +879,7 @@ public:
 						int C_BL=in.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
 						if(C_BL>0)
 						{
-							neighbors_nNAN|=0x00;
+							neighbors_nNAN|=0x40;
 							if(abs(C_BL-curValue)<threshold)
 							{
 								neighbors_close|=0x40;
@@ -874,7 +892,7 @@ public:
 					int C_BM=in.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
 					if(C_BM>0)
 					{
-						neighbors_nNAN|=0x00;
+						neighbors_nNAN|=0x20;
 						if(abs(C_BM-curValue)<threshold)
 						{
 							neighbors_close|=0x20;
@@ -888,7 +906,7 @@ public:
 						int C_BR=in.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
 						if(C_BR>0)
 						{
-							neighbors_nNAN|=0x00;
+							neighbors_nNAN|=0x10;
 							if(abs(C_BR-curValue)<threshold)
 							{
 								neighbors_close|=0x10;
@@ -912,17 +930,19 @@ public:
 	 * This computes the normals out of the depth images, but requires a neighborhood map.
 	 *
 	 */
-	static void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map, cv::Mat &dst, image_geometry::PinholeCameraModel &model)
+	static void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map,const cv::Mat &xy, cv::Mat &dst)
 	{
 		dst=cv::Mat::zeros(src.rows,src.cols,CV_16UC3);
 		int size_x=src.cols, size_y=src.rows;
 		//bool variables
 		int y,x;
 		uchar nb=0;
+		//Storing depth values of neighbor pixels
 		short TL=0,TM=0,TR=0,ML=0,MR=0,BL=0,BM=0,BR=0;
+		//Storing the average depth of each side
 		short center=0, left=0,right=0,top=0,bottom=0;
+		//Storing the amount of suitable pixels for each side
 		short left_cnt=0,right_cnt=0,top_cnt=0,bottom_cnt=0;
-
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
