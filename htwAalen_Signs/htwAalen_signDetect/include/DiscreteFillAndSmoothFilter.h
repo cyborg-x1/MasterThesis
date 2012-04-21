@@ -80,7 +80,8 @@ class DiscreteFillAndSmoothFilter
 
 	typedef cv::Vec<uchar, 3> Vec3char;
 	typedef cv::Vec<uchar, 2> Vec2char;
-	typedef cv::Vec<ushort, 2> Vec2short;
+	typedef cv::Vec<short, 2> Vec2shrt;
+	typedef cv::Vec<short, 3> Vec3shrt;
 
 public:
 
@@ -352,8 +353,8 @@ public:
 						h_gap_len++; //increase count
 						if(next!=0)//next pixel is not NAN
 						{
-							h_mark.at<Vec2short>(y_H,h_gap_start)[0]=next; 		//End Value
-						    h_mark.at<Vec2short>(y_H,h_gap_start)[1]=h_gap_len; //Pixels to be filled
+							h_mark.at<Vec2shrt>(y_H,h_gap_start)[0]=next; 		//End Value
+						    h_mark.at<Vec2shrt>(y_H,h_gap_start)[1]=h_gap_len; //Pixels to be filled
 						    h_gap_len=0; //Clear the gap length
 						    h_inside_gap=false; //Back to outside gap
 						}
@@ -397,8 +398,8 @@ public:
 						v_gap_len++; //increase count
 						if(next!=0)//next pixel is not NAN
 						{
-							v_mark.at<Vec2short>(v_gap_start,x_V)[0]=next; 		//End Value
-						    v_mark.at<Vec2short>(v_gap_start,x_V)[1]=v_gap_len; //Pixels to be filled
+							v_mark.at<Vec2shrt>(v_gap_start,x_V)[0]=next; 		//End Value
+						    v_mark.at<Vec2shrt>(v_gap_start,x_V)[1]=v_gap_len; //Pixels to be filled
 						    v_gap_len=0; //Clear the gap length
 						    v_inside_gap=false; //Back to outside gap
 						}
@@ -442,11 +443,11 @@ public:
 
 
 			//HORIZONTAL
-			if(!h_inside_gap && h_mark.at<Vec2short>(y_H,x_H)[0])
+			if(!h_inside_gap && h_mark.at<Vec2shrt>(y_H,x_H)[0])
 			{
 				//Getting all values of the current positon
-				h_end_val = h_mark.at<Vec2short>(y_H,x_H)[0];
-				h_gap_len = h_mark.at<Vec2short>(y_H,x_H)[1];
+				h_end_val = h_mark.at<Vec2shrt>(y_H,x_H)[0];
+				h_gap_len = h_mark.at<Vec2shrt>(y_H,x_H)[1];
 				h_start_val = src.at<Vec1shrt>(y_H,x_H)[0];
 				h_gap_diff = h_end_val-h_start_val;
 				h_gap_start=x_H;
@@ -468,11 +469,11 @@ public:
 			}
 
 			//VERTICAL
-			if(!v_inside_gap && v_mark.at<Vec2short>(y_V,x_V)[0])
+			if(!v_inside_gap && v_mark.at<Vec2shrt>(y_V,x_V)[0])
 			{
 				//Getting all values of the current positon
-				v_end_val = v_mark.at<Vec2short>(y_V,x_V)[0];
-				v_gap_len = v_mark.at<Vec2short>(y_V,x_V)[1];
+				v_end_val = v_mark.at<Vec2shrt>(y_V,x_V)[0];
+				v_gap_len = v_mark.at<Vec2shrt>(y_V,x_V)[1];
 				v_start_val = src.at<Vec1shrt>(y_V,x_V)[0];
 				v_gap_diff = v_end_val-v_start_val;
 				v_gap_start=y_V;
@@ -706,7 +707,7 @@ public:
 
 
 				//Create average
-				avg/=neigbors.at<Vec3char>(y,x)[1]+1;
+				avg/=neigbors.at<Vec3char>(y,x)[2]+1;
 
 				//Save back
 				dst.at<Vec1shrt>(y,x)[0]=avg;
@@ -738,6 +739,7 @@ public:
 	 * <br/>
 	 *
 	 * The second value is the amount of neighbors belonging to the same object as the current pixel.
+	 * The function also creates a map of the real xy coordinates of the pixels in mm
 	 *
 	 * @param src The source image
 	 * @param map_out The neighborhood map
@@ -755,13 +757,6 @@ public:
 		//get the model stuff
 		float center_x = model.cx();					//319.5
 		float center_y = model.cy();					//239.5
-
-		 double unit_scaling = uint16_t(1) * 0.001f;
-		 float constant_x = unit_scaling / model.fx();  //0.001 / 525
-		 float constant_y = unit_scaling / model.fy();  //0.001 / 525
-
-
-
 
 
 		int size_x=in.cols, size_y=in.rows;
@@ -788,8 +783,9 @@ public:
 
 			if(curValue>0)
 			{
-			   xy_coords.at<Vec1shrt>(y,x)[0] = (x - center_x) * (curValue) / model.fx();
-			   xy_coords.at<Vec1shrt>(y,x)[1] = (y - center_y) * (curValue) / model.fy();
+
+
+
 
 				//Top Row
 				if(_IsNotTopRow)
@@ -920,7 +916,8 @@ public:
 			}//IF NOT NULL END
 
 			map_out.at<Vec3char>(y,x)[0]=neighbors_close;
-			map_out.at<Vec3char>(y,x)[1]=cnt;
+			map_out.at<Vec3char>(y,x)[1]=neighbors_nNAN;
+			map_out.at<Vec3char>(y,x)[2]=cnt;
 
 		}//FOR END
 	}
@@ -930,102 +927,167 @@ public:
 	 * This computes the normals out of the depth images, but requires a neighborhood map.
 	 *
 	 */
-	static void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map,const cv::Mat &xy, cv::Mat &dst)
+	static void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map,const cv::Mat &xy, cv::Mat &normals)
 	{
-		dst=cv::Mat::zeros(src.rows,src.cols,CV_16UC3);
+		normals=cv::Mat::zeros(src.rows,src.cols,CV_16UC3);
+
 		int size_x=src.cols, size_y=src.rows;
 		//bool variables
 		int y,x;
 		uchar nb=0;
-		//Storing depth values of neighbor pixels
-		short TL=0,TM=0,TR=0,ML=0,MR=0,BL=0,BM=0,BR=0;
-		//Storing the average depth of each side
-		short center=0, left=0,right=0,top=0,bottom=0;
-		//Storing the amount of suitable pixels for each side
-		short left_cnt=0,right_cnt=0,top_cnt=0,bottom_cnt=0;
+
+		//Storing the resulting vectors
+		cv::Mat V_top=cv::Mat::zeros(1, 1, CV_16UC3);
+		cv::Mat V_left=cv::Mat::zeros(1, 1, CV_16UC3);
+		cv::Mat V_right=cv::Mat::zeros(1, 1, CV_16UC3);
+		cv::Mat V_bottom=cv::Mat::zeros(1, 1, CV_16UC3);
+
+		//Results
+		cv::Mat V_tr=cv::Mat::zeros(1, 1, CV_16UC1);
+		cv::Mat V_bl=cv::Mat::zeros(1, 1, CV_16UC1);
+
+		short cur=0,cur_x=0,cur_y=0;
+		int cnt=0;
+
+		int top_x,top_y,top_z;
+		int left_x,left_y,left_z;
+		int right_x,right_y,right_z;
+		int bottom_x,bottom_y,bottom_z;
+
 
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
 			y=i/size_x;
 			x=i-y*size_x;
-			nb=neighbor_map.at<Vec2char>(y,x)[0];
-			center=src.at<Vec1shrt>(y,x)[0];
+			nb=neighbor_map.at<Vec3char>(y,x)[0];
 
-			if(nb>0)
-			{
-				//Average generation for 9 pixels
-				if(nb&0x01) //TOP LEFT
-				{
-					TL=src.at<Vec1shrt>(y-1,x-1)[0];
-					top+=TL;
-					top_cnt++;
-					left+=TL;
-					left_cnt++;
-				}
-				if(nb&0x02) //TOP MIDDLE
-				{
-					TM=src.at<Vec1shrt>(y-1,x)[0];
-					top+=TM;
-					top_cnt++;
-				}
-				if(nb&0x04) //TOP RIGHT
-				{
-					TR=src.at<Vec1shrt>(y-1,x+1)[0];
-					top+=TR;
-					top_cnt++;
-					right+=TR;
-					right_cnt++;
-				}
-				if(nb&0x08) //VMIDDLE RIGHT
-				{
-					MR=src.at<Vec1shrt>(y,x+1)[0];
-					right+=MR;
-					right_cnt++;
-				}
-				if(nb&0x10) //BOTTOM RIGHT
-				{
-					BR=src.at<Vec1shrt>(y+1,x+1)[0];
-					bottom+=BR;
-					bottom_cnt++;
-					right+=BR;
-					right_cnt++;
-				}
-				if(nb&0x20) //BOTTOM MIDDLE
-				{
-					BM=src.at<Vec1shrt>(y+1,x)[0];
-					bottom+=BM;
-					bottom_cnt++;
-				}
-				if(nb&0x40) //BOTTOM LEFT
-				{
-					BL=src.at<Vec1shrt>(y+1,x-1)[0];
-					bottom+=BL;
-					bottom_cnt++;
+			cur=src.at<Vec1shrt>(y,x)[0];
+			cur_x=xy.at<Vec2shrt>(y,x)[0];
+			cur_y=xy.at<Vec2shrt>(y,x)[1];
 
-					left+=BL;
-					left_cnt++;
-				}
-				if(nb&0x80) //VMIDDLE LEFT
-				{
-					ML=src.at<Vec1shrt>(y,x-1)[0];
+			cnt=0;
 
-					left+=ML;
-					left_cnt++;
-				}
+			if(!nb)continue;
+
+//			if(((nb&0x22)&&(nb&0x88)))//Check if at least one normal can be built for this pixel
+//			{
+				if((nb&0x02)&&(nb&0x08)) //TOP MIDDLE
+				{
+					top_x=xy.at<Vec2shrt>(y-1,x)[0]-cur_x; //X
+					top_y=xy.at<Vec2shrt>(y-1,x)[1]-cur_y; //Y
+					top_z=src.at<Vec1shrt>(y-1,x)[0]-cur;  //Z
 
 
+		//		}
+		//		if(nb&0x08) //VMIDDLE RIGHT
+		//		{
+					right_x=xy.at<Vec2shrt>(y,x+1)[0]-cur_x;
+					right_y=xy.at<Vec2shrt>(y,x+1)[1]-cur_y;
+					right_z=src.at<Vec1shrt>(y,x+1)[0]-cur;
+
+					//cout<<"TOP: "<<top_x<<" "<<top_y<<" "<<top_z<<endl;
+					//cout<<"RIGHT: "<<right_x<<" "<<right_y<<" "<<right_z<<endl;
+
+
+					normals.at<Vec3shrt>(y,x)[0]+=top_y*right_z-top_z*right_y;
+					normals.at<Vec3shrt>(y,x)[1]+=top_z*right_x-top_x*right_z;
+					normals.at<Vec3shrt>(y,x)[2]+=top_x*right_y-top_y*right_x;
+					cnt++;
+
+				}
+
+				if((nb&0x20)&&(nb&0x80)) //BOTTOM MIDDLE
+				{
+					bottom_x=xy.at<Vec2shrt>(y+1,x)[0]-cur_x;
+					bottom_y=xy.at<Vec2shrt>(y+1,x)[1]-cur_y;
+					bottom_z=src.at<Vec1shrt>(y+1,x)[0]-cur;
+//				}
+//				if(nb&0x80) //VMIDDLE LEFT
+//				{
+					left_x=xy.at<Vec2shrt>(y,x-1)[0]-cur_x;
+					left_y=xy.at<Vec2shrt>(y,x-1)[1]-cur_y;
+					left_z=src.at<Vec1shrt>(y,x-1)[0]-cur;
+
+					//cout<<"BOTTOM: "<<bottom_x<<" "<<bottom_y<<" "<<bottom_z<<endl;
+					//cout<<"LEFT: "<<left_x<<" "<<left_y<<" "<<left_z<<endl;
+
+
+
+					normals.at<Vec3shrt>(y,x)[0]+=bottom_y*left_z-bottom_z*left_y;
+					normals.at<Vec3shrt>(y,x)[1]+=bottom_z*left_x-bottom_x*left_z;
+					normals.at<Vec3shrt>(y,x)[2]+=bottom_x*left_y-bottom_y*left_x;
+
+
+
+					cnt++;
+				}
+
+				if(cnt>1)
+				{
+//					normals.at<Vec3shrt>(y,x)[0]/=cnt;
+//					normals.at<Vec3shrt>(y,x)[1]/=cnt;
+//					normals.at<Vec3shrt>(y,x)[2]/=cnt;
+				}
+
+				//cout<<"300NORMAL: ("<<normals.at<Vec3shrt>(y,x)[0]<<"|"<<normals.at<Vec3shrt>(y,x)[1]<<"|"<<normals.at<Vec3shrt>(y,x)[2]<<")"<<endl;
 
 
 				//Save
 				//dst.at<Vec1shrt>(y,x)[0]=avg;
-			}
+//			}
 
 
-		}
+		}//FOR END
 	}
 
 
 
+	/**
+	 * This creates a viewable image form the normal map
+	 */
+	static void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thresh)
+	{
+
+		dst=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
+		int size_x=src.cols, size_y=src.rows;
+		//bool variables
+		int y,x;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+
+			short g1=(src.at<Vec3shrt>(y,x)[1]);
+			short g2=(src.at<Vec3shrt>(y,x)[2]);
+			short g3=(src.at<Vec3shrt>(y,x)[2]);
+
+
+//			g1*=10;
+//			g2*=10;
+//			g3*=10;
+//
+//			if(g1>255)g1=255;
+//			if(g2>255)g2=255;
+//			if(g3>255)g3=255;
+
+			int angle_x=acos((double)g2/sqrt((double)(g1*g1+g2*g2+g3*g3)))*180/3.14;
+
+			if(abs(angle_x)==thresh)
+			{
+				dst.at<Vec3char>(y,x)[1]=255;
+			}
+			else
+			{
+				dst.at<Vec3char>(y,x)[2]=255;//g3;
+
+			}
+			//dst.at<Vec3char>(y,x)[1]=0;//g2;
+
+
+		}
+	}
 
 
 //

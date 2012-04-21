@@ -28,8 +28,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "kinectStepLUT.h"
-#include "DiscreteFillAndSmoothFilter.h"
+#include "../include/kinectStepLUT.h"
+#include "../include/DiscreteFillAndSmoothFilter.h"
 
 namespace enc = sensor_msgs::image_encodings;
 
@@ -65,6 +65,7 @@ class disturbance_filter_calibrator
 	typedef cv::Vec<uchar, 3> Vec3char;
 	typedef cv::Vec<short, 1> Vec1shrt;
 	typedef cv::Vec<uchar, 1> Vec1char;
+
 
 
 
@@ -411,7 +412,8 @@ public:
 			     const sensor_msgs::CameraInfoConstPtr& info_msg)
 	{
 
-
+		image_geometry::PinholeCameraModel model;
+		model.fromCameraInfo(info_msg);
 		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
 
 
@@ -457,9 +459,16 @@ public:
 			//Fetch New Unknown Values
 			if(fetchValues)
 			{
-				cv::Rect roi=DiscreteFillAndSmoothFilter::roiFinder(imgPtrRGB->image);
+				int roisize_x=imgPtrDepth->image.cols/2;
+				int roisize_y=imgPtrDepth->image.rows/3;
+				int roistart_x=(imgPtrDepth->image.cols-roisize_x)/2;
+				int roistart_y=(imgPtrDepth->image.rows-roisize_y)/2;
 
-				int each=50;
+				cv::Rect roi(roistart_x,roistart_y,roisize_x,roisize_y);
+
+
+
+				int each=1;
 				cv::Mat testzone=orig_depth(roi);
 				int size_x=testzone.cols, size_y=testzone.rows;
 				for (int i = 0; i < (size_x*size_y); i++)
@@ -481,20 +490,20 @@ public:
 			}
 
 			//Save Values to disk ...
-//			if(outputValues)
-//			{
-//				std::ofstream outputfile;
-//				 outputfile.open ("/home/cyborg-x1/kinect_stats.csv");
-//				 outputfile << "Laser;Kinect"<<std::endl;
-//				 for(std::vector<cv::Point>::iterator it=statistics.begin(); it != statistics.end(); it++)
-//				 {
-//					 cv::Point current=*it;
-//					 outputfile<<current.x<<";"<<current.y<<std::endl;
-//				 }
-//				 outputfile.close();
-//				outputValues=false;
-//
-//			}
+			if(outputValues)
+			{
+				std::ofstream outputfile;
+				 outputfile.open ("/home/cyborg-x1/kinect_stats.csv");
+				 outputfile << "Laser;Kinect"<<std::endl;
+				 for(std::vector<cv::Point>::iterator it=statistics.begin(); it != statistics.end(); it++)
+				 {
+					 cv::Point current=*it;
+					 outputfile<<current.x<<";"<<current.y<<std::endl;
+				 }
+				 outputfile.close();
+				outputValues=false;
+
+			}
 
 
 				//Walk through
@@ -607,8 +616,7 @@ public:
 				{
 
 					cv::Mat normals, step, neighbors, range, raw, xy;
-					image_geometry::PinholeCameraModel model;
-					model.fromCameraInfo(info_msg);
+
 
 
 					DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image, range, 0, 4600);
@@ -623,11 +631,13 @@ public:
 
 					DiscreteFillAndSmoothFilter::convertStepsToKinectRaw(step,imgPtrDepth->image);
 
-					DiscreteFillAndSmoothFilter::createNormalMap(imgPtrDepth->image, neighbors, xy, normals);
-
-
 					//Bluring real image
 					myFilter1(imgPtrDepth->image,imgPtrDepth->image);
+
+					//Creating normals
+					DiscreteFillAndSmoothFilter::createNormalMap(imgPtrDepth->image, neighbors, xy, normals);
+
+					DiscreteFillAndSmoothFilter::rgbNormals(normals,imgPtrRGB->image, dyn5);
 
 					//cv::rectangle(imgPtrRGB->image,model.rawRoi(),cv::Scalar(255,0,0,0),3,8,0);
 					//cv::circle(imgPtrRGB->image,cv::Point(model.cx(),model.cy()),5,cv::Scalar(255,0,0,0),2);
