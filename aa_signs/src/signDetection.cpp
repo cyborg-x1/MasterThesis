@@ -45,6 +45,12 @@ class signDetection
 	typedef cv::Vec<short, 1> Vec1shrt;
 	typedef cv::Vec<uchar, 1> Vec1uchar;
 
+
+	//Publishers for output debug info
+	image_transport::ImageTransport it_out;
+	image_transport::CameraPublisher rgb_out;
+	image_transport::CameraPublisher depth_out;
+
 	//Node handle
 	ros::NodeHandlePtr rgb_nh_;
 	boost::shared_ptr<image_transport::ImageTransport> rgb_it_, depth_it_;
@@ -64,9 +70,13 @@ class signDetection
 
 	image_geometry::PinholeCameraModel model_;
 
+	//Surface Angles
+	int max_angle_x;
+	int max_angle_y;
+
 public:
 	signDetection() :
-			nh_("~")
+			nh_("~"), it_out(nh_)
 	{
 		rgb_nh_.reset(new ros::NodeHandle(nh_, "rgb"));
 		ros::NodeHandle depth_nh(nh_, "depth_registered");
@@ -84,9 +94,15 @@ public:
 		sync_->registerCallback(
 				boost::bind(&signDetection::imageCb, this, _1, _2, _3));
 
+
+
+
 		//Advertise out camera
 		reconfCbType = boost::bind(&signDetection::reconfigCb, this, _1, _2);
 		reconfServer.setCallback(reconfCbType);
+
+		rgb_out = it_out.advertiseCamera("out_rgb",1);
+		depth_out = it_out.advertiseCamera("out_depth",1);
 
 		//Subscribe topics
 		sub_depth_.subscribe(*depth_it_, "image_rect", 1);
@@ -102,7 +118,8 @@ public:
 	void reconfigCb(aa_signs::signDetectionConfig &config,
 			uint32_t level)
 	{
-
+		max_angle_x=config.max_angle_x;
+		max_angle_y=config.max_angle_y;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -113,10 +130,6 @@ public:
 		image_geometry::PinholeCameraModel model;
 		model.fromCameraInfo(info_msg);
 		cv_bridge::CvImagePtr imgPtrDepth, imgPtrRGB;
-
-
-
-
 
 		//Kinect raw image (millimeters)
 		if (depth_msg->encoding == "16UC1")
@@ -134,6 +147,12 @@ public:
 			std::cout<<"Got one!"<<std::endl;
 		}
 
+
+
+
+
+		rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
+		depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 	}
 
 };

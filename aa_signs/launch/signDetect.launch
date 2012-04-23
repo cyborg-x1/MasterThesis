@@ -25,10 +25,10 @@
 
 		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
 	    <!-- Explicit topic remappings, shouldn't need all of these -->
-	    <remap from="rgb/image_rect_color"        to="/signDetection/advise_rgb" />
+	    <remap from="rgb/image_rect_color"        to="/signDetection/out_rgb" />
 	    <remap from="rgb/camera_info"             to="/signDetection/camera_info" />
-	    <remap from="depth_registered/image_rect" to="/signDetection/advise_depth" />
-	    <remap from="depth_registered/points"     to="calibrator_advise" />
+	    <remap from="depth_registered/image_rect" to="/signDetection/out_depth" />
+	    <remap from="depth_registered/points"     to="debug_cloud" />
   	</node>
   	
   	
