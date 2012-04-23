@@ -1,0 +1,14 @@
+<package>
+  <description brief="aa_signs">
+
+     aa_signs
+
+  </description>
+  <author>Christian</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/aa_signs</url>
+
+</package>
+
+

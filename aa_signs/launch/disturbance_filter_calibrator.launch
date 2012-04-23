@@ -1,0 +1,34 @@
+<launch>
+
+	<!-- Set compression format to png -->
+	<param name="/comp/compressed/format" value="png" />
+	<param name="/camera/driver/depth_registration" value="true" />	
+	
+
+	<!-- Launch a reconfigure GUI -->
+	<node pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui" output="screen" respawn="true"  />
+	
+	
+	<!-- Start the camera-->
+	<include file="$(find openni_launch)/launch/openni.launch" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" respawn="true"  />
+
+	<!-- Calibrator -->
+	<node pkg="htwAalen_signDetect" type="disturbance_filter_calibrator" name="DisturbanceFilterCalibrator" output="screen" respawn="true" > 
+ 		<remap from="/DisturbanceFilterCalibrator/depth_registered/image_rect" 	to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/DisturbanceFilterCalibrator/rgb/image_rect_color" 		to="/camera/rgb/image_rect_color" />
+ 		<remap from="/DisturbanceFilterCalibrator/rgb/camera_info" 				to="/camera/rgb/camera_info" />
+	</node>
+
+  	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
+
+		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
+	    <!-- Explicit topic remappings, shouldn't need all of these -->
+	    <remap from="rgb/image_rect_color"        to="/DisturbanceFilterCalibrator/advise_rgb" />
+	    <remap from="rgb/camera_info"             to="/DisturbanceFilterCalibrator/camera_info" />
+	    <remap from="depth_registered/image_rect" to="/DisturbanceFilterCalibrator/advise_depth" />
+	    <remap from="depth_registered/points"     to="calibrator_advise" />
+  	</node>      	
+  	
+</launch>
