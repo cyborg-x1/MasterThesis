@@ -11,7 +11,6 @@
 #include <math.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-//#include <htwAalen_signDetect/disturbance_filter_calibratorConfig.h>
 #include <image_geometry/pinhole_camera_model.h>
 
 #include <image_transport/image_transport.h>
@@ -28,8 +27,6 @@
 #include <iostream>
 
 #include "aa_signs/signDetectionConfig.h"
-
-
 namespace enc = sensor_msgs::image_encodings;
 
 
@@ -44,9 +41,9 @@ class signDetection
 
 	//Types for different mats
 	typedef cv::Vec<float, 1> Vec1flt;
-	typedef cv::Vec<uchar, 3> Vec3char;
+	typedef cv::Vec<uchar, 3> Vec3uchar;
 	typedef cv::Vec<short, 1> Vec1shrt;
-	typedef cv::Vec<uchar, 1> Vec1char;
+	typedef cv::Vec<uchar, 1> Vec1uchar;
 
 	//Node handle
 	ros::NodeHandlePtr rgb_nh_;
@@ -95,8 +92,6 @@ public:
 		sub_depth_.subscribe(*depth_it_, "image_rect", 1);
 		sub_rgb_.subscribe(*rgb_it_, "image_rect_color", 1);
 		sub_info_.subscribe(*rgb_nh_, "camera_info", 1);
-
-
 	}
 
 	~signDetection()
@@ -136,11 +131,10 @@ public:
 				ROS_ERROR("cv_bridge exception: %s", e.what());
 				return;
 			}
-
+			std::cout<<"Got one!"<<std::endl;
+		}
 
 	}
-
-};
 
 };
 
