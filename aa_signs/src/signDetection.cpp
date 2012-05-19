@@ -144,7 +144,9 @@ public:
 				ROS_ERROR("cv_bridge exception: %s", e.what());
 				return;
 			}
-			std::cout<<"Got one!"<<std::endl;
+
+
+
 		}
 
 

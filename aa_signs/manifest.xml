@@ -4,7 +4,8 @@
      aa_signs
 
   </description>
-  <author>Christian</author>
+  <author>Christian Holl</author>
+  
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/aa_signs</url>
@@ -23,6 +24,7 @@
   <depend package="tf"/>
   <depend package="pcl"/>
   <depend package="pcl_ros"/>
+  <rosdep name="opencv2.3"/>
 </package>
 
 

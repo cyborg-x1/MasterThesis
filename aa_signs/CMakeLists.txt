@@ -30,9 +30,18 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #target_link_libraries(example ${PROJECT_NAME})
 
 
+######################DEFINITIONS##################################
 
 #Add sources
 rosbuild_add_executable(signDetection src/signDetection.cpp)
+rosbuild_add_library(KinectTools src/KinectTools/KinectTools.cpp)
+
+find_package(OpenCV REQUIRED)
+target_link_libraries(signDetection ${OpenCV_LIBRARIES})
+target_link_libraries(signDetection KinectTools)
+
+rosbuild_add_boost_directories()
+rosbuild_link_boost(signDetection thread regex signals)
 
 #add dynamic reconfigure api
 rosbuild_find_ros_package(dynamic_reconfigure)

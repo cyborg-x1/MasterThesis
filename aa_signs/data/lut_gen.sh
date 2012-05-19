@@ -46,13 +46,13 @@ out2="${out2} -2"
 
 
 #Write header
-echo -e "const short DiscreteFillAndSmoothFilter::kinect_depth_to_step_LUT[] = { $out };" >> ../include/kinectStepLUT
+echo -e "const static short kinect_depth_to_step_LUT[] = { $out };" >> ../include/kinectStepLUT
 
-echo -e "const short DiscreteFillAndSmoothFilter::kinect_depths_count = $j;" >> ../include/kinectStepLUT
+echo -e "const static short kinect_depths_count = $j;" >> ../include/kinectStepLUT
 	
-echo -e "const short DiscreteFillAndSmoothFilter::kinect_step_to_depth_LUT[] = { $out2 };" >> ../include/kinectStepLUT
+echo -e "const static short kinect_step_to_depth_LUT[] = { $out2 };" >> ../include/kinectStepLUT
 
-echo -e "const short DiscreteFillAndSmoothFilter::kinect_steps_count = $i;" >> ../include/kinectStepLUT
+echo -e "const static short kinect_steps_count = $i;" >> ../include/kinectStepLUT
 
 
 indent ../include/kinectStepLUT 
