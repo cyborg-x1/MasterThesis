@@ -7,6 +7,8 @@
 
 #include "KinectTools/KinectTools.hpp"
 
+
+
 namespace KinTo
 {
 	#include "kinectStepLUT"
@@ -230,17 +232,10 @@ namespace KinTo
 		}
 	}
 
-	void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, cv::Mat &xy_coords, image_geometry::PinholeCameraModel &model,unsigned short threshold)
+	void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, unsigned short threshold)
 	{
 		cv::Mat in=src.clone();
 		map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
-		xy_coords=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
-
-
-		//get the model stuff
-		float center_x = model.cx();					//319.5
-		float center_y = model.cy();					//239.5
-
 
 		int size_x=in.cols, size_y=in.rows;
 
@@ -266,9 +261,6 @@ namespace KinTo
 
 			if(curValue>0)
 			{
-
-
-
 
 				//Top Row
 				if(_IsNotTopRow)
@@ -408,7 +400,7 @@ namespace KinTo
 	void stepMapBlur(const cv::Mat &src, cv::Mat &neigbors ,cv::Mat &dst)
 	{
 
-		dst = src.clone();
+		dst = src.clone(); //TODO clone only if not the same
 		int size_x=src.cols, size_y=src.rows;
 		int x,y,avg;
 		uchar nb;
@@ -485,7 +477,7 @@ namespace KinTo
 		cv::Mat V_tr=cv::Mat::zeros(1, 1, CV_16UC1);
 		cv::Mat V_bl=cv::Mat::zeros(1, 1, CV_16UC1);
 
-		short cur=0,cur_x=0,cur_y=0;
+		int cur=0,cur_x=0,cur_y=0;
 		int cnt=0;
 
 		int top_x,top_y,top_z;
@@ -563,9 +555,9 @@ namespace KinTo
 
 				if(cnt>1)
 				{
-//					normals.at<Vec3shrt>(y,x)[0]/=cnt;
-//					normals.at<Vec3shrt>(y,x)[1]/=cnt;
-//					normals.at<Vec3shrt>(y,x)[2]/=cnt;
+					normals.at<Vec3shrt>(y,x)[0]/=cnt;
+					normals.at<Vec3shrt>(y,x)[1]/=cnt;
+					normals.at<Vec3shrt>(y,x)[2]/=cnt;
 				}
 
 				//cout<<"300NORMAL: ("<<normals.at<Vec3shrt>(y,x)[0]<<"|"<<normals.at<Vec3shrt>(y,x)[1]<<"|"<<normals.at<Vec3shrt>(y,x)[2]<<")"<<endl;
@@ -578,5 +570,134 @@ namespace KinTo
 
 		}//FOR END
 	}
+
+	void createXYMap(const cv::Mat &src, const sensor_msgs::CameraInfoConstPtr& info_msg, cv::Mat &xy)
+	{
+		if(src.type() == CV_16UC1)
+		{
+			xy=cv::Mat::zeros(src.rows,src.cols,CV_32SC2);
+
+			image_geometry::PinholeCameraModel model;
+			model.fromCameraInfo(info_msg);
+
+			int center_x = model.cx()*100;					//319.5*100=319500
+			int center_y = model.cy()*100;					//239.5*100=319500
+
+			int constant_x = model.fx()*100;
+			int constant_y = model.fy()*100;
+
+			int size_x=src.cols, size_y=src.rows;
+
+			int x,y;
+			for (int i = 0; i < (size_x*size_y); i++)
+			{
+				y=i/size_x;
+				x=i-y*size_x;
+
+				if(x>0)
+				{
+					short depth=src.at<Vec1shrt>(y,x)[0];
+					xy.at<Vec2shrt>(y,x)[0] = ((x*100 - center_x) * depth) / constant_x;
+					xy.at<Vec2shrt>(y,x)[0] = ((y*100 - center_y) * depth) / constant_y;
+				}
+			}
+		}
+		else
+		{
+			ROS_ERROR("WRONG TYPE: createXYMap");
+		}
+	}
+
+	void blurDepth(const cv::Mat &src, cv::Mat &dst)
+	{
+
+		if (src.type() == CV_16UC1)
+		{
+			cv::Mat filter_in = src.clone();
+			cv::Mat filter=filter_in.clone();
+
+
+			cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
+			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
+			cv::medianBlur(filter, filter, 3);
+
+			//Update non zero pixels
+			for (int y = 0; y < src.rows; y++)
+			{
+				for (int x = 0; x < src.cols; x++)
+				{
+					short realValue = filter_in.at<Vec1shrt>(y, x)[0];
+					short filteredValue = filter.at<Vec1shrt>(y, x)[0];
+					short maxDifference = pow((float)realValue, 2) / (480000); //Maximal difference from the real value
+					if (realValue>0)
+					{
+						if(abs(realValue - filteredValue) > maxDifference)
+						{
+							dst.at<Vec1shrt>(y, x)[0] = realValue;// realValue; //TODO maybe we should use the maxdiff value here?
+						}
+						else
+						{
+							dst.at<Vec1shrt>(y, x)[0] = filteredValue;
+						}
+					}
+				}
+			}
+			cv::medianBlur(dst, dst, 3);
+
+		}
+		else
+		{
+			ROS_ERROR("MyFilter: Wrong Image Type");
+		}
+
+	}
+
+	/**
+	 * This creates a viewable image form the normal map
+	 */
+	static void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thresh)
+	{
+
+		dst=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
+		int size_x=src.cols, size_y=src.rows;
+		//bool variables
+		int y,x;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+
+			short g1=(src.at<Vec3shrt>(y,x)[1]);
+			short g2=(src.at<Vec3shrt>(y,x)[2]);
+			short g3=(src.at<Vec3shrt>(y,x)[2]);
+
+
+//			g1*=10;
+//			g2*=10;
+//			g3*=10;
+//
+//			if(g1>255)g1=255;
+//			if(g2>255)g2=255;
+//			if(g3>255)g3=255;
+
+			int angle_x=acos((double)g2/sqrt((double)(g1*g1+g2*g2+g3*g3)))*180/3.14;
+
+			if(abs(angle_x)==thresh)
+			{
+				dst.at<Vec3char>(y,x)[1]=255;
+			}
+			else
+			{
+				dst.at<Vec3char>(y,x)[2]=255;//g3;
+
+			}
+			//dst.at<Vec3char>(y,x)[1]=0;//g2;
+
+
+		}
+	}
+
 
 } /* namespace KinTo */

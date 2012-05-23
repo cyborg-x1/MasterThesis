@@ -15,6 +15,7 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <image_geometry/pinhole_camera_model.h>
+#include <ros/ros.h>
 
 namespace KinTo
 {
@@ -22,7 +23,6 @@ namespace KinTo
 	typedef cv::Vec<short, 2> Vec2shrt;
 	typedef cv::Vec<short, 3> Vec3shrt;
 	typedef cv::Vec<uchar, 3> Vec3uchar;
-
 
 	/**
 	 * This function converts a kinect depth image into steps
@@ -92,23 +92,39 @@ namespace KinTo
 	 * @param xy_coords outputs a map containing x and y coordinates of the pixels (mm)
 	 *
 	 */
-	void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, cv::Mat &xy_coords, image_geometry::PinholeCameraModel &model,unsigned short threshold=4);
+	void createRelationNeighbourhoodMap(const cv::Mat &src, cv::Mat &map_out, unsigned short threshold=4);
 
 
 	/**
 	 * Blur Filter for a step map for a already available neighbormap
 	 * @param[in] src input depth image (must be a step map!)
-	 * @param[in] dst output depth image (step map)
+	 * @param[out] dst output depth image (step map)
 	 * @param[in] neighbors The neigbormap
 	 */
 	void stepMapBlur(const cv::Mat &src, cv::Mat &neigbors ,cv::Mat &dst);
 
+
+	/**
+	 * This creates a mat with x and y values of the pixels in the depth image
+	 * @param[in] src The kinect raw picture (BLURED!!)
+	 * @param[in] info_msg The camera info message
+	 * @param[out] xy The output (cv::Mat int[2] -> px*100)
+	 */
+	void createXYMap(const cv::Mat &src, const sensor_msgs::CameraInfoConstPtr& info_msg, cv::Mat &xy);
+
 	/**
 	 * This computes the normals out of the depth images, but requires a neighborhood map.
-	 *
+	 * @param[in] src The kinect raw picture (BLURED!!)
+	 * @param[in] neighbor_map neighbor map of the raw picture
+	 * @param[in] xy The xy values of the blured raw image
+	 * @param[out] normals the normal vector values
 	 */
 	void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map, const cv::Mat &xy, cv::Mat &normals);
 
+	/**
+	 *
+	 */
+	void blurDepth(const cv::Mat &src, cv::Mat &dst);
 
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

@@ -11,7 +11,6 @@
 #include <math.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include <image_geometry/pinhole_camera_model.h>
 
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
@@ -25,6 +24,7 @@
 #include <iterator>
 #include <fstream>
 #include <iostream>
+#include <KinectTools/KinectTools.hpp>
 
 #include "aa_signs/signDetectionConfig.h"
 namespace enc = sensor_msgs::image_encodings;
@@ -146,15 +146,24 @@ public:
 			}
 
 
+			cv::Mat origDepth, origRGB, steps, neighbor_map, normals, xy;
 
+			origDepth=imgPtrDepth->image.clone();
+			origRGB=imgPtrRGB->image.clone();
+
+
+			KinTo::convertKinectRawToSteps(origDepth,steps);
+			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
+			KinTo::stepMapBlur(steps,neighbor_map,steps);
+			KinTo::convertStepsToKinectRaw(steps,imgPtrDepth->image);
+			KinTo::blurDepth(imgPtrDepth->image,imgPtrDepth->image);
+			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
+			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
+
+			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
+			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 		}
 
-
-
-
-
-		rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
-		depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 	}
 
 };

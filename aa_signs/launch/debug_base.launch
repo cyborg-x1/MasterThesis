@@ -1,5 +1,4 @@
 <launch>
-
 	<!-- Set compression format to png -->
 	<param name="/comp/compressed/format" value="png" />
 	<param name="/camera/driver/depth_registration" value="true" />	
@@ -13,13 +12,6 @@
 	<include file="$(find openni_launch)/launch/openni.launch" />
 	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" respawn="true"  />
 
-	<!-- SignDetector -->
-	<node pkg="aa_signs" type="signDetection" name="signDetection" output="screen" respawn="true" > 
- 		<remap from="/signDetection/depth_registered/image_rect" 	to="/camera/depth_registered/image_rect_raw" />
- 		<remap from="/signDetection/rgb/image_rect_color" 			to="/camera/rgb/image_rect_color" />
- 		<remap from="/signDetection/rgb/camera_info" 				to="/camera/rgb/camera_info" />
-	</node>
-
   	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
 	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
 
@@ -30,6 +22,4 @@
 	    <remap from="depth_registered/image_rect" to="/signDetection/out_depth" />
 	    <remap from="depth_registered/points"     to="debug_cloud" />
   	</node>
-  	
-  	
 </launch>
