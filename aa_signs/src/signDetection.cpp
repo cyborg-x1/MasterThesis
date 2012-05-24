@@ -159,6 +159,7 @@ public:
 			KinTo::blurDepth(imgPtrDepth->image,imgPtrDepth->image);
 			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
+			KinTo::rgbNormals(normals,imgPtrRGB->image);
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
@@ -175,4 +176,3 @@ int main(int argc, char** argv)
 	ros::spin();
 	return 0;
 }
-

@@ -126,5 +126,10 @@ namespace KinTo
 	 */
 	void blurDepth(const cv::Mat &src, cv::Mat &dst);
 
+	/**
+	 *
+	 */
+	void rgbNormals(const cv::Mat &src, cv::Mat &dst);
+
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

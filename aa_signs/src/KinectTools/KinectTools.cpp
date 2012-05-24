@@ -652,10 +652,29 @@ namespace KinTo
 
 	}
 
+	int heron_sqrt(int f, int max_it)
+	{
+		if(f<0) std::cerr<<"heron_sqrt: ERROR NEGATIVE VALUES ARE UNSUPPORTED!"<<std::endl;
+
+		if(f==1 || f==0)return f;
+
+		//Calculate start value
+		int f_g=(f%2)?f-1:f; //create even number
+		int x=(f*10000/f_g)/2;
+		int x_m=0;
+		for(int i=0; i<max_it;  i++)
+		{
+				x_m=(x+(f*10000)/x)/2; //next Iteration
+				if(x==x_m)break; //End if it's the same value like before
+				x=x_m; //Assign new start value
+		}
+		return x;
+	}
+
 	/**
 	 * This creates a viewable image form the normal map
 	 */
-	static void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thresh)
+	void rgbNormals(const cv::Mat &src, cv::Mat &dst)
 	{
 
 		dst=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
@@ -669,8 +688,8 @@ namespace KinTo
 			x=i-y*size_x;
 
 
-			short g1=(src.at<Vec3shrt>(y,x)[1]);
-			short g2=(src.at<Vec3shrt>(y,x)[2]);
+			short g1=(src.at<Vec3shrt>(y,x)[0]);
+			short g2=(src.at<Vec3shrt>(y,x)[1]);
 			short g3=(src.at<Vec3shrt>(y,x)[2]);
 
 
@@ -682,20 +701,16 @@ namespace KinTo
 //			if(g2>255)g2=255;
 //			if(g3>255)g3=255;
 
-			int angle_x=acos((double)g2/sqrt((double)(g1*g1+g2*g2+g3*g3)))*180/3.14;
 
-			if(abs(angle_x)==thresh)
-			{
-				dst.at<Vec3char>(y,x)[1]=255;
-			}
-			else
-			{
-				dst.at<Vec3char>(y,x)[2]=255;//g3;
-
-			}
-			//dst.at<Vec3char>(y,x)[1]=0;//g2;
+			int vector_length=heron_sqrt((g1*g1)+(g2*g2)+(g3*g3),7);
 
 
+			int angle_x=acos((double)g2/vector_length*180/3.14);
+
+
+				dst.at<Vec3uchar>(y,x)[0]=angle_x;
+				dst.at<Vec3uchar>(y,x)[1]=0;
+				dst.at<Vec3uchar>(y,x)[2]=0;
 		}
 	}
 
