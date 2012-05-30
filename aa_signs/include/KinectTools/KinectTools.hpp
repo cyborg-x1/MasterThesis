@@ -23,7 +23,8 @@ namespace KinTo
 	typedef cv::Vec<short, 2> Vec2shrt;
 	typedef cv::Vec<short, 3> Vec3shrt;
 	typedef cv::Vec<uchar, 3> Vec3uchar;
-
+	typedef cv::Vec<int, 2> Vec2int;
+	typedef cv::Vec<int, 3> Vec3int;
 	/**
 	 * This function converts a kinect depth image into steps
 	 *  @param [in] src The source image (CV_16UC1)
@@ -129,7 +130,16 @@ namespace KinTo
 	/**
 	 *
 	 */
-	void rgbNormals(const cv::Mat &src, cv::Mat &dst);
+	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max);
+
+
+	void createAngleMap(const cv::Mat &normals, cv::Mat &angles);
+
+	void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, cv::Mat &depth_out, int max_size);
+
+	void crossNormalBlur(const cv::Mat &normals, const cv::Mat &neighbors, cv::Mat &normals_out, int max_size);
+
+	void ironFilter(const cv::Mat &depth, const cv::Mat &steps, cv::Mat &depth_out);
 
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

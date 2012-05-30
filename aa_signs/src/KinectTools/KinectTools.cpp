@@ -12,6 +12,7 @@
 namespace KinTo
 {
 	#include "kinectStepLUT"
+	#include "ArcCosValues"
 
 	void convertKinectRawToSteps(const cv::Mat &src, cv::Mat &dst)
 	{
@@ -498,27 +499,17 @@ namespace KinTo
 
 			cnt=0;
 
-			if(!nb)continue;
+			if(!nb || !cur)continue; //If this pixel has no suitable neighbors or if its zero skip it
 
-//			if(((nb&0x22)&&(nb&0x88)))//Check if at least one normal can be built for this pixel
-//			{
 				if((nb&0x02)&&(nb&0x08)) //TOP MIDDLE
 				{
 					top_x=xy.at<Vec2shrt>(y-1,x)[0]-cur_x; //X
 					top_y=xy.at<Vec2shrt>(y-1,x)[1]-cur_y; //Y
 					top_z=src.at<Vec1shrt>(y-1,x)[0]-cur;  //Z
 
-
-		//		}
-		//		if(nb&0x08) //VMIDDLE RIGHT
-		//		{
 					right_x=xy.at<Vec2shrt>(y,x+1)[0]-cur_x;
 					right_y=xy.at<Vec2shrt>(y,x+1)[1]-cur_y;
 					right_z=src.at<Vec1shrt>(y,x+1)[0]-cur;
-
-					//cout<<"TOP: "<<top_x<<" "<<top_y<<" "<<top_z<<endl;
-					//cout<<"RIGHT: "<<right_x<<" "<<right_y<<" "<<right_z<<endl;
-
 
 					normals.at<Vec3shrt>(y,x)[0]+=top_y*right_z-top_z*right_y;
 					normals.at<Vec3shrt>(y,x)[1]+=top_z*right_x-top_x*right_z;
@@ -532,17 +523,10 @@ namespace KinTo
 					bottom_x=xy.at<Vec2shrt>(y+1,x)[0]-cur_x;
 					bottom_y=xy.at<Vec2shrt>(y+1,x)[1]-cur_y;
 					bottom_z=src.at<Vec1shrt>(y+1,x)[0]-cur;
-//				}
-//				if(nb&0x80) //VMIDDLE LEFT
-//				{
+
 					left_x=xy.at<Vec2shrt>(y,x-1)[0]-cur_x;
 					left_y=xy.at<Vec2shrt>(y,x-1)[1]-cur_y;
 					left_z=src.at<Vec1shrt>(y,x-1)[0]-cur;
-
-					//cout<<"BOTTOM: "<<bottom_x<<" "<<bottom_y<<" "<<bottom_z<<endl;
-					//cout<<"LEFT: "<<left_x<<" "<<left_y<<" "<<left_z<<endl;
-
-
 
 					normals.at<Vec3shrt>(y,x)[0]+=bottom_y*left_z-bottom_z*left_y;
 					normals.at<Vec3shrt>(y,x)[1]+=bottom_z*left_x-bottom_x*left_z;
@@ -559,14 +543,6 @@ namespace KinTo
 					normals.at<Vec3shrt>(y,x)[1]/=cnt;
 					normals.at<Vec3shrt>(y,x)[2]/=cnt;
 				}
-
-				//cout<<"300NORMAL: ("<<normals.at<Vec3shrt>(y,x)[0]<<"|"<<normals.at<Vec3shrt>(y,x)[1]<<"|"<<normals.at<Vec3shrt>(y,x)[2]<<")"<<endl;
-
-
-				//Save
-				//dst.at<Vec1shrt>(y,x)[0]=avg;
-//			}
-
 
 		}//FOR END
 	}
@@ -598,7 +574,7 @@ namespace KinTo
 				{
 					short depth=src.at<Vec1shrt>(y,x)[0];
 					xy.at<Vec2shrt>(y,x)[0] = ((x*100 - center_x) * depth) / constant_x;
-					xy.at<Vec2shrt>(y,x)[0] = ((y*100 - center_y) * depth) / constant_y;
+					xy.at<Vec2shrt>(y,x)[1] = ((y*100 - center_y) * depth) / constant_y;
 				}
 			}
 		}
@@ -617,9 +593,17 @@ namespace KinTo
 			cv::Mat filter=filter_in.clone();
 
 
-			cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
-			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
-			cv::medianBlur(filter, filter, 3);
+
+			cv::boxFilter(filter, filter, 3, cv::Size(7, 1), cv::Point(-1, -1), 1, 0);
+			//cv::GaussianBlur(filter,filter,cv::Size(7,1),1,0);
+			cv::boxFilter(filter, filter, 3, cv::Size(7, 1), cv::Point(-1, -1), 1, 0);
+
+			cv::boxFilter(filter, filter, 3, cv::Size(1, 7), cv::Point(-1, -1), 1, 0);
+			cv::boxFilter(filter, filter, 3, cv::Size(1, 7), cv::Point(-1, -1), 1, 0);
+
+			//cv::GaussianBlur(filter,filter,cv::Size(1,7),1,0);
+
+			//cv::medianBlur(filter, filter, 5);
 
 			//Update non zero pixels
 			for (int y = 0; y < src.rows; y++)
@@ -633,7 +617,7 @@ namespace KinTo
 					{
 						if(abs(realValue - filteredValue) > maxDifference)
 						{
-							dst.at<Vec1shrt>(y, x)[0] = realValue;// realValue; //TODO maybe we should use the maxdiff value here?
+							dst.at<Vec1shrt>(y, x)[0] = realValue; //TODO maybe we should use the maxdiff value here?
 						}
 						else
 						{
@@ -642,7 +626,7 @@ namespace KinTo
 					}
 				}
 			}
-			cv::medianBlur(dst, dst, 3);
+			//cv::medianBlur(dst, dst, 5);
 
 		}
 		else
@@ -652,29 +636,72 @@ namespace KinTo
 
 	}
 
-	int heron_sqrt(int f, int max_it)
+	void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, cv::Mat &depth_out, int max_size)
 	{
-		if(f<0) std::cerr<<"heron_sqrt: ERROR NEGATIVE VALUES ARE UNSUPPORTED!"<<std::endl;
 
-		if(f==1 || f==0)return f;
-
-		//Calculate start value
-		int f_g=(f%2)?f-1:f; //create even number
-		int x=(f*10000/f_g)/2;
-		int x_m=0;
-		for(int i=0; i<max_it;  i++)
+		cv::Mat dst=cv::Mat::zeros(depth.rows,depth.cols,CV_16UC1);
+		int size_x=depth.cols, size_y=depth.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
 		{
-				x_m=(x+(f*10000)/x)/2; //next Iteration
-				if(x==x_m)break; //End if it's the same value like before
-				x=x_m; //Assign new start value
+			y=i/size_x;
+			x=i-y*size_x;
+
+			//Sum all pixels
+			int sum=depth.at<Vec1shrt>(y, x)[0];
+
+			//If current pixel is 0 go to next
+			if(sum == 0) continue;
+
+			//Count all values
+			int cnt=1;
+
+			//Get the neighbors of the current pixel
+			uchar cur_nb=neighbors.at<Vec3uchar>(y,x)[0];
+
+			//Usable neighbors
+			bool nb_top=(1<<1)&cur_nb;
+			bool nb_right=(1<<3)&cur_nb;
+			bool nb_bottom=(1<<5)&cur_nb;
+			bool nb_left=(1<<7)&cur_nb;
+
+			for(int j=1; j<=max_size; j++)
+			{
+				if(nb_top)
+				{
+					nb_top=neighbors.at<Vec3uchar>(y-j,x)[0]&(1<<1);
+					sum+=depth.at<Vec1shrt>(y-j, x)[0];
+					cnt++;
+				}
+				if(nb_right)
+				{
+					nb_right=neighbors.at<Vec3uchar>(y,x+j)[0]&(1<<3);
+					sum+=depth.at<Vec1shrt>(y, x+j)[0];
+					cnt++;
+				}
+				if(nb_bottom)
+				{
+					nb_bottom=neighbors.at<Vec3uchar>(y+j,x)[0]&(1<<5);
+					sum+=depth.at<Vec1shrt>(y+j, x)[0];
+					cnt++;
+				}
+				if(nb_left)
+				{
+					nb_left=neighbors.at<Vec3uchar>(y,x-j)[0]&(1<<7);
+					sum+=depth.at<Vec1shrt>(y, x-j)[0];
+					cnt++;
+				}
+
+				//If no suitable neighbor is available exit loop
+				if(nb_left + nb_right + nb_top + nb_bottom == 0) break;
+			}
+
+			dst.at<Vec1shrt>(y,x)=sum/cnt;
 		}
-		return x;
+		depth_out=dst;
 	}
 
-	/**
-	 * This creates a viewable image form the normal map
-	 */
-	void rgbNormals(const cv::Mat &src, cv::Mat &dst)
+	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max)
 	{
 
 		dst=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
@@ -692,27 +719,161 @@ namespace KinTo
 			short g2=(src.at<Vec3shrt>(y,x)[1]);
 			short g3=(src.at<Vec3shrt>(y,x)[2]);
 
-
-//			g1*=10;
-//			g2*=10;
-//			g3*=10;
+			//An approximation for the vector length
+//			  int a, b, c;
 //
-//			if(g1>255)g1=255;
-//			if(g2>255)g2=255;
-//			if(g3>255)g3=255;
+//			  a=std::fabs(g1);
+//			  b=std::fabs(g2);
+//			  c=std::fabs(g3);
+//
+//			  if((b>c)&&(b>a))
+//			  {
+//			    int tmp = b;
+//			    b=a;
+//			    a=tmp;
+//			  }
+//			  else if((c>b)&&(c>a))
+//			  {
+//			    int tmp = c;
+//			    c=a;
+//			    a=tmp;
+//			  }
+
+			  //int vector_length=(a+((b+c)>>1));
 
 
-			int vector_length=heron_sqrt((g1*g1)+(g2*g2)+(g3*g3),7);
+			double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
+			if(!vector_length)continue;
 
+			double angle_x=preCalcCos[(int)(g1*1000/vector_length)+1000];
+			double angle_y=preCalcCos[(int)(g2*1000/vector_length)+1000];
+			//std::cout<<" "<<angle_x<<" "<<g1<<" "<<g2<<" "<<g3<<std::endl;
+			if(((angle_x/100)>=thres_min&&(angle_x/100)<=thres_max) && ((angle_y/100)>=thres_min&&(angle_y/100)<=thres_max))
+			{
+				dst.at<Vec3uchar>(y,x)[0]=100;
+				dst.at<Vec3uchar>(y,x)[1]=100;
+				dst.at<Vec3uchar>(y,x)[2]=100;
+			}
 
-			int angle_x=acos((double)g2/vector_length*180/3.14);
-
-
-				dst.at<Vec3uchar>(y,x)[0]=angle_x;
-				dst.at<Vec3uchar>(y,x)[1]=0;
-				dst.at<Vec3uchar>(y,x)[2]=0;
+//			if((x==319 || x==321) && (y==239 || y==241))
+//			{
+//				dst.at<Vec3uchar>(y,x)[2]=255;
+//			}
+//
+//
+//			if(x==320 && y==240)
+//			{
+//				dst.at<Vec3uchar>(y,x)[2]=255;
+//				std::cout<<"::"<<angle_x<<std::endl;
+//			}
 		}
 	}
 
+	void crossNormalBlur(const cv::Mat &normals, const cv::Mat &neighbors, cv::Mat &normals_out, int max_size)
+	{
+
+		cv::Mat dst=cv::Mat::zeros(normals.rows,normals.cols,CV_16UC3);
+		int size_x=normals.cols, size_y=normals.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+			//Get the neighbors of the current pixel
+			uchar cur_nb=neighbors.at<Vec3uchar>(y,x)[0];
+			if(cur_nb == 0) continue;
+
+
+			//Sum all pixels
+			int sum_x=normals.at<Vec3shrt>(y, x)[0];
+			int sum_y=normals.at<Vec3shrt>(y, x)[1];
+			int sum_z=normals.at<Vec3shrt>(y, x)[2];
+
+			//Count all values
+			int cnt=1;
+
+			//Usable neighbors
+			bool nb_top=(1<<1)&cur_nb;
+			bool nb_right=(1<<3)&cur_nb;
+			bool nb_bottom=(1<<5)&cur_nb;
+			bool nb_left=(1<<7)&cur_nb;
+
+			for(int j=1; j<=max_size; j++)
+			{
+				if(nb_top)
+				{
+					nb_top=neighbors.at<Vec3uchar>(y-j,x)[0]&(1<<1);
+					sum_x+=normals.at<Vec3shrt>(y-j, x)[0];
+					sum_y+=normals.at<Vec3shrt>(y-j, x)[1];
+					sum_z+=normals.at<Vec3shrt>(y-j, x)[2];
+					cnt++;
+				}
+				if(nb_right)
+				{
+					nb_right=neighbors.at<Vec3uchar>(y,x+j)[0]&(1<<3);
+					sum_x+=normals.at<Vec3shrt>(y, x+j)[0];
+					sum_y+=normals.at<Vec3shrt>(y, x+j)[1];
+					sum_z+=normals.at<Vec3shrt>(y, x+j)[2];
+					cnt++;
+				}
+				if(nb_bottom)
+				{
+					nb_bottom=neighbors.at<Vec3uchar>(y+j,x)[0]&(1<<5);
+					sum_x+=normals.at<Vec3shrt>(y+j, x)[0];
+					sum_y+=normals.at<Vec3shrt>(y+j, x)[1];
+					sum_z+=normals.at<Vec3shrt>(y+j, x)[2];
+					cnt++;
+				}
+				if(nb_left)
+				{
+					nb_left=neighbors.at<Vec3uchar>(y,x-j)[0]&(1<<7);
+					sum_x+=normals.at<Vec3shrt>(y, x-j)[0];
+					sum_y+=normals.at<Vec3shrt>(y, x-j)[1];
+					sum_z+=normals.at<Vec3shrt>(y, x-j)[2];
+					cnt++;
+				}
+
+				//If no suitable neighbor is available exit loop
+				if(nb_left + nb_right + nb_top + nb_bottom == 0) break;
+			}
+
+			dst.at<Vec3shrt>(y,x)[0]=sum_x/cnt;
+			dst.at<Vec3shrt>(y,x)[1]=sum_y/cnt;
+			dst.at<Vec3shrt>(y,x)[2]=sum_z/cnt;
+		}
+		normals_out=dst;
+	}
+
+	void ironFilter(const cv::Mat &depth, const cv::Mat &steps, cv::Mat &depth_out, uint8_t iron_len, uint8_t max_diff)
+	{
+
+	}
+
+	void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
+	{
+		angles=cv::Mat::zeros(normals.rows,normals.cols,CV_16UC2);
+		int size_x=normals.cols, size_y=normals.rows;
+		//bool variables
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+
+			short g1=(normals.at<Vec3shrt>(y,x)[0]);
+			short g2=(normals.at<Vec3shrt>(y,x)[1]);
+			short g3=(normals.at<Vec3shrt>(y,x)[2]);
+
+
+
+			double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
+			if(!vector_length)continue;
+
+			double angle_x=preCalcCos[(int)(g1*1000/vector_length)+1000];
+			double angle_y=preCalcCos[(int)(g2*1000/vector_length)+1000];
+		}
+	}
 
 } /* namespace KinTo */

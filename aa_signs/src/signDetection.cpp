@@ -39,11 +39,6 @@ class signDetection
 	dynamic_reconfigure::Server<aa_signs::signDetectionConfig> reconfServer;
 	dynamic_reconfigure::Server<aa_signs::signDetectionConfig>::CallbackType reconfCbType;
 
-	//Types for different mats
-	typedef cv::Vec<float, 1> Vec1flt;
-	typedef cv::Vec<uchar, 3> Vec3uchar;
-	typedef cv::Vec<short, 1> Vec1shrt;
-	typedef cv::Vec<uchar, 1> Vec1uchar;
 
 
 	//Publishers for output debug info
@@ -71,8 +66,8 @@ class signDetection
 	image_geometry::PinholeCameraModel model_;
 
 	//Surface Angles
-	int max_angle_x;
-	int max_angle_y;
+	int min_angle;
+	int max_angle;
 
 public:
 	signDetection() :
@@ -118,8 +113,8 @@ public:
 	void reconfigCb(aa_signs::signDetectionConfig &config,
 			uint32_t level)
 	{
-		max_angle_x=config.max_angle_x;
-		max_angle_y=config.max_angle_y;
+		min_angle=config.min_angle;
+		max_angle=config.max_angle;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -146,21 +141,20 @@ public:
 			}
 
 
-			cv::Mat origDepth, origRGB, steps, neighbor_map, normals, xy;
-
-			origDepth=imgPtrDepth->image.clone();
-			origRGB=imgPtrRGB->image.clone();
+			cv::Mat steps, neighbor_map, normals, xy;
 
 
-			KinTo::convertKinectRawToSteps(origDepth,steps);
+			KinTo::RangeFilter(imgPtrDepth->image,imgPtrDepth->image,0,4800);
+			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);
 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
-			KinTo::stepMapBlur(steps,neighbor_map,steps);
-			KinTo::convertStepsToKinectRaw(steps,imgPtrDepth->image);
-			KinTo::blurDepth(imgPtrDepth->image,imgPtrDepth->image);
+			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,4);
+
 			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
-			KinTo::rgbNormals(normals,imgPtrRGB->image);
 
+			KinTo::rgbNormals(normals,imgPtrRGB->image,min_angle,max_angle);
+
+			cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 		}
