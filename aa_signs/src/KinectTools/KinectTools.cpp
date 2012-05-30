@@ -852,7 +852,7 @@ namespace KinTo
 
 	void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
 	{
-		angles=cv::Mat::zeros(normals.rows,normals.cols,CV_16UC2);
+		angles=cv::Mat::zeros(normals.rows,normals.cols,CV_8UC3);
 		int size_x=normals.cols, size_y=normals.rows;
 		//bool variables
 		int y,x;
@@ -871,8 +871,9 @@ namespace KinTo
 			double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
 			if(!vector_length)continue;
 
-			double angle_x=preCalcCos[(int)(g1*1000/vector_length)+1000];
-			double angle_y=preCalcCos[(int)(g2*1000/vector_length)+1000];
+			angles.at<Vec3uchar>(y,x)[0]=preCalcCos[(int)(g1*1000/vector_length)+1000]/100;
+			angles.at<Vec3uchar>(y,x)[1]=preCalcCos[(int)(g2*1000/vector_length)+1000]/100;
+			angles.at<Vec3uchar>(y,x)[2]=preCalcCos[(int)(g3*1000/vector_length)+1000]/100;
 		}
 	}
 

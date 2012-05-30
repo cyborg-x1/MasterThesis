@@ -141,7 +141,7 @@ public:
 			}
 
 
-			cv::Mat steps, neighbor_map, normals, xy;
+			cv::Mat steps, neighbor_map, normals, xy,angles;
 
 
 			KinTo::RangeFilter(imgPtrDepth->image,imgPtrDepth->image,0,4800);
@@ -152,9 +152,9 @@ public:
 			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
 
-			KinTo::rgbNormals(normals,imgPtrRGB->image,min_angle,max_angle);
-
-			cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
+//			KinTo::rgbNormals(normals,imgPtrRGB->image,min_angle,max_angle);
+			KinTo::createAngleMap(normals,imgPtrRGB->image);
+		//	cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 		}
