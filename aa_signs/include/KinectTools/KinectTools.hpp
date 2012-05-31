@@ -132,7 +132,6 @@ namespace KinTo
 	 */
 	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max);
 
-
 	void createAngleMap(const cv::Mat &normals, cv::Mat &angles);
 
 	void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, cv::Mat &depth_out, int max_size);
@@ -140,6 +139,12 @@ namespace KinTo
 	void crossNormalBlur(const cv::Mat &normals, const cv::Mat &neighbors, cv::Mat &normals_out, int max_size);
 
 	void ironFilter(const cv::Mat &depth, const cv::Mat &steps, cv::Mat &depth_out);
+
+	void crossAnglesBlur(const cv::Mat &angles, const cv::Mat &neighbors, cv::Mat &angles_out, int max_size);
+
+	void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out, unsigned int x_angle_min,unsigned int x_angle_max,unsigned int y_angle_min,unsigned int y_angle_max,unsigned int z_angle_min,unsigned int z_angle_max, bool binary=true);
+
+	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z);
 
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

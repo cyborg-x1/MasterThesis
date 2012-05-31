@@ -66,8 +66,8 @@ class signDetection
 	image_geometry::PinholeCameraModel model_;
 
 	//Surface Angles
-	int min_angle;
-	int max_angle;
+	int x_angle_min, x_angle_max,  y_angle_min, y_angle_max, z_angle_min, z_angle_max, blur_depth, blur_angles;
+	int x_min, x_max,  y_min, y_max, z_min, z_max;
 
 public:
 	signDetection() :
@@ -113,8 +113,23 @@ public:
 	void reconfigCb(aa_signs::signDetectionConfig &config,
 			uint32_t level)
 	{
-		min_angle=config.min_angle;
-		max_angle=config.max_angle;
+		x_angle_min=config.x_angle_min;
+		x_angle_max=config.x_angle_max;
+		y_angle_min=config.y_angle_min;
+		y_angle_max=config.y_angle_max;
+		z_angle_min=config.z_angle_min;
+		z_angle_max=config.z_angle_max;
+
+
+		x_min=config.x_min;
+		x_max=config.x_max;
+		y_min=config.y_min;
+		y_max=config.y_max;
+		z_min=config.z_min;
+		z_max=config.z_max;
+
+		blur_angles=config.blur_angles;
+		blur_depth=config.blur_depth;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -143,18 +158,24 @@ public:
 
 			cv::Mat steps, neighbor_map, normals, xy,angles;
 
+			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
+			KinTo::XYZrangeFilter(imgPtrDepth->image,xy,imgPtrDepth->image,x_min, x_max,  y_min, y_max, z_min, z_max);
 
-			KinTo::RangeFilter(imgPtrDepth->image,imgPtrDepth->image,0,4800);
 			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);
 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
-			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,4);
+			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,blur_depth);
 
-			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
+
 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
 
-//			KinTo::rgbNormals(normals,imgPtrRGB->image,min_angle,max_angle);
-			KinTo::createAngleMap(normals,imgPtrRGB->image);
-		//	cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
+			KinTo::createAngleMap(normals,angles);
+			KinTo::crossAnglesBlur(angles,neighbor_map,angles,blur_angles);
+			KinTo::anglesFilter(angles, angles, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max);
+
+			imgPtrRGB->image=angles;
+			cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
+
+
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
 		}

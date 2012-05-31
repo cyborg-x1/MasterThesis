@@ -551,7 +551,7 @@ namespace KinTo
 	{
 		if(src.type() == CV_16UC1)
 		{
-			xy=cv::Mat::zeros(src.rows,src.cols,CV_32SC2);
+			xy=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
 
 			image_geometry::PinholeCameraModel model;
 			model.fromCameraInfo(info_msg);
@@ -877,4 +877,138 @@ namespace KinTo
 		}
 	}
 
+	void crossAnglesBlur(const cv::Mat &angles, const cv::Mat &neighbors, cv::Mat &angles_out, int max_size)
+	{
+
+		cv::Mat dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+		int size_x=angles.cols, size_y=angles.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+			//Get the neighbors of the current pixel
+			uchar cur_nb=neighbors.at<Vec3uchar>(y,x)[0];
+			if(cur_nb == 0) continue;
+
+
+			//Sum all pixels
+			int sum_x=angles.at<Vec3uchar>(y, x)[0];
+			int sum_y=angles.at<Vec3uchar>(y, x)[1];
+			int sum_z=angles.at<Vec3uchar>(y, x)[2];
+
+			//Count all values
+			int cnt=1;
+
+			//Usable neighbors
+			bool nb_top=(1<<1)&cur_nb;
+			bool nb_right=(1<<3)&cur_nb;
+			bool nb_bottom=(1<<5)&cur_nb;
+			bool nb_left=(1<<7)&cur_nb;
+
+			for(int j=1; j<=max_size; j++)
+			{
+				if(nb_top)
+				{
+					nb_top=neighbors.at<Vec3uchar>(y-j,x)[0]&(1<<1);
+					sum_x+=angles.at<Vec3uchar>(y-j, x)[0];
+					sum_y+=angles.at<Vec3uchar>(y-j, x)[1];
+					sum_z+=angles.at<Vec3uchar>(y-j, x)[2];
+					cnt++;
+				}
+				if(nb_right)
+				{
+					nb_right=neighbors.at<Vec3uchar>(y,x+j)[0]&(1<<3);
+					sum_x+=angles.at<Vec3uchar>(y, x+j)[0];
+					sum_y+=angles.at<Vec3uchar>(y, x+j)[1];
+					sum_z+=angles.at<Vec3uchar>(y, x+j)[2];
+					cnt++;
+				}
+				if(nb_bottom)
+				{
+					nb_bottom=neighbors.at<Vec3uchar>(y+j,x)[0]&(1<<5);
+					sum_x+=angles.at<Vec3uchar>(y+j, x)[0];
+					sum_y+=angles.at<Vec3uchar>(y+j, x)[1];
+					sum_z+=angles.at<Vec3uchar>(y+j, x)[2];
+					cnt++;
+				}
+				if(nb_left)
+				{
+					nb_left=neighbors.at<Vec3uchar>(y,x-j)[0]&(1<<7);
+					sum_x+=angles.at<Vec3uchar>(y, x-j)[0];
+					sum_y+=angles.at<Vec3uchar>(y, x-j)[1];
+					sum_z+=angles.at<Vec3uchar>(y, x-j)[2];
+					cnt++;
+				}
+
+				//If no suitable neighbor is available exit loop
+				if(nb_left + nb_right + nb_top + nb_bottom == 0) break;
+			}
+
+			dst.at<Vec3uchar>(y,x)[0]=sum_x/cnt;
+			dst.at<Vec3uchar>(y,x)[1]=sum_y/cnt;
+			dst.at<Vec3uchar>(y,x)[2]=sum_z/cnt;
+		}
+		angles_out=dst;
+	}
+
+	void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out, unsigned int x_angle_min,unsigned int x_angle_max,unsigned int y_angle_min,unsigned int y_angle_max,unsigned int z_angle_min,unsigned int z_angle_max, bool binary)
+	{
+		cv::Mat dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+		int size_x=angles.cols, size_y=angles.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+			unsigned int a_x=angles.at<Vec3uchar>(y,x)[0];
+			unsigned int a_y=angles.at<Vec3uchar>(y,x)[1];
+			unsigned int a_z=angles.at<Vec3uchar>(y,x)[2];
+
+			if(a_x >= x_angle_min && a_x <= x_angle_max && a_y >= y_angle_min && a_y <= y_angle_max && a_z >= z_angle_min && a_z <= z_angle_max )
+			{
+				if(!binary)
+				{
+					dst.at<Vec3uchar>(y,x)[0]=a_x;
+					dst.at<Vec3uchar>(y,x)[1]=a_y;
+					dst.at<Vec3uchar>(y,x)[2]=a_z;
+				}
+				else
+				{
+					dst.at<Vec3uchar>(y,x)[0]=255;
+					dst.at<Vec3uchar>(y,x)[1]=255;
+					dst.at<Vec3uchar>(y,x)[2]=255;
+				}
+			}
+		}
+		angles_out=dst;
+	}
+
+	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z)
+	{
+
+		int size_x=depth.cols, size_y=depth.rows;
+		depth_out=depth.clone();
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+
+			short cur_z=depth_out.at<Vec1shrt>(y,x)[0];
+
+
+			if(cur_z == 0) continue; //If depth == 0 continue with next pixel
+
+			int cur_x=xy.at<Vec2shrt>(y,x)[0];
+			int cur_y=xy.at<Vec2shrt>(y,x)[1];
+
+			if(!((cur_x >= min_x && cur_x <= max_x)&&(cur_y >= min_y && cur_y <= max_y)&&(cur_z >= min_z && cur_z <= max_z)))
+			{
+				depth_out.at<Vec1shrt>(y,x)[0]=0;
+			}
+		}
+	}
 } /* namespace KinTo */
