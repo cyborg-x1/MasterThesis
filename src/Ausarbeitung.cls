@@ -27,7 +27,7 @@
 % Load the base class and required packages.
 \LoadClassWithOptions{scrbook}
   \RequirePackage{pgf}
-  \RequirePackage[german]{babel}
+  \RequirePackage[english]{babel}
   \RequirePackage[right]{eurosym}
   \RequirePackage[automark]{scrpage2}
   \RequirePackage{times}
@@ -71,7 +71,7 @@
 
 \def\MatrikelTok{\@empty}
 \def\EMailTok{}
-\def\BetreuerOneTok{\@empty}
+\def\BetreuerOneTok{\@empty} 
 \def\BetreuerTwoTok{\@empty}
 \def\AbgabeDatumTok{\@empty}
 \def\FakultaetTok{\@empty}
