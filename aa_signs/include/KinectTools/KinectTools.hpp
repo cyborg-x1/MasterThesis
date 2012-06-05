@@ -22,6 +22,7 @@ namespace KinTo
 	typedef cv::Vec<short, 1> Vec1shrt;
 	typedef cv::Vec<short, 2> Vec2shrt;
 	typedef cv::Vec<short, 3> Vec3shrt;
+	typedef cv::Vec<uchar, 1> Vec1uchar;
 	typedef cv::Vec<uchar, 3> Vec3uchar;
 	typedef cv::Vec<int, 2> Vec2int;
 	typedef cv::Vec<int, 3> Vec3int;
@@ -146,5 +147,61 @@ namespace KinTo
 
 	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z);
 
+	class BlobSurfaces
+	{
+
+		//Directions
+		typedef enum
+		{
+			none=0,
+			top_left=1,
+			top=2,
+			top_right=3,
+			right=4,
+			bottom_right=5,
+			bottom=6,
+			bottom_left=7,
+			left=8
+		} Direction;
+
+
+
+
+		//This contains region borders which are already searched
+		cv::Mat regions;
+
+		//Size of the picture
+		int size_x, size_y;
+
+		//The input mat
+		cv::Mat in;
+
+		//X and Y Of the seek process
+		int y,x;
+
+		int min_x,min_y;
+		int max_x,max_y;
+
+		std::vector<cv::Rect> &rois;
+
+		int threshold;
+
+	public:
+
+		BlobSurfaces(const cv::Mat &angles_ok, std::vector<cv::Rect> &ROIs, int threshold);
+
+	private:
+		//The state machine
+		void stateMachine();
+
+		//MinMax
+		void setMinMax(int x, int y);
+		void resetMinMax(int x, int y);
+		void addRectFromMinMax();
+
+		Direction checkDirection(int x, int y, Direction current_dir);
+		bool get_pixel_value_in_dir(int x,  int y, unsigned int dir);
+
+	};
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

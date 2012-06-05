@@ -158,23 +158,32 @@ public:
 
 			cv::Mat steps, neighbor_map, normals, xy,angles;
 
-			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
-			KinTo::XYZrangeFilter(imgPtrDepth->image,xy,imgPtrDepth->image,x_min, x_max,  y_min, y_max, z_min, z_max);
 
-			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);
+			///
+			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);  ///?
 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
 			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,blur_depth);
+			///
 
+			///
+			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
+			KinTo::XYZrangeFilter(imgPtrDepth->image,xy,imgPtrDepth->image,x_min, x_max,  y_min, y_max, z_min, z_max);
+			///
 
+			///
 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
-
 			KinTo::createAngleMap(normals,angles);
+			///
+
+			///
 			KinTo::crossAnglesBlur(angles,neighbor_map,angles,blur_angles);
 			KinTo::anglesFilter(angles, angles, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max);
+			///
+
 
 			imgPtrRGB->image=angles;
 			cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
-
+			cv::threshold(imgPtrRGB->image,imgPtrRGB->image,1,255,0);
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);
