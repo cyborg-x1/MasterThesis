@@ -13,6 +13,44 @@ namespace KinTo
 	#include "kinectStepLUT"
 	#include "ArcCosValues"
 
+
+		class Range
+		{
+			int x_min;
+			int x_max;
+			int y_min;
+			int y_max;
+		public:
+			Range(int x,int y)
+			: x_min(x)
+			, x_max(x)
+			, y_min(y)
+			, y_max(y)
+			{}
+
+			void update(int x, int y)
+			{
+				if(x<x_min)x_min=x;
+				if(x>x_max)x_max=x;
+				if(y<y_min)y_min=y;
+				if(y>y_max)y_max=y;
+			}
+
+			void merge(const Range &range)
+			{
+				if(range.x_min<x_min)x_min=range.x_min;
+				if(range.x_max>x_max)x_max=range.x_max;
+				if(range.y_min<y_min)y_min=range.y_min;
+				if(range.y_max>y_max)y_max=range.y_max;
+			}
+
+			cv::Rect getRect()
+			{
+				return cv::Rect(x_min,y_min,x_max,y_max);
+			}
+		};
+
+
 	void convertKinectRawToSteps(const cv::Mat &src, cv::Mat &dst)
 	{
 		if(src.type() == CV_16UC1)
@@ -893,6 +931,125 @@ namespace KinTo
 		}
 	}
 
+	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &vec)
+	{
+
+		cv::Mat ids=cv::Mat::zeros(depth.rows,depth.cols,CV_32SC1);
+		int id=0;
+		std::set< std::pair<int,int> > relations;
+		std::vector< Range > ranges;
+
+
+
+		int size_x=depth.cols, size_y=depth.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+			int id_nb,current_id;
+			uchar cur_neighbors=neighbors.at<Vec3uchar>(y,x)[0];
+			uchar cur_ok=pix_ok.at<Vec1uchar>(y,x)[0];
+			bool found=false;
+
+			if(cur_neighbors&&cur_ok) //current pixel has neighbors and is ok (angle)...
+			{
+
+				for(i=0;i<4;i++)
+				{
+					int nb_n, y_n,x_n; //Values for neighbor
+					//which neighbor
+					switch(i)
+					{
+					case 0:
+						nb_n=cur_neighbors&&(1<<1); //top
+						x_n=x;
+						y_n=y-1;
+						break;
+					case 1:
+						nb_n=cur_neighbors&&(1<<0);	//top-left
+						x_n=x-1;
+						y_n=y-1;
+						break;
+					case 2:
+						nb_n=cur_neighbors&&(1<<7); //left
+						x_n=x-1;
+						y_n=y;
+						break;
+					case 3:
+						nb_n=cur_neighbors&&(1<<6); //bottom-left
+						x_n=x-1;
+						y_n=y+1;
+						break;
+					default:
+						ROS_ERROR("SURFACE ERROR UNHANDLED STATE");
+						throw(0);
+					}
+
+					if(nb_n)
+					{
+						id_nb=ids.at<Vec1int>(y_n,x_n)[0]; //look if there is already an ID
+
+						if(id_nb && !found) //if there is one and no ID was found before
+						{
+							//set current id to the found one
+							current_id=id_nb;
+							ids.at<Vec1int>(y,x)[0]=current_id; //Store id to id mat
+							found = true; //and found to true
+						}
+						else if(id_nb!=current_id && found) //if there was an ID before and it's not the same
+						{
+
+							int first,second;
+							if(current_id<id_nb)
+							{
+								first=current_id;
+								second=id_nb;
+							}
+							else
+							{
+								second=current_id;
+								first=id_nb;
+							}
+							relations.insert(std::pair<int,int>(first,second));
+						}
+					}
+				}
+
+
+				if(!found)
+				{
+					//Create new id
+					id++;
+					ids.at<Vec1int>(y,x)[0]=id;
+					current_id=id;
+					ranges.push_back(Range(x,y));
+				}
+				else
+				{
+					ranges[current_id].update(x,y);
+				}
+
+			}
+		}
+
+
+		//Merging the pairs
+
+
+		//Creating the rects
+
+
+	}
+
+
+
+
+
+
+
+
+
 
 	///BLOB Separator
 
@@ -1010,12 +1167,6 @@ namespace KinTo
 			return 0;
 		}
 	}
-
-
-
-
-
-
 
 	void BlobSurfaces::stateMachine()
 	{
