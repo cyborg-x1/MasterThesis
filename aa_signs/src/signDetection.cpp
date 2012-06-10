@@ -156,7 +156,7 @@ public:
 			}
 
 
-			cv::Mat steps, neighbor_map, normals, xy,angles;
+			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok;
 
 
 			///
@@ -177,13 +177,15 @@ public:
 
 			///
 			KinTo::crossAnglesBlur(angles,neighbor_map,angles,blur_angles);
-			KinTo::anglesFilter(angles, angles, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max);
+			KinTo::anglesFilter(angles, angles_ok, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max,true);
 			///
 
 
-			imgPtrRGB->image=angles;
-			cv::blur(imgPtrRGB->image,imgPtrRGB->image,cv::Size(5,5),cv::Point(-1,-1),0);
-			cv::threshold(imgPtrRGB->image,imgPtrRGB->image,1,255,0);
+			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
+			cv::threshold(angles_ok,angles_ok,1,255,0);
+
+			imgPtrRGB->image=angles_ok;
+			imgPtrRGB->encoding="mono8";
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);

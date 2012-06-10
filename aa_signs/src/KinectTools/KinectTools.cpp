@@ -583,58 +583,6 @@ namespace KinTo
 		}
 	}
 
-	void blurDepth(const cv::Mat &src, cv::Mat &dst)
-	{
-
-		if (src.type() == CV_16UC1)
-		{
-			cv::Mat filter_in = src.clone();
-			cv::Mat filter=filter_in.clone();
-
-
-
-			cv::boxFilter(filter, filter, 3, cv::Size(7, 1), cv::Point(-1, -1), 1, 0);
-			//cv::GaussianBlur(filter,filter,cv::Size(7,1),1,0);
-			cv::boxFilter(filter, filter, 3, cv::Size(7, 1), cv::Point(-1, -1), 1, 0);
-
-			cv::boxFilter(filter, filter, 3, cv::Size(1, 7), cv::Point(-1, -1), 1, 0);
-			cv::boxFilter(filter, filter, 3, cv::Size(1, 7), cv::Point(-1, -1), 1, 0);
-
-			//cv::GaussianBlur(filter,filter,cv::Size(1,7),1,0);
-
-			//cv::medianBlur(filter, filter, 5);
-
-			//Update non zero pixels
-			for (int y = 0; y < src.rows; y++)
-			{
-				for (int x = 0; x < src.cols; x++)
-				{
-					short realValue = filter_in.at<Vec1shrt>(y, x)[0];
-					short filteredValue = filter.at<Vec1shrt>(y, x)[0];
-					short maxDifference = pow((float)realValue, 2) / (480000); //Maximal difference from the real value
-					if (realValue>0)
-					{
-						if(abs(realValue - filteredValue) > maxDifference)
-						{
-							dst.at<Vec1shrt>(y, x)[0] = realValue; //TODO maybe we should use the maxdiff value here?
-						}
-						else
-						{
-							dst.at<Vec1shrt>(y, x)[0] = filteredValue;
-						}
-					}
-				}
-			}
-			//cv::medianBlur(dst, dst, 5);
-
-		}
-		else
-		{
-			ROS_ERROR("MyFilter: Wrong Image Type");
-		}
-
-	}
-
 	void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, cv::Mat &depth_out, int max_size)
 	{
 
@@ -698,74 +646,6 @@ namespace KinTo
 			dst.at<Vec1shrt>(y,x)=sum/cnt;
 		}
 		depth_out=dst;
-	}
-
-	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max)
-	{
-
-		dst=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
-		int size_x=src.cols, size_y=src.rows;
-		//bool variables
-		int y,x;
-
-		for (int i = 0; i < (size_x*size_y); i++)
-		{
-			y=i/size_x;
-			x=i-y*size_x;
-
-
-			short g1=(src.at<Vec3shrt>(y,x)[0]);
-			short g2=(src.at<Vec3shrt>(y,x)[1]);
-			short g3=(src.at<Vec3shrt>(y,x)[2]);
-
-			//An approximation for the vector length
-//			  int a, b, c;
-//
-//			  a=std::fabs(g1);
-//			  b=std::fabs(g2);
-//			  c=std::fabs(g3);
-//
-//			  if((b>c)&&(b>a))
-//			  {
-//			    int tmp = b;
-//			    b=a;
-//			    a=tmp;
-//			  }
-//			  else if((c>b)&&(c>a))
-//			  {
-//			    int tmp = c;
-//			    c=a;
-//			    a=tmp;
-//			  }
-
-			  //int vector_length=(a+((b+c)>>1));
-
-
-			double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
-			if(!vector_length)continue;
-
-			double angle_x=preCalcCos[(int)(g1*1000/vector_length)+1000];
-			double angle_y=preCalcCos[(int)(g2*1000/vector_length)+1000];
-			//std::cout<<" "<<angle_x<<" "<<g1<<" "<<g2<<" "<<g3<<std::endl;
-			if(((angle_x/100)>=thres_min&&(angle_x/100)<=thres_max) && ((angle_y/100)>=thres_min&&(angle_y/100)<=thres_max))
-			{
-				dst.at<Vec3uchar>(y,x)[0]=100;
-				dst.at<Vec3uchar>(y,x)[1]=100;
-				dst.at<Vec3uchar>(y,x)[2]=100;
-			}
-
-//			if((x==319 || x==321) && (y==239 || y==241))
-//			{
-//				dst.at<Vec3uchar>(y,x)[2]=255;
-//			}
-//
-//
-//			if(x==320 && y==240)
-//			{
-//				dst.at<Vec3uchar>(y,x)[2]=255;
-//				std::cout<<"::"<<angle_x<<std::endl;
-//			}
-		}
 	}
 
 	void crossNormalBlur(const cv::Mat &normals, const cv::Mat &neighbors, cv::Mat &normals_out, int max_size)
@@ -842,11 +722,6 @@ namespace KinTo
 			dst.at<Vec3shrt>(y,x)[2]=sum_z/cnt;
 		}
 		normals_out=dst;
-	}
-
-	void ironFilter(const cv::Mat &depth, const cv::Mat &steps, cv::Mat &depth_out, uint8_t iron_len, uint8_t max_diff)
-	{
-
 	}
 
 	void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
@@ -954,7 +829,16 @@ namespace KinTo
 
 	void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out, unsigned int x_angle_min,unsigned int x_angle_max,unsigned int y_angle_min,unsigned int y_angle_max,unsigned int z_angle_min,unsigned int z_angle_max, bool binary)
 	{
-		cv::Mat dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+		cv::Mat dst;
+		if(!binary)
+		{
+			dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+		}
+		else
+		{
+			dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC1);
+		}
+
 		int size_x=angles.cols, size_y=angles.rows;
 		int y,x;
 		for (int i = 0; i < (size_x*size_y); i++)
@@ -967,7 +851,7 @@ namespace KinTo
 
 			if(a_x >= x_angle_min && a_x <= x_angle_max && a_y >= y_angle_min && a_y <= y_angle_max && a_z >= z_angle_min && a_z <= z_angle_max )
 			{
-				if(!binary) //TODO MONO -> Change in BlobSurfaces too
+				if(!binary)
 				{
 					dst.at<Vec3uchar>(y,x)[0]=a_x;
 					dst.at<Vec3uchar>(y,x)[1]=a_y;
@@ -975,9 +859,7 @@ namespace KinTo
 				}
 				else
 				{
-					dst.at<Vec3uchar>(y,x)[0]=255;
-					dst.at<Vec3uchar>(y,x)[1]=255;
-					dst.at<Vec3uchar>(y,x)[2]=255;
+					dst.at<Vec1uchar>(y,x)[0]=255;
 				}
 			}
 		}

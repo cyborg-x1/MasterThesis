@@ -49,7 +49,7 @@ namespace KinTo
 	cv::Rect roiFinder(const cv::Mat &src);
 
 	/**
-	 * This function reduces a depth image to a given range
+	 * This function reduces a depth image to a given depth range
 	 * @param[in] src Source image
 	 * @param[out]dst Destination image
 	 * @param[in] min_range The minimal distance allowed
@@ -61,6 +61,8 @@ namespace KinTo
 	 * This function fills holes in the depth map, but only if the difference
 	 * between the pixel to the pixel on the end of the gap is
 	 * smaller or equal to the amount o pixels between them.
+	 *
+	 * EXPERIMENTAL (Problems ...)
 	 */
 	void gapStepMapGapFiller(const cv::Mat &src, cv::Mat &dst, uchar max_size);
 
@@ -85,12 +87,14 @@ namespace KinTo
 	 *
 	 * <br/>
 	 *
-	 * The second value is the amount of neighbors belonging to the same object as the current pixel.
+	 * The second value is like the first, but does only show if the neighbor pixel is not zero.
+	 *
+	 * The third value is the amount of neighbors belonging to the same object as the current pixel.
 	 * The function also creates a map of the real xy coordinates of the pixels in mm
 	 *
 	 * @param src The source image
 	 * @param map_out The neighborhood map
-	 * @param threshold The biggest difference a pixel from the current can have to be a close neighbor.
+	 * @param threshold The biggest difference another pixel can have to the current one to be a close neighbor.
 	 * @param xy_coords outputs a map containing x and y coordinates of the pixels (mm)
 	 *
 	 */
@@ -116,7 +120,7 @@ namespace KinTo
 
 	/**
 	 * This computes the normals out of the depth images, but requires a neighborhood map.
-	 * @param[in] src The kinect raw picture (BLURED!!)
+	 * @param[in] src The depth picture (BLURED!!!)
 	 * @param[in] neighbor_map neighbor map of the raw picture
 	 * @param[in] xy The xy values of the blured raw image
 	 * @param[out] normals the normal vector values
@@ -124,27 +128,71 @@ namespace KinTo
 	void createNormalMap(const cv::Mat &src, const cv::Mat &neighbor_map, const cv::Mat &xy, cv::Mat &normals);
 
 	/**
-	 *
+	 * This function calculates the angle of the normals
+	 * @param[in] normals The normal map
+	 * @param[out] angles The angle map
 	 */
-	void blurDepth(const cv::Mat &src, cv::Mat &dst);
-
-	/**
-	 *This function
-	 */
-	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max);
-
 	void createAngleMap(const cv::Mat &normals, cv::Mat &angles);
 
+	/**
+	 * This function blures a depth image. It uses a given amount of pixels on the right, left, top and the bottom
+	 * of the current pixel but stops at the first pixel which is no close neighbor to the one before.
+	 * @param[in] depth The depth image of the kinect
+	 * @param[in] neighbors The neigborhood map
+	 * @param[out] depth_out The blured depth image
+	 * @param max_size the maximum distance to the current pixel
+	 */
 	void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, cv::Mat &depth_out, int max_size);
 
+	/**
+	 * This function blurs a normal map. It uses the given amount of pixels on the right,
+	 * left, top and the bottom of the current pixel, but stops at the first pixel
+	 * which is no close neighbor to the one before.
+	 * @param[in] normals The normal image
+	 * @param[in] neighbors The neigborhood map
+	 * @param[out] normals_out The blured normal map
+	 * @param max_size the maximum distance to the current pixel
+	 */
 	void crossNormalBlur(const cv::Mat &normals, const cv::Mat &neighbors, cv::Mat &normals_out, int max_size);
 
-	void ironFilter(const cv::Mat &depth, const cv::Mat &steps, cv::Mat &depth_out);
-
+	/**
+	 * This function blurs a angle map. It uses the given amount of pixels on the right,
+	 * left, top and the bottom of the current pixel, but stops at the first pixel
+	 * which is no close neighbor to the one before.
+	 * @param[in] angles The angles image
+	 * @param[in] neighbors The neigborhood map
+	 * @param[out] angles_out The blured angles map
+	 * @param max_size the maximum distance to the current pixel
+	 */
 	void crossAnglesBlur(const cv::Mat &angles, const cv::Mat &neighbors, cv::Mat &angles_out, int max_size);
 
+	/**
+	 * This function filters an angle map to the given angles. Every pixel lying outside the given values will be replaced
+	 * by all angles set to zero in the resulting map.
+	 * @param[in] angles The angles image
+	 * @param[in] neighbors The xy map of each pixel
+	 * @param[out] angles_out The blured angles map
+	 * @param x_angle_min minimum x angle
+	 * @param x_angle_max maximum x angle
+	 * @param y_angle_min minimum x angle
+	 * @param y_angle_max maximum x angle
+	 * @param z_angle_min minimum x angle
+	 * @param z_angle_max maximum x angle
+	 */
 	void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out, unsigned int x_angle_min,unsigned int x_angle_max,unsigned int y_angle_min,unsigned int y_angle_max,unsigned int z_angle_min,unsigned int z_angle_max, bool binary=true);
 
+	/**
+	 * This function filters a depth image three dimensional. Every pixel not fitting into the giving x,y and z coordinates will be replaced by zero in the
+	 * resulting depth image.
+	 * param[in] depth The input depth image
+	 * param[in] xy The xy map of the depth image
+	 * param min_x minimum x distance from the center of the image
+	 * param max_x maximum x distance from the center of the image
+	 * param min_y minimum y distance from the center of the image
+	 * param max_y maximum y distance from the center of the image
+	 * param min_z minimum z distance from the center of the image
+	 * param max_z maximum z distance from the center of the image
+	 */
 	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z);
 
 	class BlobSurfaces
