@@ -1163,19 +1163,18 @@ namespace KinTo
 								if(current_dir)
 								{
 									state=1;
+									regions.at<Vec1uchar>(y_dim,x_dim)[0]++;
 								}
-								else
+								else //Single pixel
 								{
-
-									ROS_ERROR("extractBorderPoints:: NO DIRECTION!");
-									throw(0);
+									regions.at<Vec1uchar>(y_dim,x_dim)[0]+=2;
 								}
 						break;
 
 						case 1: //Move
 								switch(current_dir)
 								{
-									case none: ROS_ERROR("ERROR MOVE DIRECTION NONE"); throw(0); break;
+									case none: break;
 									case top_left: 		x_dim--;y_dim--; break;
 									case top: 	     			y_dim--; break;
 									case top_right: 	x_dim++;y_dim--; break;
@@ -1194,10 +1193,10 @@ namespace KinTo
 								{
 									//Check if we still go into this direction
 									new_dir=checkDirection(x_dim,y_dim,current_dir);
-									setMinMax(x_dim,y_dim);
-									regions.at<Vec1uchar>(y_dim,x_dim)[0]++;
 									current_dir=new_dir;
 								}
+								setMinMax(x_dim,y_dim);
+								regions.at<Vec1uchar>(y_dim,x_dim)[0]++;
 
 						break;
 						default:

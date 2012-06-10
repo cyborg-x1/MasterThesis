@@ -129,7 +129,7 @@ namespace KinTo
 	void blurDepth(const cv::Mat &src, cv::Mat &dst);
 
 	/**
-	 *
+	 *This function
 	 */
 	void rgbNormals(const cv::Mat &src, cv::Mat &dst, int thres_min, int thres_max);
 
@@ -162,9 +162,19 @@ namespace KinTo
 			bottom=6,
 			bottom_left=7,
 			left=8
-		} Direction;
+		} Directions;
 
+		typedef unsigned int Direction;
 
+		typedef enum
+		{
+			seekPix,
+			checkMark,
+			nextMark,
+			boundaryScan_startDir,
+			boundaryScan_moving,
+
+		} States;
 
 
 		//This contains region borders which are already searched
