@@ -36,12 +36,12 @@ namespace KinTo
 				if(y>y_max)y_max=y;
 			}
 
-			void merge(const Range &range)
+			void merge(const Range *range)
 			{
-				if(range.x_min<x_min)x_min=range.x_min;
-				if(range.x_max>x_max)x_max=range.x_max;
-				if(range.y_min<y_min)y_min=range.y_min;
-				if(range.y_max>y_max)y_max=range.y_max;
+				if(range->x_min<x_min)x_min=range->x_min;
+				if(range->x_max>x_max)x_max=range->x_max;
+				if(range->y_min<y_min)y_min=range->y_min;
+				if(range->y_max>y_max)y_max=range->y_max;
 			}
 
 			cv::Rect getRect()
@@ -931,23 +931,23 @@ namespace KinTo
 		}
 	}
 
-	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &vec)
+	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth, int minHeight, int maxWidth, int maxHeight)
 	{
 
 		cv::Mat ids=cv::Mat::zeros(depth.rows,depth.cols,CV_32SC1);
-		int id=0;
+		int next_new_id=0;
 		std::set< std::pair<int,int> > relations;
-		std::vector< Range > ranges;
-
-
+		std::vector< Range* > ranges;
 
 		int size_x=depth.cols, size_y=depth.rows;
 		int y,x;
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
-			y=i/size_x;
-			x=i-y*size_x;
-			int id_nb,current_id;
+			//Move forward in vertical direction
+			x=i/size_y;
+			y=i-x*size_y;
+
+			int id_nb=0,current_id=0;
 			uchar cur_neighbors=neighbors.at<Vec3uchar>(y,x)[0];
 			uchar cur_ok=pix_ok.at<Vec1uchar>(y,x)[0];
 			bool found=false;
@@ -955,11 +955,11 @@ namespace KinTo
 			if(cur_neighbors&&cur_ok) //current pixel has neighbors and is ok (angle)...
 			{
 
-				for(i=0;i<4;i++)
+				for(int j=0;j<4;j++)
 				{
 					int nb_n, y_n,x_n; //Values for neighbor
 					//which neighbor
-					switch(i)
+					switch(j)
 					{
 					case 0:
 						nb_n=cur_neighbors&&(1<<1); //top
@@ -981,9 +981,6 @@ namespace KinTo
 						x_n=x-1;
 						y_n=y+1;
 						break;
-					default:
-						ROS_ERROR("SURFACE ERROR UNHANDLED STATE");
-						throw(0);
 					}
 
 					if(nb_n)
@@ -1020,25 +1017,57 @@ namespace KinTo
 				if(!found)
 				{
 					//Create new id
-					id++;
-					ids.at<Vec1int>(y,x)[0]=id;
-					current_id=id;
-					ranges.push_back(Range(x,y));
+					ids.at<Vec1int>(y,x)[0]=next_new_id;
+					current_id=next_new_id;
+					ranges.push_back(new Range(x,y));
+					next_new_id++;
 				}
 				else
 				{
-					ranges[current_id].update(x,y);
+					ranges[current_id]->update(x,y);
 				}
 
 			}
 		}
 
 
-		//Merging the pairs
+		for(std::set< std::pair<int,int> >::iterator it=relations.begin(); it != relations.end();it++)
+		{
+			int f=(*it).first;
+			int s=(*it).second; //bigger one will be deleted and referenced to the smaller one
 
+			Range* sec=ranges[s];
 
-		//Creating the rects
+			//Merge
+			ranges[f]->merge(sec);
 
+			//Set pointer from second to first object
+			ranges[s]=ranges[f];
+
+			//Delete the second object
+			delete sec;
+		}
+
+//		//Creating the rects
+//
+//		//insert pointers into a set to remove duplicate pointers
+//		std::set<Range*> out;
+//		for(std::vector<Range*>::iterator it=ranges.begin();it!=ranges.end();it++)
+//		{
+//			if(out.insert(*it).second)//Check if element was inserted
+//			{
+//				//Create rect
+//				cv::Rect cur_rect=(*it)->getRect();
+//				//Check if rect is inside minimum and maximum size
+//				if(minHeight<=cur_rect.height && minWidth<=cur_rect.width&&
+//				   maxHeight>=cur_rect.height && maxWidth>=cur_rect.width)
+//				rects.push_back(cur_rect);
+//
+//				//Delete the rect inside the vector we do not need it anymore
+//				delete (*it);
+//			}
+//		}
+//		//NOTE: DO NOT ACCESS "out" pointers, they are deleted...
 
 	}
 

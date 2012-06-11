@@ -184,8 +184,15 @@ public:
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
-			imgPtrRGB->image=angles_ok;
-			imgPtrRGB->encoding="mono8";
+			std::vector<cv::Rect> rois;
+			KinTo::SurfaceExtractor(imgPtrDepth->image,angles_ok,neighbor_map,rois,10,10);
+
+			std::cout<<"painting rects"<<std::endl;
+			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
+				cv::rectangle(imgPtrRGB->image,*it,cv::Scalar(255,0,0),2,0,0);
+
+//			imgPtrRGB->image=angles_ok;
+//			imgPtrRGB->encoding="mono8";
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);

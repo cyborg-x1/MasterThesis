@@ -196,6 +196,19 @@ namespace KinTo
 	 */
 	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z);
 
+
+
+
+
+
+
+
+
+	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
+
+
+
+
 	class BlobSurfaces
 	{
 
