@@ -471,7 +471,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.x_angle_min = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.x_angle_min = 70;
+      __default__.x_angle_min = 0;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("x_angle_min", "int", 0, "min x angle", "", &signDetectionConfig::x_angle_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -481,7 +481,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.x_angle_max = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.x_angle_max = 110;
+      __default__.x_angle_max = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("x_angle_max", "int", 0, "max x angle", "", &signDetectionConfig::x_angle_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -491,7 +491,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.y_angle_min = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.y_angle_min = 80;
+      __default__.y_angle_min = 0;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("y_angle_min", "int", 0, "min y angle", "", &signDetectionConfig::y_angle_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -501,7 +501,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.y_angle_max = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.y_angle_max = 100;
+      __default__.y_angle_max = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("y_angle_max", "int", 0, "max y angle", "", &signDetectionConfig::y_angle_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -511,7 +511,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.z_angle_min = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.z_angle_min = 0;
+      __default__.z_angle_min = 10;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("z_angle_min", "int", 0, "min z angle", "", &signDetectionConfig::z_angle_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -521,7 +521,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.z_angle_max = 180;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.z_angle_max = 180;
+      __default__.z_angle_max = 35;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("z_angle_max", "int", 0, "max z angle", "", &signDetectionConfig::z_angle_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -581,7 +581,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.z_max = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.z_max = 10000;
+      __default__.z_max = 2500;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("z_max", "int", 0, "max z", "", &signDetectionConfig::z_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -601,7 +601,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.blur_angles = 100;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.blur_angles = 5;
+      __default__.blur_angles = 16;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("blur_angles", "int", 0, "size of bluring angle image", "", &signDetectionConfig::blur_angles)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
