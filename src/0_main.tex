@@ -19,6 +19,21 @@ Color-Camera \\ for an Autonomous Robot}
 \addtolength{\parskip}{\baselineskip}
 
 
+%newPicture
+%\pic{file}{caption}{reference}{scale}{where: ht...}
+%\pic{PS_Newspaper.pdf}{Publisher Subscriber Pricible2}{\label{figure:psp_real2}}{0.6}{h}
+\newcommand{\pic}[5]%
+{%
+\begin{figure}[#5]%
+\centering
+\includegraphics[scale=#4]{#1}%
+\caption{#2}%
+#3%
+\end{figure}%
+}%
+
+
+
 \masterthesis
 \begin{document}
 
@@ -37,30 +52,26 @@ Color-Camera \\ for an Autonomous Robot}
 
 
 \include{Introduction/introduction}
+\include{Mechanical/mechanical}
 
-\chapter{Mechanical Parts}
-\section{Signpost}
-\section{Robot Update}
 
+
+\chapter{Kinect Data Characteristics}
+
+\section{Interferences}
+%sunlight
+%Materials mirrors%glas%monitors
+%other kinect
+%to close
+\section{Resolution Depending the Depth}
+%Resolution picture
 
 \chapter{Software}
-\section{Kinect Data}
-\subsection{Characteristics}
-\subsubsection{Disturbances}
-\subsubsection{Resolution Depending the Depth}
-\subsection{Filtering}
-\subsection{Processing}
-\subsubsection{Blur Filter}
-\subsubsection{Range Filter}
+\section{Filtering}
+\subsection{Blur Filter}
+\subsection{Range Filter}
 \section{Robot Control}
 \subsection{ROS Transform}
 \subsection{Navigation}
-
-
-
-
-
-
-
 
 \end{document}  
