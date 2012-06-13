@@ -1114,6 +1114,30 @@ namespace KinTo
 		}
 	}
 
+	void BGRFilter(const cv::Mat &bgr_in, cv::Mat &bgr_out, uchar min_b, uchar max_b, uchar min_g, uchar max_g, uchar min_r, uchar max_r)
+	{
+		int size_x=bgr_in.cols, size_y=bgr_in.rows;
+		bgr_out=bgr_in.clone();
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Move forward in vertical direction
+			x=i/size_y;
+			y=i-x*size_y;
+			uchar b=bgr_out.at<Vec3uchar>(y,x)[0];
+			uchar g=bgr_out.at<Vec3uchar>(y,x)[1];
+			uchar r=bgr_out.at<Vec3uchar>(y,x)[2];
 
+			if(!(b<=max_b && b>=min_b &&
+			     g<=max_g && g>=min_g &&
+			     r<=max_r && r>=min_r))
+			{
+				bgr_out.at<Vec3uchar>(y,x)[0]=0;
+				bgr_out.at<Vec3uchar>(y,x)[1]=0;
+				bgr_out.at<Vec3uchar>(y,x)[2]=0;
+			}
+
+		}
+	}
 
 } /* namespace KinTo */

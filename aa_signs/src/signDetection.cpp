@@ -192,14 +192,34 @@ public:
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
-			if(show_angles_ok)
-			{
-				imgPtrRGB->image=angles_ok;
-				imgPtrRGB->encoding="mono8";
-			}
+
+			KinTo::BGRFilter(imgPtrRGB->image,imgPtrRGB->image,0,70,0,70,50,255);
+
+
+
 
 			std::vector<cv::Rect> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
+
+
+
+			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
+			{
+				cv::Mat current_surface=imgPtrRGB->image(*it),gray;
+			    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
+			    std::vector<cv::Vec3f> circles;
+			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
+			                 2, gray.rows/4, 100, 50 );
+			    for( size_t i = 0; i < circles.size(); i++ )
+			    {
+			    	std::cout<<"found!"<<std::endl;
+			         cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+			         int radius = cvRound(circles[i][2]);
+			         // draw the circle outline
+			         cv::circle( current_surface, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+			    }
+			}
+
 
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
 			{
@@ -215,7 +235,11 @@ public:
 
 
 
-
+			if(show_angles_ok)
+			{
+				imgPtrRGB->image=angles_ok;
+				imgPtrRGB->encoding="mono8";
+			}
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);

@@ -202,5 +202,10 @@ namespace KinTo
 	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
 
 
+	/**
+	 * BGR Filter
+	 */
+	void BGRFilter(const cv::Mat &bgr_in, cv::Mat &bgr_out, uchar min_b=0, uchar max_b=255, uchar min_g=0, uchar max_g=255, uchar min_r=0, uchar max_r=255);
+
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */
