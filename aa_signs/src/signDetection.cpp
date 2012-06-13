@@ -205,18 +205,27 @@ public:
 
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
 			{
+				//taken from http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html:
 				cv::Mat current_surface=imgPtrRGB->image(*it),gray;
 			    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
+			    // smooth it, otherwise a lot of false circles may be detected
+			    cv::GaussianBlur( gray, gray, cv::Size(3, 3), 2, 2 );
 			    std::vector<cv::Vec3f> circles;
-			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
-			                 2, gray.rows/4, 100, 50 );
+			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
 			    for( size_t i = 0; i < circles.size(); i++ )
 			    {
-			    	std::cout<<"found!"<<std::endl;
-			         cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-			         int radius = cvRound(circles[i][2]);
-			         // draw the circle outline
-			         cv::circle( current_surface, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+
+			    	 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+			    	 int radius = cvRound(circles[i][2]);
+
+			    	 if(center.x-radius>0 &&
+			    	    center.y-radius>0 &&
+			    	    center.x+radius<(*it).width &&
+			    	    center.y+radius<(*it).height && center.x>0 && center.y>0
+			    	    )
+			    	 cv::circle( current_surface, center, radius, cv::Scalar(255,255,0), 3, 8, 0 );
+
+
 			    }
 			}
 
