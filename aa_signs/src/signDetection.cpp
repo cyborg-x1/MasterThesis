@@ -68,8 +68,9 @@ class signDetection
 	//Surface Angles
 	int x_angle_min, x_angle_max,  y_angle_min, y_angle_max, z_angle_min, z_angle_max, blur_depth, blur_angles;
 	int x_min, x_max,  y_min, y_max, z_min, z_max;
-
-public:7
+	int surface_w_min,surface_w_max,surface_h_min,surface_h_max;
+	bool show_angles_ok;
+public:
 	signDetection() :
 			nh_("~"), it_out(nh_)
 	{
@@ -130,6 +131,13 @@ public:7
 
 		blur_angles=config.blur_angles;
 		blur_depth=config.blur_depth;
+
+		surface_w_min=config.surface_w_min;
+		surface_w_max=config.surface_w_max;
+		surface_h_min=config.surface_h_min;
+		surface_h_max=config.surface_h_max;
+
+		show_angles_ok=config.show_angles_ok;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -184,16 +192,30 @@ public:7
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
+			if(show_angles_ok)
+			{
+				imgPtrRGB->image=angles_ok;
+				imgPtrRGB->encoding="mono8";
+			}
+
 			std::vector<cv::Rect> rois;
-			KinTo::SurfaceExtractor(imgPtrDepth->image,angles_ok,neighbor_map,rois);
+			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
 
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
-				cv::rectangle(angles_ok,*it,cv::Scalar(100),1,0,0);
+			{
+				if(show_angles_ok)
+				{
+					cv::rectangle(angles_ok,*it,cv::Scalar(100),1,0,0);
+				}
+				else
+				{
+					cv::rectangle(imgPtrRGB->image,*it,cv::Scalar(100),1,0,0);
+				}
+			}
 
 
 
-			imgPtrRGB->image=angles_ok;
-			imgPtrRGB->encoding="mono8";
+
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);

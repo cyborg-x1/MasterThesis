@@ -196,84 +196,11 @@ namespace KinTo
 	 */
 	void XYZrangeFilter(const cv::Mat &depth, const cv::Mat &xy, cv::Mat &depth_out, int min_x, int max_x, int min_y, int max_y, int min_z, int max_z);
 
+	/**
+	 * This function creates seperate rects for each surface.
+	 */
+	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
 
 
-
-
-
-
-
-
-	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
-
-
-
-
-	class BlobSurfaces
-	{
-
-		//Directions
-		typedef enum
-		{
-			none=0,
-			top_left=1,
-			top=2,
-			top_right=3,
-			right=4,
-			bottom_right=5,
-			bottom=6,
-			bottom_left=7,
-			left=8
-		} Directions;
-
-		typedef unsigned int Direction;
-
-		typedef enum
-		{
-			seekPix,
-			checkMark,
-			nextMark,
-			boundaryScan_startDir,
-			boundaryScan_moving,
-
-		} States;
-
-
-		//This contains region borders which are already searched
-		cv::Mat regions;
-
-		//Size of the picture
-		int size_x, size_y;
-
-		//The input mat
-		cv::Mat in;
-
-		//X and Y Of the seek process
-		int y,x;
-
-		int min_x,min_y;
-		int max_x,max_y;
-
-		std::vector<cv::Rect> &rois;
-
-		int threshold;
-
-	public:
-
-		BlobSurfaces(const cv::Mat &angles_ok, std::vector<cv::Rect> &ROIs, int threshold);
-
-	private:
-		//The state machine
-		void stateMachine();
-
-		//MinMax
-		void setMinMax(int x, int y);
-		void resetMinMax(int x, int y);
-		void addRectFromMinMax();
-
-		Direction checkDirection(int x, int y, Direction current_dir);
-		bool get_pixel_value_in_dir(int x,  int y, unsigned int dir);
-
-	};
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

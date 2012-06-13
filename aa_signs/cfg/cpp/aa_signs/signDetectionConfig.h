@@ -275,8 +275,13 @@ class DEFAULT
         if("y_max"==(*i)->name){y_max = boost::any_cast<int>(val);}
         if("z_min"==(*i)->name){z_min = boost::any_cast<int>(val);}
         if("z_max"==(*i)->name){z_max = boost::any_cast<int>(val);}
+        if("surface_w_min"==(*i)->name){surface_w_min = boost::any_cast<int>(val);}
+        if("surface_w_max"==(*i)->name){surface_w_max = boost::any_cast<int>(val);}
+        if("surface_h_min"==(*i)->name){surface_h_min = boost::any_cast<int>(val);}
+        if("surface_h_max"==(*i)->name){surface_h_max = boost::any_cast<int>(val);}
         if("blur_depth"==(*i)->name){blur_depth = boost::any_cast<int>(val);}
         if("blur_angles"==(*i)->name){blur_angles = boost::any_cast<int>(val);}
+        if("show_angles_ok"==(*i)->name){show_angles_ok = boost::any_cast<bool>(val);}
       }
     }
 
@@ -292,8 +297,13 @@ int y_min;
 int y_max;
 int z_min;
 int z_max;
+int surface_w_min;
+int surface_w_max;
+int surface_h_min;
+int surface_h_max;
 int blur_depth;
 int blur_angles;
+bool show_angles_ok;
 
     bool state;
     std::string name;
@@ -328,9 +338,19 @@ int blur_angles;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       int z_max;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      int surface_w_min;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      int surface_w_max;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      int surface_h_min;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      int surface_h_max;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       int blur_depth;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       int blur_angles;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      bool show_angles_ok;
 //#line 255 "/opt/ros/fuerte/stacks/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -587,6 +607,46 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("z_max", "int", 0, "max z", "", &signDetectionConfig::z_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.surface_w_min = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.surface_w_min = 1000;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.surface_w_min = 20;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_w_min", "int", 0, "pixel width min", "", &signDetectionConfig::surface_w_min)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_w_min", "int", 0, "pixel width min", "", &signDetectionConfig::surface_w_min)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.surface_w_max = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.surface_w_max = 1000;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.surface_w_max = 200;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_w_max", "int", 0, "pixel width max", "", &signDetectionConfig::surface_w_max)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_w_max", "int", 0, "pixel width max", "", &signDetectionConfig::surface_w_max)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.surface_h_min = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.surface_h_min = 1000;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.surface_h_min = 20;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_h_min", "int", 0, "pixel width min", "", &signDetectionConfig::surface_h_min)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_h_min", "int", 0, "pixel width min", "", &signDetectionConfig::surface_h_min)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.surface_h_max = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.surface_h_max = 1000;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.surface_h_max = 200;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_h_max", "int", 0, "pixel width max", "", &signDetectionConfig::surface_h_max)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("surface_h_max", "int", 0, "pixel width max", "", &signDetectionConfig::surface_h_max)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __min__.blur_depth = 1;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.blur_depth = 100;
@@ -606,6 +666,16 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("blur_angles", "int", 0, "size of bluring angle image", "", &signDetectionConfig::blur_angles)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("blur_angles", "int", 0, "size of bluring angle image", "", &signDetectionConfig::blur_angles)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.show_angles_ok = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.show_angles_ok = 1;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.show_angles_ok = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("show_angles_ok", "bool", 0, "show the pixel with the correct angles", "", &signDetectionConfig::show_angles_ok)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("show_angles_ok", "bool", 0, "show the pixel with the correct angles", "", &signDetectionConfig::show_angles_ok)));
 //#line 228 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.convertParams();
 //#line 228 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"

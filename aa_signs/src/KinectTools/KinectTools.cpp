@@ -108,7 +108,7 @@ namespace KinTo
 
 		cv::Rect getRect()
 		{
-			return cv::Rect(cv::Point(x_min,y_min),cv::Point(x_max,y_max));
+			return cv::Rect(x_min,y_min,x_max-x_min,y_max-y_min);
 		}
 
 
@@ -995,7 +995,7 @@ namespace KinTo
 		}
 	}
 
-	void SurfaceExtractor(const cv::Mat &depth, const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth, int minHeight, int maxWidth, int maxHeight)
+	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth, int minHeight, int maxWidth, int maxHeight)
 	{
 
 		cv::Mat ids=cv::Mat::zeros(pix_ok.rows,pix_ok.cols,CV_32SC1);
@@ -1004,7 +1004,7 @@ namespace KinTo
 		std::vector< Range* > ranges;
 		std::vector< Range* > del_ranges;
 
-		int size_x=depth.cols, size_y=depth.rows;
+		int size_x=pix_ok.cols, size_y=pix_ok.rows;
 		int y,x;
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
@@ -1017,7 +1017,7 @@ namespace KinTo
 			uchar cur_ok=pix_ok.at<Vec1uchar>(y,x)[0];
 			bool found=false;
 
-			if(cur_neighbors&&cur_ok) //current pixel has neighbors and is ok (angle)...
+			if(cur_ok) //current pixel has neighbors and is ok (angle)...
 			{
 				int id_of_neighbor=0;
 				for(int j=0;j<4;j++)
@@ -1027,22 +1027,22 @@ namespace KinTo
 					switch(j)
 					{
 					case 0:
-						neighbor_present=cur_neighbors&&(1<<1); //top
+						neighbor_present=cur_neighbors&(1<<1); //top
 						x_n=x;
 						y_n=y-1;
 						break;
 					case 1:
-						neighbor_present=cur_neighbors&&(1<<0);	//top-left
+						neighbor_present=cur_neighbors&(1<<0);	//top-left
 						x_n=x-1;
 						y_n=y-1;
 						break;
 					case 2:
-						neighbor_present=cur_neighbors&&(1<<7); //left
+						neighbor_present=cur_neighbors&(1<<7); //left
 						x_n=x-1;
 						y_n=y;
 						break;
 					case 3:
-						neighbor_present=cur_neighbors&&(1<<6); //bottom-left
+						neighbor_present=cur_neighbors&(1<<6); //bottom-left
 						x_n=x-1;
 						y_n=y+1;
 						break;
@@ -1060,7 +1060,9 @@ namespace KinTo
 							ids.at<Vec1int>(y,x)[0]=current_id; //Store id to id mat
 							found = true; //and found to true
 						}
-						else if(id_of_neighbor>0 && id_of_neighbor!=current_id && found) //if there was an ID before and it's not the same
+						else if(id_of_neighbor>0 &&
+								id_of_neighbor!= current_id &&
+								found) //if there was is another ID and it's not the same
 						{
 							//Create relation
 							int first,second;
@@ -1111,197 +1113,6 @@ namespace KinTo
 			}
 		}
 	}
-
-	///BLOB Separator
-
-	BlobSurfaces::BlobSurfaces(const cv::Mat &angles_ok, std::vector<cv::Rect> &ROIs, int threshold)
-	:regions(cv::Mat::zeros(angles_ok.rows,angles_ok.cols,CV_8UC1)),
-	 size_x(angles_ok.cols),
-	 size_y(angles_ok.rows),
-	 in(angles_ok),
-	 rois(ROIs),
-	 threshold(threshold)
-	{}
-
-	void BlobSurfaces::setMinMax(int x, int y)
-	{
-		if(x<min_x) min_x=x;
-		if(y<min_y) min_y=y;
-		if(x>max_x) max_x=x;
-		if(y>max_y) max_y=y;
-	}
-
-	void BlobSurfaces::resetMinMax(int x, int y)
-	{
-		max_x=min_x=x;
-		max_y=min_y=y;
-	}
-
-	void BlobSurfaces::addRectFromMinMax()
-	{
-		rois.push_back(cv::Rect(min_x,min_y,max_x,max_y));
-	}
-
-	BlobSurfaces::Direction BlobSurfaces::checkDirection(int x_cd, int y_cd, BlobSurfaces::Direction current_dir)
-	{
-		if(x_cd>=size_x || y_cd>=size_y)
-		{
-			ROS_ERROR("Error Object::extract outside of mat bounds!!");
-			throw(0);
-		}
-		if(!current_dir)//if we are at the first value return begin direction
-		{
-			if	   (get_pixel_value_in_dir(x_cd,y_cd,4)){current_dir=right;}
-			else if(get_pixel_value_in_dir(x_cd,y_cd,5)){current_dir=bottom_right;}
-			else if(get_pixel_value_in_dir(x_cd,y_cd,6)){current_dir=bottom;}
-			else if(get_pixel_value_in_dir(x_cd,y_cd,7)){current_dir=bottom_left;}
-			return current_dir;
-		}
-
-		unsigned int left_of_curdir=(current_dir != 1)?current_dir--:8;
-		unsigned int right_of_curdir=(current_dir != 8)?current_dir++:1;
-
-		bool pix_in_dir=get_pixel_value_in_dir(x_cd,y_cd,current_dir);	   	 //The pix bool value (b/w) in current move direction
-		bool box_left_dir=get_pixel_value_in_dir(x_cd,y_cd,left_of_curdir);  //in box left of the box of move dir
-		bool box_right_dir=get_pixel_value_in_dir(x_cd,y_cd,right_of_curdir);//right
-
-
-
-		if(!pix_in_dir ||(box_left_dir && box_right_dir))
-		{
-			bool pix_found=0;
-			int new_dir=current_dir-2;
-			if(new_dir <=0) new_dir+=8;
-
-			while(!pix_found)
-			{
-				switch(new_dir)
-				{
-				case 1: pix_found=get_pixel_value_in_dir(x_cd,y_cd,1); break;
-				case 2: pix_found=get_pixel_value_in_dir(x_cd,y_cd,2); break;
-				case 3: pix_found=get_pixel_value_in_dir(x_cd,y_cd,3); break;
-				case 4: pix_found=get_pixel_value_in_dir(x_cd,y_cd,4); break;
-				case 5: pix_found=get_pixel_value_in_dir(x_cd,y_cd,5); break;
-				case 6: pix_found=get_pixel_value_in_dir(x_cd,y_cd,6); break;
-				case 7: pix_found=get_pixel_value_in_dir(x_cd,y_cd,7); break;
-				case 8: pix_found=get_pixel_value_in_dir(x_cd,y_cd,8); break;
-
-				default: throw("Unhandled exception"); break;
-				}
-
-				if(!pix_found)
-				{
-					new_dir++;
-					if(new_dir > 8) new_dir=new_dir -8;
-				}
-				else
-				{
-					current_dir=new_dir;
-				}
-			}
-		}
-
-		return current_dir;
-	}
-
-	bool BlobSurfaces::get_pixel_value_in_dir(int x_gv,  int y_gv, unsigned int dir)
-	{
-		switch(dir)
-		{
-			case none:		 	ROS_ERROR("get Pixel in dir -> direction NONE!!!!"); throw(0); break;
-			case top_left: 		x_gv--; y_gv--; 	break;
-			case top: 	 		y_gv--; 			break;
-			case top_right: 	x_gv++; y_gv--; 	break;
-			case right: 		x_gv++;      		break;
-			case bottom_right: 	x_gv++; y_gv++; 	break;
-			case bottom: 	 	y_gv++; 			break;
-			case bottom_left: 	x_gv--; y_gv++; 	break;
-			case left:			x_gv--; 	  		break;
-		}
-
-		if((x_gv>=0 && y_gv>=0) && (x_gv<(int)size_x && y_gv<(int)size_y))
-		{
-			return in.at<Vec3uchar>(y_gv,x_gv)[0] > threshold;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-
-	void BlobSurfaces::stateMachine()
-	{
-		for (int i = 0; i < (size_x*size_y); i++)
-		{
-			y=i/size_x;
-			x=i-y*size_x;
-
-			if(in.at<Vec3uchar>(y,x)[0])
-			{
-
-			}
-
-			//Find reorientation points or border pixel direction
-					unsigned int state=0;
-					Direction current_dir, new_dir;
-					unsigned int x_dim=x;
-					unsigned int y_dim=y;
-					resetMinMax(x,y);
-
-					while(state < 2)
-					{
-						switch(state)
-						{
-						case 0: //Start state find first direction
-								current_dir=checkDirection(x_dim,y_dim,none);
-								if(current_dir)
-								{
-									state=1;
-									regions.at<Vec1uchar>(y_dim,x_dim)[0]++;
-								}
-								else //Single pixel
-								{
-									regions.at<Vec1uchar>(y_dim,x_dim)[0]+=2;
-								}
-						break;
-
-						case 1: //Move
-								switch(current_dir)
-								{
-									case none: break;
-									case top_left: 		x_dim--;y_dim--; break;
-									case top: 	     			y_dim--; break;
-									case top_right: 	x_dim++;y_dim--; break;
-									case right: 		x_dim++;      	 break;
-									case bottom_right: 	x_dim++;y_dim++; break;
-									case bottom: 	 			y_dim++; break;
-									case bottom_left: 	x_dim--;y_dim++; break;
-									case left: 			x_dim--; 	  	 break;
-								}
-								//If we reached start again stop and go to state 2
-								if(x==x_dim && y==y_dim)
-								{
-									state=2;
-								}
-								else
-								{
-									//Check if we still go into this direction
-									new_dir=checkDirection(x_dim,y_dim,current_dir);
-									current_dir=new_dir;
-								}
-								setMinMax(x_dim,y_dim);
-								regions.at<Vec1uchar>(y_dim,x_dim)[0]++;
-
-						break;
-						default:
-							ROS_ERROR("extractBorderPoints:: Unknown STATE!");
-							throw(0);
-							break;
-						}
-					}
-		}
-	}
-
 
 
 
