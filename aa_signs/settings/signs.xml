@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<signs>
+	<sign name="right"  file="../graphics/right.png" />
+	<sign name="left" 	file="../graphics/left.png" />
+	<sign name="stop"  	file="../graphics/stop.png" />
+</signs>
+  
