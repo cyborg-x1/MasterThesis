@@ -39,9 +39,10 @@ rosbuild_add_library(KinectTools src/KinectTools/KinectTools.cpp)
 find_package(OpenCV REQUIRED)
 target_link_libraries(signDetection ${OpenCV_LIBRARIES})
 target_link_libraries(signDetection KinectTools)
+target_link_libraries(signDetection tinyxml)
 
 rosbuild_add_boost_directories()
-rosbuild_link_boost(signDetection thread regex signals)
+rosbuild_link_boost(signDetection thread regex signals filesystem system)
 
 #add dynamic reconfigure api
 rosbuild_find_ros_package(dynamic_reconfigure)

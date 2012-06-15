@@ -25,6 +25,8 @@
   <depend package="pcl"/>
   <depend package="pcl_ros"/>
   <rosdep name="opencv2.3"/>
+  <rosdep name="tinyxml" />
+  
 </package>
 
 
