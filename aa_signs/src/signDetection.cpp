@@ -11,6 +11,7 @@
 #include <math.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
+#include <boost/filesystem.hpp>
 
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
@@ -25,10 +26,29 @@
 #include <fstream>
 #include <iostream>
 #include <KinectTools/KinectTools.hpp>
-
+#include <tinyxml.h>
 #include "aa_signs/signDetectionConfig.h"
 namespace enc = sensor_msgs::image_encodings;
 
+
+class sign
+{
+	std::string name;
+	cv::Mat img;
+public:
+	sign(std::string name, cv::Mat &img)
+	:name(name)
+	,img(img)
+	{}
+	std::string getName()
+	{
+		return name;
+	}
+	const cv::Mat& getImg()
+	{
+		return img;
+	}
+};
 
 class signDetection
 {
@@ -39,7 +59,8 @@ class signDetection
 	dynamic_reconfigure::Server<aa_signs::signDetectionConfig> reconfServer;
 	dynamic_reconfigure::Server<aa_signs::signDetectionConfig>::CallbackType reconfCbType;
 
-
+	//Sign Patterns
+	std::vector<sign> signs;
 
 	//Publishers for output debug info
 	image_transport::ImageTransport it_out;
@@ -81,7 +102,106 @@ public:
 
 		// Read parameters
 		int queue_size;
+		std::string settingsfile;
+
 		nh_.param("queue_size", queue_size, 5);
+		nh_.param<std::string>("settingsfile", settingsfile, "");
+		ROS_INFO("Queue: %i",queue_size);
+
+		if(settingsfile.size())
+		{
+			ROS_INFO("Settingsfile: %s",settingsfile.c_str());
+			TiXmlDocument settings(settingsfile);
+
+			if(settings.LoadFile())
+			{
+				TiXmlNode *parent, *pChild;
+
+				static int nonames=0;
+				//Parsing the XML
+				parent=settings.FirstChildElement();
+
+
+				for ( pChild = parent->FirstChild(); pChild != 0; pChild = pChild->NextSibling())
+				{
+					//Look for Elements
+					if(pChild->Type()==TiXmlNode::TINYXML_ELEMENT)
+					{
+						TiXmlElement* pElement=pChild->ToElement();
+						if(pElement->ValueStr()=="sign")//If the element is sign
+						{
+							TiXmlAttribute* pAttrib=pElement->FirstAttribute();
+							bool imgloaded=false;
+							printf("\n");
+							std::string name;
+							std::string file;
+							while (pAttrib) //fetch attributes
+							{
+								if(pAttrib->NameTStr()=="name") //sign name
+								{
+									name=pAttrib->Value();
+								}
+								if(pAttrib->NameTStr()=="file") //file name
+								{
+									file=pAttrib->Value();
+								}
+								pAttrib=pAttrib->Next();
+							}
+
+
+							if(!name.size())//if no name tag is specified create a noname
+							{
+								std::stringstream ss;
+								ss<<"NONAME_"<<nonames;
+								name=ss.str();
+								nonames++;
+							}
+
+							if(file.size())
+							{
+								boost::filesystem::path picturePath(file);
+								if(picturePath.is_relative())
+								{
+									boost::filesystem::path xmlfilepath(settingsfile);
+									boost::filesystem::path xmldir=xmlfilepath.parent_path();
+									picturePath=xmldir/=picturePath;
+								}
+
+								ROS_INFO("File: %s", picturePath.string().c_str());
+								cv::Mat img=cv::imread(picturePath.string());
+								if(!img.empty())
+								{
+									signs.push_back(sign(name,img));
+									imgloaded=true;
+								}
+							}
+							else
+							{
+								imgloaded=false;
+							}
+
+							if(imgloaded)
+							{
+								ROS_INFO("New Sign: %s",name.c_str());
+							}
+							else
+							{
+								ROS_INFO("Sign: %s, Could not be loaded!",name.c_str());
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				ROS_ERROR("Could not load settings file: %s", settingsfile.c_str());
+			}
+		}
+		else
+		{
+			ROS_ERROR("NO SETTINGS FILE GIVEN!!!");
+		}
+
 
 		// Synchronize inputs. Topic subscriptions happen on demand in the connection callback.
 		sync_.reset(
@@ -164,7 +284,7 @@ public:
 			}
 
 
-			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok;
+			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
 
 
 			///
@@ -192,29 +312,30 @@ public:
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
-
-			KinTo::BGRFilter(imgPtrRGB->image,imgPtrRGB->image,0,70,0,70,50,255);
-
-
-
+			filtered_bgr=imgPtrRGB->image;
+			//KinTo::BGRFilter(imgPtrRGB->image,filtered_bgr,0,70,0,70,50,255);
 
 			std::vector<cv::Rect> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
 
 
-
+			//search for circles
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
 			{
 				//taken from http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html:
-				cv::Mat current_surface=imgPtrRGB->image(*it),gray;
+				cv::Mat current_surface=filtered_bgr(*it),gray;
 			    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
 			    // smooth it, otherwise a lot of false circles may be detected
-			    cv::GaussianBlur( gray, gray, cv::Size(3, 3), 2, 2 );
+			    cv::GaussianBlur( gray, gray, cv::Size(5, 5), 2, 2 );
 			    std::vector<cv::Vec3f> circles;
+
 			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
+
+			    //circles
 			    for( size_t i = 0; i < circles.size(); i++ )
 			    {
-
+				    float lowest_global=FLT_MAX;
+				    std::vector<sign>::iterator found_sign;
 			    	 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			    	 int radius = cvRound(circles[i][2]);
 
@@ -223,7 +344,78 @@ public:
 			    	    center.x+radius<(*it).width &&
 			    	    center.y+radius<(*it).height && center.x>0 && center.y>0
 			    	    )
-			    	 cv::circle( current_surface, center, radius, cv::Scalar(255,255,0), 3, 8, 0 );
+			    	 {
+
+						 //Create a new ROI for the current circle
+						 int start_x=center.x-radius-10;
+						 int start_y=center.y-radius-10;
+						 int end_x=center.x+radius+10;
+						 int end_y=center.y+radius+10;
+
+						 if(end_x>=(*it).width)end_x=(*it).width-1;
+						 if(end_y>=(*it).height)end_y=(*it).height-1;
+
+						 if(start_x<0)start_x=0;
+						 if(start_y<0)start_y=0;
+
+						 cv::Mat circleplace=imgPtrRGB->image(*it)(cv::Rect(start_x,start_y,end_x-start_x,end_y-start_y));
+
+						 for(std::vector<sign>::iterator it2=signs.begin();it2!=signs.end();it2++)
+						 {
+							 cv::Mat sign_image;
+							 //resize the template to the circle size
+							 cv::resize((*it2).getImg(),sign_image,cv::Size(radius+5,radius+5),0,0,cv::INTER_AREA);
+
+							 //Output template matching
+							 cv::Mat result;
+							 cv::matchTemplate(circleplace,sign_image,result,CV_ADAPTIVE_THRESH_MEAN_C);
+
+							 float lowest_local=result.at<float>(0,0);
+
+							 //Calculate interesting pixels
+							 int rows=result.rows-sign_image.rows+1;
+							 int cols=result.cols-sign_image.cols+1;
+
+
+							 for (int i = 0; i < (rows*cols); i++)
+							 {
+								int y=i/rows;
+								int x=i-y*cols;
+
+								//ROS_INFO("%f",result.at<float>(y,x));
+								if(result.at<float>(y,x)<lowest_local)
+								{
+									lowest_local=result.at<float>(y,x);
+								}
+							 }
+							 if(lowest_local<lowest_global)
+							 {
+								 found_sign=it2;
+								 lowest_global=lowest_local;
+							 }
+						 }
+
+				    	 if(1)
+				    	 {
+
+				    		cv::Mat blub=imgPtrRGB->image(*it);
+				    		ROS_INFO("Found sign: %s",found_sign->getName().c_str());
+				    		if(found_sign->getName()=="left")
+				    		{
+				    			cv::circle( blub, center, radius, cv::Scalar(0,255,0), 3, 8, 0 );
+				    		}
+				    		if(found_sign->getName()=="right")
+							{
+								cv::circle( blub, center, radius, cv::Scalar(255,0,0), 3, 8, 0 );
+							}
+				    		if(found_sign->getName()=="stop")
+							{
+								cv::circle( blub, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+							}
+				    	 }
+
+			    	 }
+
 
 
 			    }
