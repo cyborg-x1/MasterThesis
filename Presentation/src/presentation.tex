@@ -1,0 +1,208 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{VLKlauck}
+\usepackage{graphicx}
+\author[]{Christian Holl (24296)}
+\institute[HTW Aaalen - Elektronik und Informatik]
+{
+	Studiengang Computer Controlled Systems\\
+	Hochschule Aalen - Technik und Wirtschaft
+}
+
+\graphicspath{{./img/}}
+
+\title[]{Kinect Kamera}  
+
+\date[]{\today}
+
+\begin{document}
+\maketitle
+ 
+ 
+\begin{frame}{Kinect}
+	\includegraphics[scale=0.7]{KinectSVG.png}
+\end{frame} 
+\begin{frame}{Ungefiltert (6,5m)}
+	\includegraphics[scale=0.4]{0_KinectFarField.png}
+\end {frame}
+\begin{frame}{Ungefiltert (3,5m)}
+	\includegraphics[scale=0.4]{0_KinectNearField.png}
+\end {frame}
+\begin{frame}{Filter1: Boxed (6,5m)}
+	\includegraphics[scale=0.4]{1_BoxedFarField.png}
+\end {frame}
+\begin{frame}{Filter1: Boxed (3,5m)}
+	\includegraphics[scale=0.4]{1_BoxedNearField.png}
+\end {frame}
+\begin{frame}{Filter1: Median 1 (6,5m)}
+	\includegraphics[scale=0.4]{2_BoxedAndFirstMedianFar.png}
+\end {frame}
+\begin{frame}{Filter1: Median 1 (3,5m)}
+	\includegraphics[scale=0.4]{2_BoxedAndFirstMedianNear.png}
+\end {frame}
+\begin{frame}{Filter1: Problem Blurfilter}
+	\includegraphics[scale=0.3]{2_BoxedFirstMedianProblem.png}
+\end {frame}
+\begin{frame}{Filter1: Zu große Abweichungen von Realpixeln zurücksetzen (6,5m)}
+	\includegraphics[scale=0.4]{3_DepthDifferenceFilterBoxedAndFirstMedianFar.png}
+\end {frame}
+\begin{frame}{Filter1: Zu große Abweichungen von Realpixeln zurücksetzen (3,5m)}
+	\includegraphics[scale=0.4]{3_DepthDifferenceFilterBoxedAndFirstMedianNear.png}
+\end {frame}
+\begin{frame}{Filter1: Problem weg}
+	\includegraphics[scale=0.4]{3_DepthDifferenceFilterBoxedAndFirstMedianProblemGone.png}
+\end {frame}
+\begin{frame}{Filter1: Dezenter Median 2 (6,5m)}
+	\includegraphics[scale=0.4]{4_SecondMedianFinalFar.png}
+\end {frame}
+\begin{frame}{Filter1: Dezenter Median 2 (3,5m)}
+	\includegraphics[scale=0.4]{4_SecondMedianFinalNear.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung1.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.3]{ProblemKreisErkennung2.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung5.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung4.png}
+\end {frame}
+\begin{frame}{Filter1:Problem der Kreiserkennung}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung3.png}
+\end {frame}
+\begin{frame}{Filter1:Kreisproblem gefiltertertes Bild}
+	\includegraphics[scale=0.4]{ProblemKreisErkennung6.png}
+\end {frame}
+\begin{frame}{Filter1: Reichweitenfilter}
+	Eventuell mit Bildausschnitt in Schildhöhe
+	\includegraphics[scale=0.4]{KreisemitReichweitenfilter.png}
+\end {frame}
+\begin{frame}{Filter1: Größere Werte für Canny 22 61}
+	\includegraphics[scale=0.4]{ProblemKreisWeg2261.png}
+\end {frame}
+\begin{frame}{Filter1: Kreiserkennung\ldots (D\=10cm) (von ca. 40cm - 2m)}
+	\includegraphics[scale=0.4]{KreisDone.png}
+\end {frame}
+\begin{frame}{Forschung: Systematische Fehler in der Kinect}
+	\includegraphics[scale=0.2]{FlacheWand.png}
+\end {frame}
+\begin{frame}{Forschung: Systematische Fehler in der Kinect}
+	\includegraphics[scale=0.2]{Kubus.png}
+\end {frame}
+\begin{frame}{Konzepte für eigene Filter}
+	Kreuz-Füllfilter:
+		Das Bild wird gleichzeitig von oben nach unten und von rechts nach links
+		reihenweise nach Lücken durchsucht.
+		Ist eine Lücke gefunden, wird die Länge festgestellt und der Wert des Pixels
+		am Ende der Lücke mit dem am Anfang der Lücke verglichen, sind sie gleich 
+		oder im Rahmen einer schwelle wird die Lücke gefüllt mit dem medianwert
+		gefüllt.
+	Stufenglättung:
+		Bei einem Sprung beim nächsten Pixel wird der aktuelle Wert festgehalten.
+		und auf den nächsten Sprung folgende. Die Pixel zwischen den Werten geglättet
+		werden geglättet.
+	Ki: Suche nach Fraktalen mittels Wahrscheinlichkeitswerten aus dem Calibrator
+\end {frame}
+\begin{frame}{Wert Quantisierung bei der Kinect}
+	Für den Abstandstest für den Abweichungsgraphen wird über die Pointcloud ein
+	Bild gelegt bei dem jeder Pixel der über 5 mm vom eingestellten Wert
+	abweicht rot und ein Pixel der sich in der Grenze befindet Grün dargestellt.
+
+	Bei dem Abstand von genau 3 Metern (3000) konnte kein einziger grüner Pixel 
+	festgestellt werden, trotz der Schrägstellung der Kinect.
+	
+	Im Tiefenbild kann auch schon erkannt werden, das eine Quantisierung der Werte
+	vorgenommen wird.
+
+	Annahme:	
+	Je größer die Abstände zur Kammera werden, desto größer die Quantisierung.
+	
+\end {frame}
+
+\begin{frame}{Bestätigung der Annahme: Kinect zeigt nur 825 Werte}
+
+	 
+	 Überprüft mit einem std::set, welches über ein längeren Zeitraum mit allen
+	 Pixelwerten jedes Bildes gefüllt wurde. Die Kamera wurde während dessen im
+	 Raum herumbewegt solange bis sich die Anzahl der Werte nicht mehr geändert
+	 hat. Hier sieht man anhand der Werte auch deutlich warum Kinect Fusion nur
+	 eine Maximaltiefe von 2m für das Tiefenbild berücksichtigt. (siehe nächste
+	 Seite)
+
+	 
+	
+\end {frame}
+
+
+\begin{frame}{Bestätigung der Annahme: Kinect zeigt nur 825 Werte}
+	\includegraphics[scale=0.35]{KinectRectTiefeWertAbstand.png}
+\end{frame}
+
+\begin{frame}{Tiefenanalyse des rectified Tiefenbildes}
+
+	\includegraphics[scale=0.5]{KinectRectTiefe.png}
+
+\end {frame}
+	 
+	 
+\begin{frame}{Fehler Kinect2}
+
+	\includegraphics[scale=0.3]{FehlerKinect1.png}
+
+\end {frame}
+	 
+\begin{frame}{Fehler Kinect3}
+
+	\includegraphics[scale=0.3]{FehlerKinect2.png}
+
+\end {frame}	 
+
+
+\begin{frame}{Step Map}
+	Bei der Step Map handelt es sich um das konvertierte Roh Bild der Kinect, bei
+	dem alle die verfügbaren 825 Werte der Kamera in aufeinanderfolgende Zahlen
+	konvertiert worden sind. z.B.  317 in 1, 318 in 2, 319 in 3, \ldots 9757 in
+	824.
+	Dies kann dazu verwendet werden, den Abstand von zwei Pixeln in den
+	jeweiligen Ebenen zu bestimmen.
+	
+	Eventuell taugt dies auch für das Finden vertikaler Artefakte, da ein
+	vertikales Artefakt bei eigener Beobachtung immer ein Sprung in einer Ebene
+	ist, egal in welcher Tiefe sich das Artefakt befindet.
+	
+	Ein weiterer Vorteil könnte sich bei der Filterung der anderen Fraktale
+	auftreten, welche meist einen ründlichen Blob formen und oft einen Sprung von 1
+	aufweisen.
+\end{frame}
+
+
+\begin{frame}{Step Map}
+	Ein weiterer Vorteil könnte dadurch entstehen, dass mittels einer bestimmten 
+	Calibrierungssoftware die einzelnen Störungen aufgenommen und in der Stepmap
+	(unabhängig von der Tiefe) abgezogen werden können.
+	
+	Fluktuierenden Störungen, könnte man eventuell mittels eines
+	Wahrscheinlichkeitsalgorithmuses versuchen auszubessern.
+\end{frame}
+	 
+\begin{frame}{Senkrechte (vertikale) Artefakte}
+	
+	Es wurde vermutet das zwischen den Pixeln die ab und zu in verschiedener Anzahl
+	in den äußeren Bereichen die normalerweise Null sind auftauchen und den
+	Vertikalen Fragmenten der Kinect ein Zusammenhang besteht.
+	
+	Es konnte nicht wirklich nachgewiesen werden das dies der Fall ist.
+	Allerdings fällt auf das die äußeren Punkte die nicht Null sind zum Teil mehr
+	werden, sofern mehr senkrechte Artefakte da sind. Ob sich jedoch darin eine
+	art von Lokalisierungsinfo befindet ist weiterhin unbekannt.
+\end {frame}	 
+	  
+
+\end{document}
+ 
