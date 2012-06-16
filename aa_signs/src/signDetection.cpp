@@ -312,8 +312,10 @@ public:
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
-			filtered_bgr=imgPtrRGB->image;
+			//filtered_bgr=imgPtrRGB->image;
 			//KinTo::BGRFilter(imgPtrRGB->image,filtered_bgr,0,70,0,70,50,255);
+			KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
+
 
 			std::vector<cv::Rect> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
@@ -330,11 +332,12 @@ public:
 			    std::vector<cv::Vec3f> circles;
 
 			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
-
+			    float lowest_global;
 			    //circles
 			    for( size_t i = 0; i < circles.size(); i++ )
 			    {
-				    float lowest_global=FLT_MAX;
+			    	bool found=false;
+				    lowest_global=FLT_MAX;
 				    std::vector<sign>::iterator found_sign;
 			    	 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
 			    	 int radius = cvRound(circles[i][2]);
@@ -362,19 +365,23 @@ public:
 
 						 for(std::vector<sign>::iterator it2=signs.begin();it2!=signs.end();it2++)
 						 {
-							 cv::Mat sign_image;
+							 cv::Mat sign_image,sign_space_image;
 							 //resize the template to the circle size
 							 cv::resize((*it2).getImg(),sign_image,cv::Size(radius+5,radius+5),0,0,cv::INTER_AREA);
+							 cv::cvtColor(sign_image, sign_image, CV_BGR2GRAY);
+							 cv::cvtColor(circleplace, sign_space_image, CV_BGR2GRAY);
+
+
 
 							 //Output template matching
 							 cv::Mat result;
-							 cv::matchTemplate(circleplace,sign_image,result,CV_ADAPTIVE_THRESH_MEAN_C);
+							 cv::matchTemplate(sign_space_image,sign_image,result,CV_TM_SQDIFF_NORMED);
 
 							 float lowest_local=result.at<float>(0,0);
 
 							 //Calculate interesting pixels
-							 int rows=result.rows-sign_image.rows+1;
-							 int cols=result.cols-sign_image.cols+1;
+							 int rows=result.rows;//-sign_image.rows+1;
+							 int cols=result.cols;//-sign_image.cols+1;
 
 
 							 for (int i = 0; i < (rows*cols); i++)
@@ -388,14 +395,16 @@ public:
 									lowest_local=result.at<float>(y,x);
 								}
 							 }
-							 if(lowest_local<lowest_global)
+							 if(lowest_local<lowest_global && lowest_local<15000000)
 							 {
+								 found=true;
 								 found_sign=it2;
 								 lowest_global=lowest_local;
+								 ROS_INFO("LOW: %f",lowest_global);
 							 }
 						 }
 
-				    	 if(1)
+				    	 if(found)
 				    	 {
 
 				    		cv::Mat blub=imgPtrRGB->image(*it);
@@ -441,6 +450,8 @@ public:
 				imgPtrRGB->image=angles_ok;
 				imgPtrRGB->encoding="mono8";
 			}
+
+			//imgPtrRGB->image=filtered_bgr;
 
 			rgb_out.publish(imgPtrRGB->toImageMsg(),info_msg);
 			depth_out.publish(imgPtrDepth->toImageMsg(),info_msg);

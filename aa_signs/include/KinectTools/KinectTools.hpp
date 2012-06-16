@@ -207,5 +207,11 @@ namespace KinTo
 	 */
 	void BGRFilter(const cv::Mat &bgr_in, cv::Mat &bgr_out, uchar min_b=0, uchar max_b=255, uchar min_g=0, uchar max_g=255, uchar min_r=0, uchar max_r=255);
 
+	/**
+	 * Red-Filter
+	 */
+	void RedFilter(const cv::Mat &bgr, cv::Mat &red_out);
+
+
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

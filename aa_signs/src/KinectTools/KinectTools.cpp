@@ -1140,4 +1140,33 @@ namespace KinTo
 		}
 	}
 
+	void RedFilter(const cv::Mat &bgr, cv::Mat &red_out)
+	{
+		cv::Mat hsv;
+		red_out=bgr.clone();
+		cv::cvtColor( bgr, hsv , CV_RGB2HSV);
+
+		int size_x=bgr.cols, size_y=bgr.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Move forward in vertical direction
+			x=i/size_y;
+			y=i-x*size_y;
+
+			int h=hsv.at<Vec3uchar>(y,x)[0]*2.83;
+			int s=hsv.at<Vec3uchar>(y,x)[1]*0.39;
+			int v=hsv.at<Vec3uchar>(y,x)[2]*0.39;
+
+
+			if(!((h<=13 || h>=338) && s>45 &&v>35))
+			{
+				red_out.at<Vec3uchar>(y,x)[0]=0;
+				red_out.at<Vec3uchar>(y,x)[1]=0;
+				red_out.at<Vec3uchar>(y,x)[2]=0;
+			}
+		}
+	}
+
+
 } /* namespace KinTo */
