@@ -24,9 +24,12 @@ namespace KinTo
 	typedef cv::Vec<short, 3> Vec3shrt;
 	typedef cv::Vec<uchar, 1> Vec1uchar;
 	typedef cv::Vec<uchar, 3> Vec3uchar;
+	typedef cv::Vec<uchar, 4> Vec4uchar;
+	typedef cv::Vec<int, 1> Vec1int;
 	typedef cv::Vec<int, 2> Vec2int;
 	typedef cv::Vec<int, 3> Vec3int;
-	typedef cv::Vec<int, 1> Vec1int;
+
+
 	/**
 	 * This function converts a kinect depth image into steps
 	 *  @param [in] src The source image (CV_16UC1)

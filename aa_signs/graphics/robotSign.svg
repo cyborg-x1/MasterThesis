@@ -14,7 +14,10 @@
    id="svg3699"
    version="1.1"
    inkscape:version="0.48.2 r9819"
-   sodipodi:docname="ROBODIR.svg">
+   sodipodi:docname="robotSign_imp.svg"
+   inkscape:export-filename="/home/cyborg-x1/Entwicklung/MasterThesis/aa_signs/graphics/stop_imp.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs3701">
     <inkscape:perspective
@@ -60,7 +63,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -85,11 +88,13 @@
          style="fill:#d40000;fill-opacity:1"
          id="path7652" />
       <path
-         style="fill:#000000;stroke:#000000;stroke-width:0.23289177000000000px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="m 43.720292,992.1852 17.46693,17.4669 -17.46693,17.4669 0,-11.6446 -17.4669,0 0,-11.6446 17.4669,0 z"
+         style="fill:#000000;stroke:#000000;stroke-width:0.23289177px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 61.187207,1009.6521 -17.4669,17.4669 -17.4669,-17.4669 11.6446,0 0,-17.46692 11.6446,0 0,17.46692 z"
          id="path4311"
          inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccccccc" />
+         sodipodi:nodetypes="cccccccc"
+         inkscape:export-xdpi="90"
+         inkscape:export-ydpi="90" />
     </g>
   </g>
 </svg>

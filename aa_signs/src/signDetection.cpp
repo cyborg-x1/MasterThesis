@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <KinectTools/KinectTools.hpp>
+#include <KinectTools/tmpMatch.hpp>
 #include <tinyxml.h>
 #include "aa_signs/signDetectionConfig.h"
 namespace enc = sensor_msgs::image_encodings;
@@ -91,6 +92,10 @@ class signDetection
 	int x_min, x_max,  y_min, y_max, z_min, z_max;
 	int surface_w_min,surface_w_max,surface_h_min,surface_h_max;
 	bool show_angles_ok;
+	bool new_template_matching;
+
+	std::vector<KinTo::MatchTempProfile> tempProfiles;
+
 public:
 	signDetection() :
 			nh_("~"), it_out(nh_)
@@ -135,6 +140,7 @@ public:
 							printf("\n");
 							std::string name;
 							std::string file;
+							std::string file_imp;
 							while (pAttrib) //fetch attributes
 							{
 								if(pAttrib->NameTStr()=="name") //sign name
@@ -145,6 +151,11 @@ public:
 								{
 									file=pAttrib->Value();
 								}
+								if(pAttrib->NameTStr()=="file_imp") //file name (important pixels)
+								{
+									file_imp=pAttrib->Value();
+								}
+
 								pAttrib=pAttrib->Next();
 							}
 
@@ -167,10 +178,33 @@ public:
 									picturePath=xmldir/=picturePath;
 								}
 
+								boost::filesystem::path picturePath2(file_imp);
+								if(picturePath2.is_relative())
+								{
+									boost::filesystem::path xmlfilepath(settingsfile);
+									boost::filesystem::path xmldir=xmlfilepath.parent_path();
+									picturePath2=xmldir/=picturePath2;
+								}
+
 								ROS_INFO("File: %s", picturePath.string().c_str());
 								cv::Mat img=cv::imread(picturePath.string());
+								cv::Mat img_imp=cv::imread(picturePath2.string());
 								if(!img.empty())
 								{
+									if(!img_imp.empty())
+									{
+										ROS_INFO("Loaded img_imp: %s",file_imp.c_str());
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,img_imp,name,0.08,0.2,127,0.2,1,0.86));
+									}
+									else
+									{
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,name,0.08,0.2,127,0.2,1,0.86));
+										if(file_imp.size())
+										{
+											ROS_ERROR("Could not load given imp_file: %s, going on without it...",file_imp.c_str());
+										}
+									}
+
 									signs.push_back(sign(name,img));
 									imgloaded=true;
 								}
@@ -258,6 +292,8 @@ public:
 		surface_h_max=config.surface_h_max;
 
 		show_angles_ok=config.show_angles_ok;
+
+		new_template_matching=config.new_template_matching;
 	}
 
 	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
@@ -321,113 +357,152 @@ public:
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
 
 
-			//search for circles
+			//Look through the surfaces...
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
 			{
-				//taken from http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html:
-				cv::Mat current_surface=filtered_bgr(*it),gray;
-			    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
-			    // smooth it, otherwise a lot of false circles may be detected
-			    cv::GaussianBlur( gray, gray, cv::Size(5, 5), 2, 2 );
-			    std::vector<cv::Vec3f> circles;
+				if(new_template_matching)//proportion enhanced template matching
+				{
+					cv::Mat roi_mat=imgPtrRGB->image(*it);
+					KinTo::proportionEnhancedTemplateMatching(tempProfiles,roi_mat,100);
+					int i=0;
+					KinTo::Match bestMatch; //Best match for ROI
+					for(std::vector<KinTo::MatchTempProfile>::iterator it_prof=tempProfiles.begin();it_prof!=tempProfiles.end();it_prof++)
+					{
+						KinTo::MatchTempProfile prof=(*it_prof);
+						const std::vector<KinTo::Match>& match_vec=prof.getMatches();
 
-			    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
-			    float lowest_global;
-			    //circles
-			    for( size_t i = 0; i < circles.size(); i++ )
-			    {
-			    	bool found=false;
-				    lowest_global=FLT_MAX;
-				    std::vector<sign>::iterator found_sign;
-			    	 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-			    	 int radius = cvRound(circles[i][2]);
+						cv::Point last_center(-1,-1);
+						i++;
 
-			    	 if(center.x-radius>0 &&
-			    	    center.y-radius>0 &&
-			    	    center.x+radius<(*it).width &&
-			    	    center.y+radius<(*it).height && center.x>0 && center.y>0
-			    	    )
-			    	 {
+						bestMatch.congruence=0;
 
-						 //Create a new ROI for the current circle
-						 int start_x=center.x-radius-10;
-						 int start_y=center.y-radius-10;
-						 int end_x=center.x+radius+10;
-						 int end_y=center.y+radius+10;
-
-						 if(end_x>=(*it).width)end_x=(*it).width-1;
-						 if(end_y>=(*it).height)end_y=(*it).height-1;
-
-						 if(start_x<0)start_x=0;
-						 if(start_y<0)start_y=0;
-
-						 cv::Mat circleplace=imgPtrRGB->image(*it)(cv::Rect(start_x,start_y,end_x-start_x,end_y-start_y));
-
-						 for(std::vector<sign>::iterator it2=signs.begin();it2!=signs.end();it2++)
-						 {
-							 cv::Mat sign_image,sign_space_image;
-							 //resize the template to the circle size
-							 cv::resize((*it2).getImg(),sign_image,cv::Size(radius+5,radius+5),0,0,cv::INTER_AREA);
-							 cv::cvtColor(sign_image, sign_image, CV_BGR2GRAY);
-							 cv::cvtColor(circleplace, sign_space_image, CV_BGR2GRAY);
+						for(std::vector<KinTo::Match>::const_reverse_iterator it_matches=match_vec.rbegin()
+								;it_matches!=match_vec.rend();it_matches++)
+						{
+							it_matches->printMatch();
 
 
 
-							 //Output template matching
-							 cv::Mat result;
-							 cv::matchTemplate(sign_space_image,sign_image,result,CV_TM_SQDIFF_NORMED);
 
-							 float lowest_local=result.at<float>(0,0);
+							if(it_matches->congruence>bestMatch.congruence)
+							{
+								bestMatch=*it_matches;
+							}
+						}
+						it_prof->clearMatches();
+					}
+					std::string str;
+					str+=bestMatch.name[0];
+					cv::putText(roi_mat,str,bestMatch.center,CV_FONT_NORMAL,1,cv::Scalar(0,0,255));
 
-							 //Calculate interesting pixels
-							 int rows=result.rows;//-sign_image.rows+1;
-							 int cols=result.cols;//-sign_image.cols+1;
+				}
+				else //with circles
+				{
+					//Circledetection taken from http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html:
+					//and modified
+					cv::Mat current_surface=filtered_bgr(*it),gray;
+				    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
+				    // smooth it, otherwise a lot of false circles may be detected
+				    cv::GaussianBlur( gray, gray, cv::Size(5, 5), 2, 2 );
+				    std::vector<cv::Vec3f> circles;
 
+				    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
+				    float lowest_global;
+				    //circles
+				    for( size_t i = 0; i < circles.size(); i++ )
+				    {
+				    	bool found=false;
+					    lowest_global=FLT_MAX;
+					    std::vector<sign>::iterator found_sign;
+				    	 cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+				    	 int radius = cvRound(circles[i][2]);
 
-							 for (int i = 0; i < (rows*cols); i++)
-							 {
-								int y=i/rows;
-								int x=i-y*cols;
-
-								//ROS_INFO("%f",result.at<float>(y,x));
-								if(result.at<float>(y,x)<lowest_local)
-								{
-									lowest_local=result.at<float>(y,x);
-								}
-							 }
-							 if(lowest_local<lowest_global && lowest_local<15000000)
-							 {
-								 found=true;
-								 found_sign=it2;
-								 lowest_global=lowest_local;
-								 ROS_INFO("LOW: %f",lowest_global);
-							 }
-						 }
-
-				    	 if(found)
+				    	 if(center.x-radius>0 &&
+				    	    center.y-radius>0 &&
+				    	    center.x+radius<(*it).width &&
+				    	    center.y+radius<(*it).height && center.x>0 && center.y>0
+				    	    )
 				    	 {
 
-				    		cv::Mat blub=imgPtrRGB->image(*it);
-				    		ROS_INFO("Found sign: %s",found_sign->getName().c_str());
-				    		if(found_sign->getName()=="left")
-				    		{
-				    			cv::circle( blub, center, radius, cv::Scalar(0,255,0), 3, 8, 0 );
-				    		}
-				    		if(found_sign->getName()=="right")
-							{
-								cv::circle( blub, center, radius, cv::Scalar(255,0,0), 3, 8, 0 );
-							}
-				    		if(found_sign->getName()=="stop")
-							{
-								cv::circle( blub, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
-							}
+							 //Create a new ROI for the current circle
+							 int start_x=center.x-radius-10;
+							 int start_y=center.y-radius-10;
+							 int end_x=center.x+radius+10;
+							 int end_y=center.y+radius+10;
+
+							 if(end_x>=(*it).width)end_x=(*it).width-1;
+							 if(end_y>=(*it).height)end_y=(*it).height-1;
+
+							 if(start_x<0)start_x=0;
+							 if(start_y<0)start_y=0;
+
+							 //ROI
+							 cv::Mat circleplace=imgPtrRGB->image(*it)(cv::Rect(start_x,start_y,end_x-start_x,end_y-start_y));
+
+							 for(std::vector<sign>::iterator it2=signs.begin();it2!=signs.end();it2++)
+							 {
+								 cv::Mat sign_image,sign_space_image;
+								 //resize the template to the circle size
+								 cv::resize((*it2).getImg(),sign_image,cv::Size(radius+5,radius+5),0,0,cv::INTER_AREA);
+								 cv::cvtColor(sign_image, sign_image, CV_BGR2GRAY);
+								 cv::cvtColor(circleplace, sign_space_image, CV_BGR2GRAY);
+
+
+
+								 //Output template matching
+								 cv::Mat result;
+								 cv::matchTemplate(sign_space_image,sign_image,result,CV_TM_SQDIFF_NORMED);
+
+								 float lowest_local=result.at<float>(0,0);
+
+								 //Calculate interesting pixels
+								 int rows=result.rows;//-sign_image.rows+1;
+								 int cols=result.cols;//-sign_image.cols+1;
+
+
+								 for (int i = 0; i < (rows*cols); i++)
+								 {
+									int y=i/rows;
+									int x=i-y*cols;
+
+									//ROS_INFO("%f",result.at<float>(y,x));
+									if(result.at<float>(y,x)<lowest_local)
+									{
+										lowest_local=result.at<float>(y,x);
+									}
+								 }
+								 if(lowest_local<lowest_global && lowest_local<0.15)
+								 {
+									 found=true;
+									 found_sign=it2;
+									 lowest_global=lowest_local;
+									 ROS_INFO("LOW: %f",lowest_global);
+								 }
+							 }
+
+					    	 if(found)
+					    	 {
+
+					    		cv::Mat blub=imgPtrRGB->image(*it);
+					    		ROS_INFO("Found sign: %s",found_sign->getName().c_str());
+					    		if(found_sign->getName()=="left")
+					    		{
+					    			cv::circle( blub, center, radius, cv::Scalar(0,255,0), 3, 8, 0 );
+					    		}
+					    		if(found_sign->getName()=="right")
+								{
+									cv::circle( blub, center, radius, cv::Scalar(255,0,0), 3, 8, 0 );
+								}
+					    		if(found_sign->getName()=="stop")
+								{
+									cv::circle( blub, center, radius, cv::Scalar(0,0,255), 3, 8, 0 );
+								}
+					    	 }
+
 				    	 }
+				    }
+				}
 
-			    	 }
-
-
-
-			    }
 			}
 
 

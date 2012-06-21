@@ -282,6 +282,7 @@ class DEFAULT
         if("blur_depth"==(*i)->name){blur_depth = boost::any_cast<int>(val);}
         if("blur_angles"==(*i)->name){blur_angles = boost::any_cast<int>(val);}
         if("show_angles_ok"==(*i)->name){show_angles_ok = boost::any_cast<bool>(val);}
+        if("new_template_matching"==(*i)->name){new_template_matching = boost::any_cast<bool>(val);}
       }
     }
 
@@ -304,6 +305,7 @@ int surface_h_max;
 int blur_depth;
 int blur_angles;
 bool show_angles_ok;
+bool new_template_matching;
 
     bool state;
     std::string name;
@@ -351,6 +353,8 @@ bool show_angles_ok;
       int blur_angles;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       bool show_angles_ok;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      bool new_template_matching;
 //#line 255 "/opt/ros/fuerte/stacks/dynamic_reconfigure/templates/ConfigType.h"
 
     bool __fromMessage__(dynamic_reconfigure::Config &msg)
@@ -676,6 +680,16 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("show_angles_ok", "bool", 0, "show the pixel with the correct angles", "", &signDetectionConfig::show_angles_ok)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("show_angles_ok", "bool", 0, "show the pixel with the correct angles", "", &signDetectionConfig::show_angles_ok)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __min__.new_template_matching = 0;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __max__.new_template_matching = 1;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __default__.new_template_matching = 1;
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("new_template_matching", "bool", 0, "use the new template matching instead of circle detection and opencv template matching", "", &signDetectionConfig::new_template_matching)));
+//#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
+      __param_descriptions__.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<bool>("new_template_matching", "bool", 0, "use the new template matching instead of circle detection and opencv template matching", "", &signDetectionConfig::new_template_matching)));
 //#line 228 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.convertParams();
 //#line 228 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"

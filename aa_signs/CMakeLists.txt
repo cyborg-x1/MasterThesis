@@ -35,6 +35,8 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #Add sources
 rosbuild_add_executable(signDetection src/signDetection.cpp)
 rosbuild_add_library(KinectTools src/KinectTools/KinectTools.cpp)
+rosbuild_add_library(KinectTools src/KinectTools/tmpMatch.cpp)
+
 
 find_package(OpenCV REQUIRED)
 target_link_libraries(signDetection ${OpenCV_LIBRARIES})

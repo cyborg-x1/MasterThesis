@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <signs>
-	<sign name="right"  file="../graphics/nbRight.png" />
-	<sign name="left" 	file="../graphics/nbLeft.png" />
+	<sign name="right"  file="../graphics/right.png" file_imp="../graphics/right_imp.png"/>
+	<sign name="left" 	file="../graphics/left.png" file_imp="../graphics/left_imp.png"/>
+	<sign name="stop" 	file="../graphics/stop.png" file_imp="../graphics/stop_imp.png"/>
 </signs>
   
