@@ -1,19 +1,65 @@
-\chapter{Kinect Data Characteristics}
+\chapter{Kinect Analysis}
 \graphicspath{{./KinectData/img/}}
 
+As mentioned in the introduction, a closer look to the Kinects data characteristics is taken.
 
-\section{Interferences}
-%sunlight
-\pic{glas.png}{Glas (Webcam and Pointcloud)}{\label{figure:depths1}}{1}{h}
-\pic{Mirror.png}{Mirror (Webcam and Pointcloud)}{\label{figure:depths1}}{1}{h}
-\pic{ToClose.png}{Kinect to Close to a Surface (Webcam and Pointcloud)}{\label{figure:depths1}}{0.8}{h}
+
+\section{Surface Problems}
+
+There are a few cases when the Kinect is not able to deliver any depth data from a surface.
+
+First of all it does not work with translucent materials like glas or plastics. The projected
+points are just fractured away, when they hit in a small angle. It's be possible to look through 
+a translucent surface, but only if it's clear and the angle from the camera to the surface is not
+to big.
+\pic{glas.png}{Glas (Webcam and Pointcloud)}{\label{figure:glas}}{1}{h}
+
+Another problem are mirrors. Mirrors will also fracture the ir spots away, 
+so it's not possible to get any depth data (see figure \vref{figure:mirror}).
+\pic{Mirror.png}{Mirror (Webcam and Pointcloud)}{\label{figure:mirror}}{1}{h}
+
+If the sun lights up a surface directly it will outshine the ir-spots this will also blank out this surface
+in the resulting depth image (see figure \vref{figure:sun}).
+\pic{Sun.png}{Sun light on a surface (Pointcloud/Webcam)}{\label{figure:sun}}{0.8}{h}
+
+On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
+identifying their location (see figure \vref{figure:close}) leading to the same result as the previous cases.
+\pic{ToClose.png}{Kinect to Close to a Surface (IR sensor and Pointcloud)}{\label{figure:close}}{0.8}{h}
+
+
+\section{Data Characteristics} 
+
+\subsection{Analyzing Tools}
+
+While this work multiple analyzing tools have been created. Those were created as
+nodes to easily connect with the OpenNi driver package in the ROS system.
+
+\subsubsection{DepthImageAnalyzer}
+In the beginning a GUI node was created to get in touch with the depth images.
+It is able to show a depth image in and if the user clicks into the picture it
+will show the corresponding value of the pixel.
+
+%TODO DepthImageAnalyzer Picture
+
+In the later process of this work it was not needed anymore, because showing the point cloud
+in rViz showed to be more effective in analyzing data and debugging applications.
+
+\subsection{PointCloud creation with selected topics}
+To create point cloud messages for other topics than those from the Kinect node.
+
+
 \pic{verticalFractals.png}{Vertical Fractals (Pointcloud)}{\label{figure:verticals}}{0.4}{h}
-\pic{noise.png}{Noise (Pointcloud)}{\label{figure:verticals}}{0.8}{h}
 
 
-%other kinect
-%to close
+\pic{noise.png}{Noise (Pointcloud)}{\label{figure:noise}}{0.8}{h}
+
 \section{Resolution Depending the Depth}
 %Resolution picture
+
+
+\subsection{}
 \pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths1}}{0.1}{h}
 \pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths1}}{0.1}{h}
+\pic{LaserDistanceKinectDistance.png}{Distance measured by Laser and by Kinect}{\label{figure:LaserKinect}}{0.9}{h}
+\pic{DifferenceForegoing.png}{Distance to the foregoing value in relation to the depth}{\label{figure:LaserKinect}}{1}{h}
+ 

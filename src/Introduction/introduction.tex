@@ -1,5 +1,30 @@
 \chapter{Introduction}
 \graphicspath{{./Introduction/img/}}
+
+Nowadays image processing is being used in many applications like improvements in
+photography, recognizing parts and their arrangement in industry applications, 
+face-recognition in photos or to scan objects with 3D cameras for creating
+models of them.
+
+Recently Microsoft startet to ship the Kinect camera, which was ment to enable
+gamers of the XBox-360 to control their in-game avatar with their own body.
+As soon it was released a contest was proclaimed to write a free driver to make it a
+usable on different systems, like Linux or Windows.
+
+Today the Kinect is also used in WillowGarages Robot Operating System,
+where it can act as cheap laser scanner for their Turtlebot. The Turtlebot 
+(/url{www.turtlebot.org}) was designed to give home users who are interested in 
+robotics the opportunity to experiment with robotics on their own.
+
+\pic{turtlebot.jpg}{Turtlebot EU-Version}{\label{figure:turtlebot}}{0.6}{h}
+
+This thesis will have a look on the data characteristics and the accuracy of the
+Kinect camera and use the results to find surfaces arranged to the camera and to 
+recognize different signs on them with pattern matching in the corresponding regions
+in the RGB picture.
+
+\chapter{Basics}
+
 \section{Robot Operating System (ROS)}
   
 \begin{figure}[h]
@@ -15,7 +40,7 @@ as experimental.
 
 It also works together with a Google Android device by runnning a special software which makes the device available
 as hardware extension, enabling processes on different machines to access cameras, accelerometers and the display.
-The basic underlying principle of ROS is the Publisher Subscriber Pattern further called PSP is a pattern which 
+The basic underlying principle of ROS is the Publisher Subscriber Pattern further called PSP, it's a pattern which 
 implements the realworld behaviour of publishers and subscribers (e.g. newspaper) in software. 
 The publishing house advertises and publishes its newspaper or magazine while the subscribers look at the advertisements
 and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
@@ -44,10 +69,29 @@ connected together by topics.
 	\label{figure:psp_ROS}
 \end{figure} 
 
+In this work the output of the rViz-node (short form for robot visualizer) will be used to display changes to the depth- and 
+rgb-image of the Kinect. rViz is a tool to display various informations like video streams, maps, paths, positions and the
+so called point cloud.
 
- 
+\section{Point Cloud}
+The point cloud is data set which contains the three dimensional position for each pixel of a 3D camera. 
+If available, it can also contain the color or grayscale values of each pixel. 
+The point cloud data can be collected from a stereo camera, a laser scanner which rotates around an axis or 
+from cameras like the Microsoft Kinect.
+
+
+%TODO Picture from rViz with the pointcloud and video
+
 \clearpage
 
+\section{OpenCV}
+OpenCV is a set of tools mainly for computer vision. There are tools for image processing, feature detection, tracking,
+template matching and so on. It's the main vision package for usage with ROS.
+
+\pic{OpenCV_Overview}{OpenCV Overview}{\label{figure:opencv_ov}
+\captionsetup{font={footnotesize,bf,it}}
+\caption*{Source: \url{http://opencv.willowgarage.com/wiki/}}}
+{0.6}{h}
 
 \section{Kinect}
 
@@ -58,13 +102,24 @@ connected together by topics.
 	\label{figure:kinect_ir}
 \end{figure}
 
-The Kinect is a combination of a standard color camera and a depth sensor produced by Microsoft. The depth sensor is made by Primesense and 
-it's working principle is currently a secret of the manufacturer. The known facts are, that the Kinect uses an ir-projector to draw a 
-grid of very small points onto each surface (see figure \vref{figure:kinect_ir})on its front and a ir-camera to process the result somehow.  
-There are different approaches on how it might work, the most resonable is that it uses 
+The Kinect is a combination of a standard color camera and a depth sensor produced by Microsoft, a so called RGB-D camera. 
+The depth sensor is produced by Primesense and it's working principle is currently a secret of the manufacturer. 
+The known facts are, that the Kinect uses an ir-projector to draw a grid of very small points onto each surface 
+(see figure \vref{figure:kinect_ir}) and an ir-camera to process the result somehow.  
+There are different approaches on how it might work, the most resonable approach is that it uses 
 specific groups of points and their position on the resulting camera image to calculate how far 
-away they are like a laser scanner (in figure \vref{figure:ls_WP}) but in three dimensons (see figure \vref{figure:kinect_WP}) 
-than in two dimensions. 
+away they are. This is the same way a laser scanner works. 
+It sends out a laser beam and the sensor is aranged in a different viewing angle than the beam.
+If the beam now hits a surface its position in the camera picture relates to the distance of the surface.
+(see in figure \vref{figure:ls_WP}). This it would be the same for the Kinect points but in 3 dimensions 
+(see in figure \vref{figure:kinect_WP}).
+
+ASUS is also offering cameras with the Primesense chipset for developers, the XTion Pro and the XTion Pro Live.
+The difference between those cameras is, that the XTion Pro does not include a webcam.
+
+In the recent past Microsoft created a new PC version of the Kinect, which is called Kinect for Windows.
+This camera offers a greater viewing angle, while being able to detect objects closer to the camera.
+The problem of objects being to close will be discussed later in this document.
 
 \begin{figure}[h]
 	\centering
@@ -88,6 +143,27 @@ than in two dimensions.
 	\label{figure:kinect_WP} 
 \end{figure}
 \clearpage
+
+\section{OpenNi}
+
+
+
 \section{Mobile Robots Pioneer 3dx}
+The Pioneer 3dx is a Research Robot created by Mobile Robots(\url{http://www.mobilerobots.com/ResearchRobots/PioneerP3DX.aspx}).
+With its two motored wheels and its stabilization wheel the robot is a so called point robot. That means its able to 
+rotate around its center like a tank which makes path planing and movement a lot easier. 
+The robot features a internal microcontroller board which can be remote controlled from an external computing system, 
+ultra-sonic distance sensors and bumpers. The robot of the University of Applied Sciences Aalen 
+is additionally equipped with a LMS-200 laser scanner from SICK Sensor Technologies, which works
+like described in the last chapter.
+
+%TODO Picture Pioneer
 
 
+
+
+
+
+ 
+
+ 
