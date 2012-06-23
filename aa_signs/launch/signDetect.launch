@@ -3,7 +3,8 @@
 	<!-- Set compression format to png -->
 	<param name="/comp/compressed/format" value="png" />
 	<param name="/camera/driver/depth_registration" value="true" />	
-	
+
+	  
 
 	<!-- Launch a reconfigure GUI -->
 	<node pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui" output="screen" respawn="true"  />

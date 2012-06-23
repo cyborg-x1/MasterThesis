@@ -200,15 +200,6 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 	r.x=x_tplace;
 	r.y=y_tplace;
 
-	cv::Mat d_tar=target.clone();
-	cv::cvtColor(d_tar, d_tar, CV_GRAY2BGR);
-	cv::rectangle(d_tar,r,cv::Scalar(0,0,255),3,0,0);
-	cv::line(d_tar,cv::Point(fromTarget.x-fromTarget.length_c,fromTarget.y-fromTarget.length_c),
-			cv::Point(fromTarget.x,fromTarget.y),cv::Scalar(255,0,255),1,0,0);
-	cv::line(d_tar,cv::Point(fromTarget.x-fromTarget.length_c-fromTarget.length_l,fromTarget.y-fromTarget.length_c-fromTarget.length_l),
-			cv::Point(fromTarget.x-fromTarget.length_c,fromTarget.y-fromTarget.length_c),cv::Scalar(0,255,255),1,0,0);
-	cv::circle(d_tar,cv::Point(fromTarget.x,fromTarget.y),3,cv::Scalar(255,255,0),2);
-
 
 	int cnt_pixelsCmp=0;
 	int cnt_pixelsOk=0;
@@ -258,11 +249,8 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 
 
 
-	double congruence=(double)cnt_pixelsOk/(double)cnt_pixelsCmp-cnt_pixelsNegative/10;
+	double congruence=(double)cnt_pixelsOk/(double)cnt_pixelsCmp-cnt_pixelsNegative/2;
 	double coverage=(double)cnt_pixelsCmp/(double)(size_x*size_y);
-
-
-
 
 	if(congruence>=min_congruence && coverage>=min_coverage)
 	{
@@ -279,6 +267,10 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 		matches.push_back(m);
 	}
 }
+
+
+
+
 
 void MatchTempProfile::checkProportion(Proportion proportion, const cv::Mat &target, int threshold)
 {
@@ -325,7 +317,12 @@ void proportionEnhancedTemplateMatching(std::vector<MatchTempProfile> &templates
 
 	cv::Mat blured;
 	cv::cvtColor(target, blured, CV_BGR2GRAY);
+	cv::equalizeHist(blured,blured);
+
 	cv::GaussianBlur(blured,blured,cv::Size(5,5),2,2,0);
+
+
+
 
 	int size_x=target.cols;
 	int size_y=target.rows;
@@ -338,7 +335,7 @@ void proportionEnhancedTemplateMatching(std::vector<MatchTempProfile> &templates
 
 	int last_length=-1;
 	int current_length=0;
-	int dark;
+	int dark=0;
 
 	for(int i=0; i<(size_x*size_y);i++)
 	{

@@ -1,0 +1,63 @@
+<launch>
+	<!-- Set compression format to png -->
+	<param name="/comp/compressed/format" value="png" />
+	<param name="/camera/driver/depth_registration" value="true" />	
+	
+		   <!-- run the teleop node to send movement velocities to the pioneer -->
+	  <param name="axis_vx" type="int" value="1" />
+	  <param name="axis_vw" type="int" value="0" />
+	  <param name="axis_vy" type="int" value="2" />
+	  <param name="deadman_button" type="int" value="0" />
+	  <param name="run_button" type="int" value="0" />
+
+	<!-- Launch a reconfigure GUI -->
+	<node pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui" output="screen" respawn="true"  />
+	
+	
+	<!-- Start the camera-->
+	<include file="$(find openni_launch)/launch/openni.launch" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" respawn="true"  />
+
+  	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
+
+		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
+	    <!-- Explicit topic remappings, shouldn't need all of these -->
+	    <remap from="rgb/image_rect_color"        to="/signDetection/out_rgb" />
+	    <remap from="rgb/camera_info"             to="/signDetection/camera_info" />
+	    <remap from="depth_registered/image_rect" to="/signDetection/out_depth" />
+	    <remap from="depth_registered/points"     to="debug_cloud" />
+  	</node>
+
+  	<node pkg="aa_signs" type="signDetection" name="signDetection" output="screen" respawn="true" > 
+ 		<remap from="/signDetection/depth_registered/image_rect" 	to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/signDetection/rgb/image_rect_color" 			to="/camera/rgb/image_rect_color" />
+ 		<remap from="/signDetection/rgb/camera_info" 				to="/camera/rgb/camera_info" />
+ 		<param name="settingsfile" value="$(find aa_signs)/settings/signs.xml" />
+	</node>
+  	
+	<!-- ############### -->
+    <!-- #### P2OS  #### -->
+    <!-- ############### -->
+
+    <node pkg="p2os_driver" type="p2os" name="p2os" respawn="true" output="screen">
+      <param name="port" type="string" value="/dev/ttyUSB1" />
+      <param name="baud" type="string" value="9600" />
+
+    <!-- <param name="pulse" type="double" value="0.5" /> -->
+    </node>
+
+
+    <!-- #################### -->
+    <!-- ### MOTOR ENABLE ### -->
+    <!-- #################### -->
+
+    <node pkg="rostopic" type="rostopic" name="$(anon chatter)" args="pub -1 /cmd_motor_state p2os_driver/MotorState 1" output="screen" />
+
+	<node pkg="joy" type="joy_node" name="pioneer_joy_controller" respawn="true" />
+
+  	<node pkg="p2os_teleop" type="p2os_teleop" name="p2os_teleop" respawn="true">
+                  <remap from="/des_vel" to="/base_controller/command" />
+  	</node>
+	
+</launch>

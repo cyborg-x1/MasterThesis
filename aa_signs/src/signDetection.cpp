@@ -194,11 +194,11 @@ public:
 									if(!img_imp.empty())
 									{
 										ROS_INFO("Loaded img_imp: %s",file_imp.c_str());
-										tempProfiles.push_back(KinTo::MatchTempProfile(img,img_imp,name,0.08,0.2,127,0.2,1,0.86));
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,img_imp,name,0.08,0.2,127,0.2,0.7,0.8));
 									}
 									else
 									{
-										tempProfiles.push_back(KinTo::MatchTempProfile(img,name,0.08,0.2,127,0.2,1,0.86));
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,name,0.08,0.2,127,0.2,0.7,0.8));
 										if(file_imp.size())
 										{
 											ROS_ERROR("Could not load given imp_file: %s, going on without it...",file_imp.c_str());
@@ -360,12 +360,53 @@ public:
 			//Look through the surfaces...
 			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
 			{
+
+//				image_geometry::PinholeCameraModel model;
+//				model.fromCameraInfo(info_msg);
+
+				cv::Mat roi_mat=imgPtrRGB->image(*it).clone();
+
+				//Get normal from center
+				int center_x=it->x+it->width/2;
+				int center_y=it->y+it->height/2;
+
+				double nx=normals.at<KinTo::Vec3shrt>(center_y,center_x)[0];
+				double ny=normals.at<KinTo::Vec3shrt>(center_y,center_x)[1];
+				double nz=normals.at<KinTo::Vec3shrt>(center_y,center_x)[2];
+
+				double nl=std::sqrt(std::pow(nx,2)+std::pow(ny,2)+std::pow(nz,2));
+
+				double wx=std::acos(nx/nl);
+				double wy=std::acos(ny/nl);
+				double wz=std::acos(nz/nl);
+
+				//HUH?
+				double alpha=wz*0.001;
+				double beta=wy*0.001;
+
+
+					 cv::Mat R = (cv::Mat_<double>(3, 3) <<
+					 std::cos(beta),      0,    std::sin(beta),
+					      0, 	  1,                 0,
+					-std::sin(beta),      0,  std::cos(beta));
+
+					  cv::Mat R2 = (cv::Mat_<double>(3, 3) <<
+						  1,          			0,                0,
+						  0, 	  std::cos(alpha), -std::sin(alpha),
+						  0,      std::sin(alpha),  std::cos(alpha));
+
+				cv::warpPerspective(roi_mat, roi_mat, R*R2, cv::Size(roi_mat.cols,roi_mat.rows));
+
+
+
+
 				if(new_template_matching)//proportion enhanced template matching
 				{
-					cv::Mat roi_mat=imgPtrRGB->image(*it);
+
 					KinTo::proportionEnhancedTemplateMatching(tempProfiles,roi_mat,100);
 					int i=0;
 					KinTo::Match bestMatch; //Best match for ROI
+					bool matchfound=false;
 					for(std::vector<KinTo::MatchTempProfile>::iterator it_prof=tempProfiles.begin();it_prof!=tempProfiles.end();it_prof++)
 					{
 						KinTo::MatchTempProfile prof=(*it_prof);
@@ -379,22 +420,29 @@ public:
 						for(std::vector<KinTo::Match>::const_reverse_iterator it_matches=match_vec.rbegin()
 								;it_matches!=match_vec.rend();it_matches++)
 						{
-							it_matches->printMatch();
 
+							matchfound=true;
 
 
 
 							if(it_matches->congruence>bestMatch.congruence)
 							{
+
 								bestMatch=*it_matches;
 							}
 						}
 						it_prof->clearMatches();
 					}
-					std::string str;
-					str+=bestMatch.name[0];
-					cv::putText(roi_mat,str,bestMatch.center,CV_FONT_NORMAL,1,cv::Scalar(0,0,255));
 
+					//Write first letter of the match to the surface
+					if(matchfound)
+					{
+						std::string str;
+						str+=bestMatch.name[0];
+						cv::Mat paint_roi=imgPtrRGB->image(*it);
+						cv::putText(paint_roi,str,bestMatch.center,CV_FONT_NORMAL,1,cv::Scalar(0,0,255));
+						bestMatch.printMatch();
+					}
 				}
 				else //with circles
 				{
