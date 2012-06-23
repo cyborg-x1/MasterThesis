@@ -1,31 +1,30 @@
 \chapter{Kinect Analysis}
 \graphicspath{{./KinectData/img/}}
 
-As mentioned in the introduction, a closer look to the Kinects data characteristics is taken.
-
+As mentioned in the introduction, a closer look to the Kinects data characteristics is taken
+within this document to be able to implement a sign detection method.
 
 \section{Surface Problems}
 
 There are a few cases when the Kinect is not able to deliver any depth data from a surface.
 
-First of all it does not work with translucent materials like glas or plastics. The projected
+First of all it does not work with translucent materials like glass. The projected
 points are just fractured away, when they hit in a small angle. It's be possible to look through 
 a translucent surface, but only if it's clear and the angle from the camera to the surface is not
 to big.
-\pic{glas.png}{Glas (Webcam and Pointcloud)}{\label{figure:glas}}{1}{h}
+\pic{glas.png}{Glass (Webcam/Pointcloud)}{\label{figure:glas}}{1}{h}
 
 Another problem are mirrors. Mirrors will also fracture the ir spots away, 
-so it's not possible to get any depth data (see figure \vref{figure:mirror}).
-\pic{Mirror.png}{Mirror (Webcam and Pointcloud)}{\label{figure:mirror}}{1}{h}
+so it's not possible to get any depth data from their surfaces (see figure \vref{figure:mirror}).
+\pic{Mirror.png}{Mirror (Webcam/Pointcloud)}{\label{figure:mirror}}{1}{h}
 
-If the sun lights up a surface directly it will outshine the ir-spots this will also blank out this surface
+If the sun lights up a surface directly, it will outshine the ir-spots this will also blank out the surface
 in the resulting depth image (see figure \vref{figure:sun}).
 \pic{Sun.png}{Sun light on a surface (Pointcloud/Webcam)}{\label{figure:sun}}{0.8}{h}
 
 On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
-identifying their location (see figure \vref{figure:close}) leading to the same result as the previous cases.
+identifying their location (see figure \vref{figure:close}) what leads to the same result as the previous cases.
 \pic{ToClose.png}{Kinect to Close to a Surface (IR sensor and Pointcloud)}{\label{figure:close}}{0.8}{h}
-
 
 \section{Data Characteristics} 
 
@@ -45,21 +44,72 @@ In the later process of this work it was not needed anymore, because showing the
 in rViz showed to be more effective in analyzing data and debugging applications.
 
 \subsection{PointCloud creation with selected topics}
-To create point cloud messages for other topics than those from the Kinect node.
+Point clouds are very useful for debuging and filtering techniques. They can be displayed in
+3D and directly show what happens to the data when a special filter is applied.
+To create point cloud messages for other topics than those from the Kinect node it is necessary to
+create specific launch files. Launch files are xml-files which are used to start multiple nodes in one
+go. 
 
 
+{%
+\tiny{}
+\begin{lstlisting}
+<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
+
+<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" 
+	args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
+    <remap from="rgb/image_rect_color"        to="/signDetection/out_rgb" />
+    <remap from="rgb/camera_info"             to="/signDetection/camera_info" />
+    <remap from="depth_registered/image_rect" to="/signDetection/out_depth" />
+    <remap from="depth_registered/points"     to="debug_cloud" />
+</node>
+\end{lstlisting}
+}
+
+
+As seen in the listing for creating a point cloud from different topics a nodelet manager and a 
+depth\_image\_proc/point\_cloud\_xyzrgb nodlet is needed. Inside the node tag of the nodelet
+there are the remapping tags, to connect the nodelet with the custom topics.
+
+\subsection{Tool for various data fetching and filter testing}
+The tool was named disturbance\_filter\_calculator, the name is still reminding what it was intended to do. It should
+filter out the noise by creating a picture of it on a flat surface. This didn't work because of the special autoranging
+feature of the Kinect which will be discussed later. Currently the Tool can be used to fetch data points or to
+draw a pattern of lines in the RGB image which is mapped over the point cloud. It also can tell the users which data points
+are in a given distance and which not by painting the pixels of the RGB image green for they are in the specified distance
+and red they are not. This feature helped to realize about the missing values which are also discussed later. It also includes
+some of the first tries to filter and blur the depth image, but as the project was progressing it was decided to move the 
+filter code to a new clean node in a new package to save compiling time, leaving the disturbance\_filter\_calculator 
+node as it was.
+
+%TODO pictures filter_calculator
+
+\section{Disturbances}
+While pointing the Kinect to a flat surface the noise fractals (see in figure \vref{figure:noise}) 
+seem to reappear always at the same position. So it was decided to try to remove them with capturing a image from a flat surface.
+and subtract the number of data steps the noise produces. Therefore the kinect is arranged very close to a flat surface 
+so that it only will see this surface. Then a difference picture is created and stored to be substraced. 
+This was a nice idea but it didn't work as expected. There some special vertical fractals (see in figure \vref{figure:verticals}) 
+inside the data which seem to result from an autoranging feature of the camera always creating one data step in the picture. 
+The biggest problem is that the size of the noise fractals changes with their appearance and their number. The number of
+those vertical lines ranges from 0 to a spottet maximum of 9. They do always appear on a special range 
+but they are not fixed to a special column, but seem to be symetrical or nearly symetrical to the center 
+and their number is never even. 
+\pic{noise.png}{Noise (Pointcloud)}{\label{figure:noise}}{0.8}{h}
 \pic{verticalFractals.png}{Vertical Fractals (Pointcloud)}{\label{figure:verticals}}{0.4}{h}
 
-
-\pic{noise.png}{Noise (Pointcloud)}{\label{figure:noise}}{0.8}{h}
-
-\section{Resolution Depending the Depth}
-%Resolution picture
-
-
-\subsection{}
-\pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths1}}{0.1}{h}
-\pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths1}}{0.1}{h}
+\section{Resolution Depending the Depth} \label{resdepDepth}
+When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
+at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
+device(see in figure),it was realized that many values just do not exist. The camera does never out this values.
+After realizing this fact it was decided to look for the available values, their number and the values which never occur.
+The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, the available values (black) and 
+not availabe values (white) in the middle and the number of the missing values between them on the right. 
+Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.
+%TODO hilti bild VREF!
 \pic{LaserDistanceKinectDistance.png}{Distance measured by Laser and by Kinect}{\label{figure:LaserKinect}}{0.9}{h}
-\pic{DifferenceForegoing.png}{Distance to the foregoing value in relation to the depth}{\label{figure:LaserKinect}}{1}{h}
- 
+\pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths1}}{0.1}{h}
+\pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths2}}{0.1}{h}
+\pic{DifferenceForegoing.png}{Missing values in relation to the depth}{\label{figure:DepthValueDiff}}{1}{h}
+
