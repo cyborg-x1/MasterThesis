@@ -23,7 +23,7 @@ in the resulting depth image (see figure \vref{figure:sun}).
 \pic{Sun.png}{Sunlight on a surface (Pointcloud/Webcam)}{\label{figure:sun}}{0.8}{h}
 
 On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
-identifying their location (see figure \vref{figure:close}) what leads to the same result as the previous cases.
+identifying their location (see figure \vref{figure:close}) that leads to the same result as in the previous cases.
 \pic{ToClose.png}{Kinect to Close to a Surface (IR sensor/Pointcloud)}{\label{figure:close}}{0.8}{h}
 
 \section{Data Characteristics} 
@@ -77,9 +77,9 @@ The tool was named disturbance\_filter\_calculator, the name is still reminding 
 filter out the noise by creating a picture of it on a flat surface. This didn't work because of the special autoranging
 feature of the Kinect which will be discussed later. Currently the Tool can be used to fetch data points or to
 draw a pattern of lines in the RGB image which is mapped over the point cloud. It also can tell the users which data points
-are in a given distance and which not by painting the pixels of the RGB image green for they are in the specified distance
-and red they are not. This feature helped to realize about the missing values which are also discussed later. It also includes
-some of the first tries to filter and blur the depth image, but as the project was progressing it was decided to move the 
+are in a given distance and which not by painting the pixels of the RGB image green for being in the specified distance
+and red if not. This feature helped to realize about the missing values which are also discussed later. It also includes
+some of the first tries to filter and blur the depth image, but as the project advanced it was decided to move the 
 filter code to a new clean node in a new package to save compiling time, leaving the disturbance\_filter\_calculator 
 node as it was.
 
@@ -87,22 +87,23 @@ node as it was.
 
 \section{Disturbances}
 While pointing the Kinect to a flat surface the noise fractals (see in figure \vref{figure:noise}) 
-seem to reappear always at the same position. So it was decided to try to remove them with capturing a image from a flat surface.
+seem to reappear at the same position. So it was decided to try to remove them with capturing a image from a flat surface.
 and subtract the number of data steps the noise produces. Therefore the kinect is arranged very close to a flat surface 
-so that it only will see this surface. Then a difference picture is created and stored to be substraced. 
+so that it only will see this surface. Then a picture is created which stores the difference of the data to the 
+distance of the surface to be substracted from the following frames.
 This was a nice idea but it didn't work as expected. There some special vertical fractals (see in figure \vref{figure:verticals}) 
-inside the data which seem to result from an autoranging feature of the camera always creating one data step in the picture. 
-The biggest problem is that the size of the noise fractals changes with their appearance and their number. The number of
-those vertical lines ranges from 0 to a spotted maximum of 9. They do always appear on a special range 
-but they are not fixed to a special column, but seem to be symetrical or nearly symetrical to the center 
-and their number is never even. 
+inside the data which seem to be the result from an autoranging feature of the camera, 
+always creating one data step in the picture. The biggest problem is that the size of the noise fractals changes 
+with their appearance and their number. The number of those vertical lines ranges from 0 to a spotted maximum of 9. 
+They do always appear on a special range, seem to be symetrical or 
+nearly symetrical to the center and their number is never even but are not fixed to a special column of pixels. 
 \pic{noise.png}{Noise (Pointcloud)}{\label{figure:noise}}{0.8}{h}
 \pic{verticalFractals.png}{Vertical Fractals (Pointcloud)}{\label{figure:verticals}}{0.4}{h}
 
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure),it was realized that many values just do not exist. The camera does never out this values.
+device(see in figure),it was realized that many values just do not exist. The camera does never output these values.
 After realizing this fact it was decided to look for the available values, their number and the values which never occur.
 The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, the available values (black) and 
 not availabe values (white) in the middle and the number of the missing values between them on the right. 

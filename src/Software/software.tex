@@ -4,6 +4,58 @@
 \section{Depth Image Processing}
 
 
+\subsection{Blur Filtering}
+Bluring the depth image sounds like an easy task but 
+if a simple boxed, gaussian or blur filter is used all etches are lost (see in figure \vref{figure:blurfail}).
+At first it was tried to do all the filtering and reset all blured pixels $P_n$ which are to far away from their 
+original depth value by the following formula.
+
+\[
+ \forall P_n(x,y)  |   \left(\left|{P_n(x,y)-P(x,y)}\right|>{\frac{P(x,y)^2}{480000}}\right)\implies P_n(x,y)=P(x,y)
+\]
+
+The following listing shows the code of this first filter, which uses a box-filter and and a median-blur filter from
+OpenCV. In the next step the previous formula is used to move pixels, which are too far away, back to their original depth.
+In the end another blur filter is applied to remove possible noise on the borders of the surfaces.
+
+{
+\tiny
+\newpage
+\begin{lstlisting}
+cv::Mat filter_in = src.clone();
+cv::Mat filter=filter_in.clone();
+cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
+cv::medianBlur(filter, filter, 3);
+
+//Update non zero pixels
+for (int y = 0; y < src.rows; y++)
+{
+	for (int x = 0; x < src.cols; x++)
+	{
+		short realValue = filter_in.at<Vec1shrt>(y, x)[0];
+		short filteredValue = filter.at<Vec1shrt>(y, x)[0];
+		short maxDifference = pow((float)realValue, 2) / (480000); //Maximal difference from the real value
+		if (realValue>0)
+		{
+			if(abs(realValue - filteredValue) > maxDifference)
+			{
+				dst.at<Vec1shrt>(y, x)[0] = realValue;
+			}
+			else
+			{
+				dst.at<Vec1shrt>(y, x)[0] = filteredValue;
+			}
+		}
+	}
+}
+cv::medianBlur(dst, dst, 3);
+
+\end{lstlisting}
+}
+
+
+
+
 
 % 			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
 % 
@@ -34,12 +86,6 @@
 % 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
 
-\subsection{Blur Filtering}
-Bluring the depth image sounds like an easy task but 
-if a simple boxed, gaussian or blur filter is used all etches are lost (see in figure \vref{figure:blurfail}).
-At first it was tried to do all the filtering and reset pixels which are to far from their 
-original position. Better results can be optained from a bilateral filter, it was tried to use the 
-bilateral filter from OpenCV but it resulted in a really low performance.
 
 \pic{KinectOriginal.png}{Kinect RAW picture (Point Cloud)}{\label{figure:blurfail}}{0.6}{h}
 
