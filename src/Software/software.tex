@@ -1,9 +1,64 @@
 \chapter{SignRecognition}
 \graphicspath{{./Software/img/}}
  
-\section{Image Processing}
-\subsection{Blur Filter}
+\section{Depth Image Processing}
+
+
+
+% 			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
+% 
+% 
+% 			///
+% 			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);  ///?
+% 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
+% 			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,blur_depth);
+% 			///
+% 
+% 			///
+% 			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
+% 			KinTo::XYZrangeFilter(imgPtrDepth->image,xy,imgPtrDepth->image,x_min, x_max,  y_min, y_max, z_min, z_max);
+% 			///
+% 
+% 			///
+% 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
+% 			KinTo::createAngleMap(normals,angles);
+% 			///
+% 
+% 			///
+% 			KinTo::crossAnglesBlur(angles,neighbor_map,angles,blur_angles);
+% 			KinTo::anglesFilter(angles, angles_ok, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max,true);
+% 			///
+% 
+% 
+% 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
+% 			cv::threshold(angles_ok,angles_ok,1,255,0);
+
+
+\subsection{Blur Filtering}
+Bluring the depth image sounds like an easy task but 
+if a simple boxed, gaussian or blur filter is used all etches are lost (see in figure \vref{figure:blurfail}).
+At first it was tried to do all the filtering and reset pixels which are to far from their 
+original position. Better results can be optained from a bilateral filter, it was tried to use the 
+bilateral filter from OpenCV but it resulted in a really low performance.
+
+\pic{KinectOriginal.png}{Kinect RAW picture (Point Cloud)}{\label{figure:blurfail}}{0.6}{h}
+
+\pic{BlurFilterFail.png}{Depth Image with Boxed Filter (Point Cloud)}{\label{figure:blurfail}}{0.6}{h}
+
+\pic{neighborhoodmap.pdf}{Neighborhood-Map Creation}{\label{figure:crossblur}}{1}{h}
+
+\pic{crossBlur.pdf}{Cross Blur Working Principle}{\label{figure:crossblur}}{1}{h}
+
+\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{1}{h}
+
+
+
 \subsection{Range Filter}
+
+
+
+\section{RGB Image Processing}
+
 
 \section{Robot Control}
 \subsection{ROS Transform}
