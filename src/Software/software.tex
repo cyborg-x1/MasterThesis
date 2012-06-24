@@ -15,8 +15,8 @@ original depth value by the following formula.
 \]
 
 The following listing shows the code of this first filter, which uses a box-filter and and a median-blur filter from
-OpenCV. In the next step the previous formula is used to move pixels, which are too far away, back to their original depth.
-In the end another blur filter is applied to remove possible noise on the borders of the surfaces.
+OpenCV. In the next step the previous formula is used to revert pixels, which are too far away, back to their original depth.
+In the end another blur filter is applied to remove possible noise resulting from that procedure.
 
 {
 \tiny
@@ -53,6 +53,8 @@ cv::medianBlur(dst, dst, 3);
 \end{lstlisting}
 }
 
+
+\pic{myFilter1.png}{Blur Filter (Boxed/Median/Reset Borders/Median)}{\label{figure:blur}}{0.6}{h}
 
 
 
