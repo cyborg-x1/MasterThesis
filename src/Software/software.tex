@@ -92,12 +92,16 @@ is not a close neighbor to the current to preserve the edges. (see in figure \vr
 
 %TODO Result picture
 
+
+
+\subsection{Calculation of X and Y Distances of each Point}
 After bluring the real world X and Y values of each point must be calculated. This is done with the camera information delivered 
 from ROS. The code for this is copied from the rgbxyz-point cloud nodelet from ROS and a few things were changed.
 All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
 calculating a integer value for x and y coordinates. The coordinates itself are stored as short. This was done to save
-computational time by calculating the normals as integers instead of double format.
- 
+computational time by calculating the normals with integers instead of double format.
+
+The full code of the function to create the XY-map is shown in the following listing:
 {
 \tiny
 \begin{lstlisting}
@@ -130,6 +134,32 @@ computational time by calculating the normals as integers instead of double form
 	}
 \end{lstlisting}
 }
+
+\subsection{3D RangeFilter}
+If the X and Y values are known, it is possible to cut out interesting values by giving minimum and maximum values for all axis.
+
+
+\subsection{Normal Calculation}
+With the depth image and the xy map the normal of each pixel can be calculated. This is done with the well known scalar product.
+
+
+$$ \vec{N} = \left( \begin{array}{c} x_u \\ y_u \\ z_u \end{array} \right) \times \left( \begin{array}{c} x_v \\ y_v \\ z_v \end{array} \right) 
+= \left( \begin{array}{c} y_u \cdot z_v - z_u \cdot y_v \\ z_u \cdot x_v - z_v \cdot x_u \\ x_u \cdot y_v - y_u \cdot x_v \end{array}\right)
+$$
+
+\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{1}{h}
+
+\subsection{Angle Calculation}
+
+\subsection{Angle Bluring}
+
+\subsection{Angle Filtering}
+
+\subsection{Surface Segmentation}
+
+\subsection{Proportion Enhanced Template Matching}
+
+
 % 			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
 % 
 % 
@@ -161,11 +191,9 @@ computational time by calculating the normals as integers instead of double form
 
 
 
-\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{1}{h}
 
 
 
-\subsection{Range Filter}
 
 
 
