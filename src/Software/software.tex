@@ -4,9 +4,9 @@
 \section{Depth Image Processing}
 
 
-\subsection{Blur Filtering}
-Bluring the depth image sounds like an easy task but 
-if a simple boxed, gaussian or blur filter is used all etches are lost (see in figure \vref{figure:blurfail}).
+\subsection{First Blur Filter}
+Bluring the depth image sounds like an easy task but if a simple boxed filter is used all edges are smothed to surfaces
+they do not belong to (see first picture in figure \vref{figure:blur}).
 At first it was tried to do all the filtering and reset all blured pixels $P_n$ which are to far away from their 
 original depth value by the following formula.
 
@@ -15,8 +15,8 @@ original depth value by the following formula.
 \]
 
 The following listing shows the code of this first filter, which uses a box-filter and and a median-blur filter from
-OpenCV. In the next step the previous formula is used to revert pixels, which are too far away, back to their original depth.
-In the end another blur filter is applied to remove possible noise resulting from that procedure.
+OpenCV. In the next step the previous formula is used to revert pixels as said above and then another blur filter 
+is applied to remove possible noise resulting from that procedure (see figure \vref{figure:blur} for results).
 
 {
 \tiny
@@ -58,11 +58,82 @@ cv::medianBlur(dst, dst, 3);
 
 
 
+\subsection{New Blur Filter}
+After realizing that there are only 824 depth values available, it was decided to transform the depth picture
+to the available depth steps. This step map now contains the number of each available depth like shown in figure \vref{figure:stepMap}.
 
+\pic{stepmap.pdf}{Step Map Creation}{\label{figure:stepMap}}{1}{h}
+
+With that new image it's now possible to determine if a pixel is a direct neighbor to another one. This is mostly the case,
+when the value from the difference of the steps is smaller than or equal to one. A threshold of four is adequate to be sure 
+to eliminate the noise created by the fractals which sometimes creates a step difference of 3 inside of a surface. 
+So the neighborhood condition of one pixel $P$ to another pixel $P_i$ can be determind by the following formula.
+
+\[
+ \forall P_i(x_i,y_i)  |\mbox{   }
+ \Big(\left|P_i(x_i,y_i)-P(x,y)\right|<4 \Big) \wedge  P_i(x_i,y_i) \neq 0 %\wedge  P(x,y) \neq 0 
+\]
+\[
+ \implies P_i(x_i,y_i) \mbox{ is a close neighbor to } P(x,y)
+\]
+
+With this formula a neighborhood map is created which contains 8-bit values for each pixel, where each bit shows the neighborhood 
+condition to one of the eight pixels around the current one (as seen in figure \vref{figure:neighborhoodmap}).
+
+\pic{neighborhoodmap.pdf}{Neighborhood-Map Creation}{\label{figure:neighborhoodmap}}{1}{h}
+
+This information helps to write a more performance saving, effective and edge saving bluring method which 
+was named crossBlur because it blures each pixel with a specified number of it's neighbors on top, left, right and bottom.
+The neighborhood condition is needed because it will stop adding pixels on each side if the next pixel in the direction 
+is not a close neighbor to the current to preserve the edges. (see in figure \vref{figure:crossblur}).
+
+\pic{crossBlur.pdf}{Cross Blur Working Principle}{\label{figure:crossblur}}{1}{h}
+
+
+%TODO Result picture
+
+After bluring the real world X and Y values of each point must be calculated. This is done with the camera information delivered 
+from ROS. The code for this is copied from the rgbxyz-point cloud nodelet from ROS and a few things were changed.
+All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
+calculating a integer value for x and y coordinates. The coordinates itself are stored as short. This was done to save
+computational time by calculating the normals as integers instead of double format.
+ 
+{
+\tiny
+\begin{lstlisting}
+
+	xy=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
+
+	image_geometry::PinholeCameraModel model;
+	model.fromCameraInfo(info_msg);
+
+	int center_x = model.cx()*100;					
+	int center_y = model.cy()*100;					
+
+	int constant_x = model.fx()*100;
+	int constant_y = model.fy()*100;
+
+	int size_x=src.cols, size_y=src.rows;
+
+	int x,y;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		y=i/size_x;
+		x=i-y*size_x;
+
+		if(x>0)
+		{
+			short depth=src.at<Vec1shrt>(y,x)[0];
+			xy.at<Vec2shrt>(y,x)[0] = ((x*100 - center_x) * depth) / constant_x;
+			xy.at<Vec2shrt>(y,x)[1] = ((y*100 - center_y) * depth) / constant_y;
+		}
+	}
+\end{lstlisting}
+}
 % 			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
 % 
 % 
-% 			///
+% 			//
 % 			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);  ///?
 % 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
 % 			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,blur_depth);
@@ -89,13 +160,6 @@ cv::medianBlur(dst, dst, 3);
 
 
 
-\pic{KinectOriginal.png}{Kinect RAW picture (Point Cloud)}{\label{figure:blurfail}}{0.6}{h}
-
-\pic{BlurFilterFail.png}{Depth Image with Boxed Filter (Point Cloud)}{\label{figure:blurfail}}{0.6}{h}
-
-\pic{neighborhoodmap.pdf}{Neighborhood-Map Creation}{\label{figure:crossblur}}{1}{h}
-
-\pic{crossBlur.pdf}{Cross Blur Working Principle}{\label{figure:crossblur}}{1}{h}
 
 \pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{1}{h}
 

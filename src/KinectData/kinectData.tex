@@ -2,7 +2,10 @@
 \graphicspath{{./KinectData/img/}}
 
 As mentioned in the introduction, a closer look to the Kinects data characteristics is taken
-within this document to be able to implement a sign detection method.
+within this document to be able to implement a sign detection method. 
+For this work the Kinect RAW fromat was used, each value has 16 bit and shows the
+depth for the pixel in millimeters. A depth of zero means that no valid data is available for
+this pixel.
 
 \section{Surface Problems}
 
@@ -103,14 +106,14 @@ nearly symetrical to the center and their number is never even but are not fixed
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure),it was realized that many values just do not exist. The camera does never output these values.
+device(see in figure \vref{figure:hilti}),it was realized that many values just do not exist. The camera does never output these values.
 After realizing this fact it was decided to look for the available values, their number and the values which never occur.
-The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, the available values (black) and 
+The figures \vref{figure:depths_1} and \vref{figure:depths_2} show the distance on the left, the available values (black) and 
 not availabe values (white) in the middle and the number of the missing values between them on the right. 
 Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.
-%TODO hilti bild VREF!
-\pic{LaserDistanceKinectDistance.png}{Distance measured by Laser and by Kinect}{\label{figure:LaserKinect}}{0.9}{h}
-\pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths1}}{0.1}{h}
-\pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths2}}{0.1}{h}
-\pic{DifferenceForegoing.png}{Missing values in relation to the depth}{\label{figure:DepthValueDiff}}{1}{h}
 
+\pic{hiltipd38.jpg}{Hilti PD38 Laser Distance Measurement Device}{\label{figure:hilti}}{0.1}{h}
+\pic{LaserDistanceKinectDistance.png}{Distance measured by Laser and by Kinect}{\label{figure:LaserKinect}}{0.9}{h}
+\pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths_1}}{0.1}{h}
+\pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths_2}}{0.1}{h}
+\pic{DifferenceForegoing.png}{Missing values in relation to the depth}{\label{figure:DepthValueDiff}}{1}{h}
