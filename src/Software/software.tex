@@ -3,7 +3,6 @@
  
 \section{Depth Image Processing}
 
-
 \subsection{First Blur Filter}
 Bluring the depth image sounds like an easy task but if a simple boxed filter is used all edges are smothed to surfaces
 they do not belong to (see first picture in figure \vref{figure:blur}).
@@ -14,14 +13,15 @@ original depth value by the following formula.
  \forall P_n(x,y)  |   \left(\left|{P_n(x,y)-P(x,y)}\right|>{\frac{P(x,y)^2}{480000}}\right)\implies P_n(x,y)=P(x,y)
 \]
 
-The following listing shows the code of this first filter, which uses a box-filter and and a median-blur filter from
-OpenCV. In the next step the previous formula is used to revert pixels as said above and then another blur filter 
-is applied to remove possible noise resulting from that procedure (see figure \vref{figure:blur} for results).
+The following listing \vref{lst:fstBlur} shows the code of this first filter, which uses a box-filter and and a 
+median-blur filter from OpenCV. In the next step the previous formula is used to revert pixels as said above and 
+then another blur filter is applied to remove possible noise resulting from that procedure 
+(see figure \vref{figure:blur} for results).
 
-{
-\tiny
 \newpage
-\begin{lstlisting}
+%TODO include function header!!
+
+\begin{lstlisting}[caption={Code of the first Bluring Function}\label{lst:fstBlur},language=c++]  
 cv::Mat filter_in = src.clone();
 cv::Mat filter=filter_in.clone();
 cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
@@ -34,7 +34,7 @@ for (int y = 0; y < src.rows; y++)
 	{
 		short realValue = filter_in.at<Vec1shrt>(y, x)[0];
 		short filteredValue = filter.at<Vec1shrt>(y, x)[0];
-		short maxDifference = pow((float)realValue, 2) / (480000); //Maximal difference from the real value
+		short maxDifference = pow((float)realValue, 2) / (480000);
 		if (realValue>0)
 		{
 			if(abs(realValue - filteredValue) > maxDifference)
@@ -49,24 +49,69 @@ for (int y = 0; y < src.rows; y++)
 	}
 }
 cv::medianBlur(dst, dst, 3);
-
 \end{lstlisting}
-}
-
 
 \pic{myFilter1.png}{Blur Filter (Boxed/Median/Reset Borders/Median)}{\label{figure:blur}}{0.6}{h}
+\clearpage
 
-
-
-\subsection{New Blur Filter}
+\subsection{Neighborhood Map and New Blur Filter} \label{sect:blurFilter}
 After realizing that there are only 824 depth values available, it was decided to transform the depth picture
-to the available depth steps. This step map now contains the number of each available depth like shown in figure \vref{figure:stepMap}.
+to the available depth steps. The resulting step map contains the number of each available depth like 
+shown in figure \vref{figure:stepMap}. The converting function uses an array. This array contains the number of the
+step when obtaining the cell number of its value. Each cell of a non-existing value contains -1. 
 
 \pic{stepmap.pdf}{Step Map Creation}{\label{figure:stepMap}}{1}{h}
 
+Listing \vref{lst:stpmap} contains the code of the converting function.
+
+\begin{lstlisting}[caption={covertKinectRawToSteps - Function}\label{lst:stpmap}, language=c++]
+void convertKinectRawToSteps(const cv::Mat &src, cv::Mat &dst)
+{
+	if(src.type() == CV_16UC1)
+	{
+		dst=src.clone();
+
+		int size_x=src.cols, size_y=src.rows;
+
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Forward direction x -
+			int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+			short current=src.at<Vec1shrt>(y_xfw,x_xfw)[0];
+			if(current>=0 && current < kinect_depths_count)
+			{
+				if(kinect_depth_to_step_LUT[current]>=0)
+				{
+					dst.at<Vec1shrt>(y_xfw,x_xfw)[0]=kinect_depth_to_step_LUT[current];
+				}
+				else
+				{
+					std::cerr<<"convertKinectRawToSteps: Unregistered Depth Value found!" 
+					           " You must use unedited KINECT RAW data for this! "
+							 <<"Value is: "<<current<<std::endl;
+				}
+			}
+			else
+			{
+				std::cerr<<"convertKinectRawToSteps: Unregistered Depth Value found " 
+				           "(too big)! You must use unedited KINECT RAW data for this! "
+						 <<"Value is: "<<current<<std::endl;
+			}
+		}
+	}
+	else
+	{
+		std::cerr<<"convertKinectRawToSteps: Wrong matrix type! "
+		"You must use unedited KINECT RAW (CV_16UC1) data for this! "<<std::endl;
+	}
+}
+\end{lstlisting}
+
+
+
 With that new image it's now possible to determine if a pixel is a direct neighbor to another one. This is mostly the case,
 when the value from the difference of the steps is smaller than or equal to one. A threshold of four is adequate to be sure 
-to eliminate the noise created by the fractals which sometimes creates a step difference of 3 inside of a surface. 
+to eliminate the noise created by the fractals which can create a step difference of up to 3 inside of a surface. 
 So the neighborhood condition of one pixel $P$ to another pixel $P_i$ can be determind by the following formula.
 
 \[
@@ -80,6 +125,179 @@ So the neighborhood condition of one pixel $P$ to another pixel $P_i$ can be det
 With this formula a neighborhood map is created which contains 8-bit values for each pixel, where each bit shows the neighborhood 
 condition to one of the eight pixels around the current one (as seen in figure \vref{figure:neighborhoodmap}).
 
+Listing \vref{lst:nbhmap} contains the function which generates the neighborhood map.
+
+\begin{lstlisting}[caption={createRelationNeighbourhoodMap - Function}\label{lst:nbhmap}, language=c++]
+void createRelationNeighbourhoodMap(const cv::Mat &src, 
+                                    cv::Mat &map_out, 
+                                    unsigned short threshold)
+{
+	cv::Mat in=src.clone();
+	map_out=cv::Mat::zeros(src.rows,src.cols,CV_8UC3);
+
+	int size_x=in.cols, size_y=in.rows;
+
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		//Forward direction x
+		int y_xfw=i/size_x, x_xfw=i-y_xfw*size_x;
+
+		int x=x_xfw;
+		int y=y_xfw;
+
+		int curValue=in.at<Vec1shrt>(y,x)[0];
+
+
+		bool _IsNotTopRow=(y>0);
+		bool _IsNotLeftCol=(x>0);
+		bool _IsNotBottomRow=(y<(size_y-1));
+		bool _IsNotRightCol=(x<(size_x-1));
+
+		short cnt=0;
+		unsigned char neighbors_close=0;
+		unsigned char neighbors_nNAN=0;
+
+		if(curValue>0)
+		{
+
+			//Top Row
+			if(_IsNotTopRow)
+			{
+				//Left Top Cell
+				if(_IsNotLeftCol)
+				{
+					int C_TL=in.at<Vec1shrt>(y_xfw-1,x_xfw-1)[0]; 
+					if(C_TL>0)
+					{
+						neighbors_nNAN|=0x01;
+						if(abs(C_TL-curValue)<threshold) 
+						//Bigger then zero and difference to current pixel smaller threshold?
+						{
+							neighbors_close|=0x01;
+							cnt++;
+						}
+					}
+				}
+
+				//Middle Top Cell
+				int C_TM=in.at<Vec1shrt>(y_xfw-1,x_xfw)[0];
+				if(C_TM>0)
+				{
+					neighbors_nNAN|=0x02;
+					if(abs(C_TM-curValue)<threshold)
+					{
+						neighbors_close|=0x02;
+						cnt++;
+					}
+				}
+
+				//Right Top Cell
+				if(_IsNotRightCol)
+				{
+					int C_TR=in.at<Vec1shrt>(y_xfw-1,x_xfw+1)[0];
+					if(C_TR>0)
+					{
+						neighbors_nNAN|=0x04;
+						if(abs(C_TR-curValue)<threshold)
+						{
+							neighbors_close|=0x04;
+							cnt++;
+						}
+					}
+				}
+			}
+
+
+			//Middle Row
+
+			//Left Middle Cell
+			if(_IsNotLeftCol)
+			{
+				int C_ML=in.at<Vec1shrt>(y_xfw,x_xfw-1)[0];
+				if(C_ML>0)
+				{
+					neighbors_nNAN|=0x80;
+					if(abs(C_ML-curValue)<threshold)
+					{
+						neighbors_close|=0x80;
+						cnt++;
+					}
+				}
+			}
+
+			//Right Middle Cell
+			if(_IsNotRightCol)
+			{
+				int C_MR=in.at<Vec1shrt>(y_xfw,x_xfw+1)[0];
+				if(C_MR>0)
+				{
+					neighbors_nNAN|=0x08;
+					if(abs(C_MR-curValue)<threshold)
+					{
+						neighbors_close|=0x08;
+						cnt++;
+					}
+				}
+			}
+
+			//Bottom Row
+			if(_IsNotBottomRow)
+			{
+				//Left Bottom Cell
+				if(_IsNotLeftCol)
+				{
+					int C_BL=in.at<Vec1shrt>(y_xfw+1,x_xfw-1)[0];
+					if(C_BL>0)
+					{
+						neighbors_nNAN|=0x40;
+						if(abs(C_BL-curValue)<threshold)
+						{
+							neighbors_close|=0x40;
+							cnt++;
+						}
+					}
+				}
+
+				//Middle Bottom Cell
+				int C_BM=in.at<Vec1shrt>(y_xfw+1,x_xfw)[0];
+				if(C_BM>0)
+				{
+					neighbors_nNAN|=0x20;
+					if(abs(C_BM-curValue)<threshold)
+					{
+						neighbors_close|=0x20;
+						cnt++;
+					}
+				}
+
+				//Right Bottom Cell
+				if(_IsNotRightCol)
+				{
+					int C_BR=in.at<Vec1shrt>(y_xfw+1,x_xfw+1)[0];
+					if(C_BR>0)
+					{
+						neighbors_nNAN|=0x10;
+						if(abs(C_BR-curValue)<threshold)
+						{
+							neighbors_close|=0x10;
+							cnt++;
+						}
+					}
+				}
+
+			}
+
+		}//IF NOT NULL END
+
+		map_out.at<Vec3uchar>(y,x)[0]=neighbors_close;
+		map_out.at<Vec3uchar>(y,x)[1]=neighbors_nNAN;
+		map_out.at<Vec3uchar>(y,x)[2]=cnt;
+
+	}//FOR END
+}
+\end{lstlisting}
+
+
 \pic{neighborhoodmap.pdf}{Neighborhood-Map Creation}{\label{figure:neighborhoodmap}}{1}{h}
 
 This information helps to write a more performance saving, effective and edge saving bluring method which 
@@ -89,73 +307,417 @@ is not a close neighbor to the current to preserve the edges. (see in figure \vr
 
 \pic{crossBlur.pdf}{Cross Blur Working Principle}{\label{figure:crossblur}}{1}{h}
 
-
+%TODO Formula
 %TODO Result picture
 
+Listing \vref{crossblur} shows the cross bluring function.
 
-
-\subsection{Calculation of X and Y Distances of each Point}
-After bluring the real world X and Y values of each point must be calculated. This is done with the camera information delivered 
-from ROS. The code for this is copied from the rgbxyz-point cloud nodelet from ROS and a few things were changed.
-All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
-calculating a integer value for x and y coordinates. The coordinates itself are stored as short. This was done to save
-computational time by calculating the normals with integers instead of double format.
-
-The full code of the function to create the XY-map is shown in the following listing:
+\begin{lstlisting}[caption={crossDepthBlur - Function}\label{lst:crossblur}, language=c++]
+void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, 
+                    cv::Mat &depth_out, int max_size)
 {
-\tiny
-\begin{lstlisting}
-
-	xy=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
-
-	image_geometry::PinholeCameraModel model;
-	model.fromCameraInfo(info_msg);
-
-	int center_x = model.cx()*100;					
-	int center_y = model.cy()*100;					
-
-	int constant_x = model.fx()*100;
-	int constant_y = model.fy()*100;
-
-	int size_x=src.cols, size_y=src.rows;
-
-	int x,y;
+	cv::Mat dst=cv::Mat::zeros(depth.rows,depth.cols,CV_16UC1);
+	int size_x=depth.cols, size_y=depth.rows;
+	int y,x;
 	for (int i = 0; i < (size_x*size_y); i++)
 	{
 		y=i/size_x;
 		x=i-y*size_x;
 
-		if(x>0)
+		//Sum all pixels
+		int sum=depth.at<Vec1shrt>(y, x)[0];
+
+		//If current pixel is 0 go to next
+		if(sum == 0) continue;
+
+		//Count all values
+		int cnt=1;
+
+		//Get the neighbors of the current pixel
+		uchar cur_nb=neighbors.at<Vec3uchar>(y,x)[0];
+
+		//Usable neighbors
+		bool nb_top=(1<<1)&cur_nb;
+		bool nb_right=(1<<3)&cur_nb;
+		bool nb_bottom=(1<<5)&cur_nb;
+		bool nb_left=(1<<7)&cur_nb;
+
+		for(int j=1; j<=max_size; j++)
 		{
-			short depth=src.at<Vec1shrt>(y,x)[0];
-			xy.at<Vec2shrt>(y,x)[0] = ((x*100 - center_x) * depth) / constant_x;
-			xy.at<Vec2shrt>(y,x)[1] = ((y*100 - center_y) * depth) / constant_y;
+			if(nb_top)
+			{
+				nb_top=neighbors.at<Vec3uchar>(y-j,x)[0]&(1<<1);
+				sum+=depth.at<Vec1shrt>(y-j, x)[0];
+				cnt++;
+			}
+			if(nb_right)
+			{
+				nb_right=neighbors.at<Vec3uchar>(y,x+j)[0]&(1<<3);
+				sum+=depth.at<Vec1shrt>(y, x+j)[0];
+				cnt++;
+			}
+			if(nb_bottom)
+			{
+				nb_bottom=neighbors.at<Vec3uchar>(y+j,x)[0]&(1<<5);
+				sum+=depth.at<Vec1shrt>(y+j, x)[0];
+				cnt++;
+			}
+			if(nb_left)
+			{
+				nb_left=neighbors.at<Vec3uchar>(y,x-j)[0]&(1<<7);
+				sum+=depth.at<Vec1shrt>(y, x-j)[0];
+				cnt++;
+			}
+
+			//If no suitable neighbor is available exit loop
+			if(nb_left + nb_right + nb_top + nb_bottom == 0) break;
+		}
+
+		dst.at<Vec1shrt>(y,x)=sum/cnt;
+	}
+	depth_out=dst;
+}
+\end{lstlisting}
+
+\subsection{Calculation of X and Y Distance}
+After bluring the depth the real world X and Y values of each point must be calculated. 
+This is done with the camera information delivered from ROS. 
+The code for this is mostly copied from the rgbxyz-point cloud nodelet from ROS with a few changes.
+All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
+calculating a integer value for x and y coordinates. The coordinates itself are stored as short. This was done to save
+computational time by calculating the normals with short instead of the double format.
+
+The full code of the function to create the XY-map is shown in the listing \vref{lst:xymap}.
+\begin{lstlisting}[caption={createXYMap - Function\label{lst:xymap}},language=C++]
+void createXYMap(const cv::Mat &src, 
+				 const sensor_msgs::CameraInfoConstPtr& info_msg, 
+				 cv::Mat &xy)
+{
+	if(src.type() == CV_16UC1)
+	{
+		xy=cv::Mat::zeros(src.rows,src.cols,CV_16UC2);
+
+		image_geometry::PinholeCameraModel model;
+		model.fromCameraInfo(info_msg);
+
+		int center_x = model.cx()*100;	
+		int center_y = model.cy()*100;
+
+		int constant_x = model.fx()*100;
+		int constant_y = model.fy()*100;
+
+		int size_x=src.cols, size_y=src.rows;
+
+		int x,y;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			y=i/size_x;
+			x=i-y*size_x;
+
+			if(x>0)
+			{
+				short depth=src.at<Vec1shrt>(y,x)[0];
+				xy.at<Vec2shrt>(y,x)[0] = ((x*100 - center_x) * depth) / constant_x;
+				xy.at<Vec2shrt>(y,x)[1] = ((y*100 - center_y) * depth) / constant_y;
+			}
 		}
 	}
-\end{lstlisting}
+	else
+	{
+		ROS_ERROR("WRONG TYPE: createXYMap");
+	}
 }
+\end{lstlisting}
+
 
 \subsection{3D RangeFilter}
-If the X and Y values are known, it is possible to cut out interesting values by giving minimum and maximum values for all axis.
+If the real X and Y values for each pixel $P_i$ are known, it is possible to get only the pixels $P_o$ for a 
+3-dimensional region of interest by setting minimum and maximum values for all axis.
 
+	$$
+		\forall P_i(x,y) | (X_i < Xmin \vee X_i > Xmax \vee Y_i > Ymax \vee Y_i < Ymin \vee Z_i < Zmin \vee Z_i > Zmax)
+	$$$$
+		\implies P_o(x,y) = 0;
+	$$
+
+Listing \vref{lst:range3d} shows the code of the 3D Range Filter
+
+\begin{lstlisting}[caption={XYZrangeFilter - Function\label{lst:range3d}},language=C++]
+void XYZrangeFilter(const cv::Mat &depth, 
+                    const cv::Mat &xy, 
+                    cv::Mat &depth_out, 
+                    int min_x, int max_x, 
+                    int min_y, int max_y, 
+                    int min_z, int max_z)
+{
+
+	int size_x=depth.cols, size_y=depth.rows;
+	depth_out=depth.clone();
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		y=i/size_x;
+		x=i-y*size_x;
+
+
+		short cur_z=depth_out.at<Vec1shrt>(y,x)[0];
+
+
+		if(cur_z == 0) continue; //If depth == 0 continue with next pixel
+
+		int cur_x=xy.at<Vec2shrt>(y,x)[0];
+		int cur_y=xy.at<Vec2shrt>(y,x)[1];
+
+		if(!((cur_x >= min_x && cur_x <= max_x)&&
+		     (cur_y >= min_y && cur_y <= max_y)&&
+		     (cur_z >= min_z && cur_z <= max_z)))
+		{
+			depth_out.at<Vec1shrt>(y,x)[0]=0;
+		}
+	}
+}
+\end{lstlisting}
 
 \subsection{Normal Calculation}
-With the depth image and the xy map the normal of each pixel can be calculated. This is done with the well known scalar product.
+With the depth image and the xy map the normal of each pixel can be calculated. This is done with the scalar product.
 
 
 $$ \vec{N} = \left( \begin{array}{c} x_u \\ y_u \\ z_u \end{array} \right) \times \left( \begin{array}{c} x_v \\ y_v \\ z_v \end{array} \right) 
 = \left( \begin{array}{c} y_u \cdot z_v - z_u \cdot y_v \\ z_u \cdot x_v - z_v \cdot x_u \\ x_u \cdot y_v - y_u \cdot x_v \end{array}\right)
 $$
 
-\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{1}{h}
+The current algorithm tries to calculate two normals, one calculated with the vector from the current pixel to the top and right 
+($\vec{N_{tr}}=\vec{V_t}\times\vec{V_r}$) and one to
+the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). 
+If both normals can be calculated it takes the average of both normals (see figure \vref{figure:normals}).
+
+$$ \vec{N} = \frac{\vec{N_{tr}} + \vec{N_{bl}}}{2}$$
+
+\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{0.8}{h}
 
 \subsection{Angle Calculation}
 
+The angles from vectors to the axes are basically calculated by the follwing formulas. Where $\alpha$, $\beta$ and $\gamma$ 
+are the angles to the x,y, and z-axis of the normal vector $\vec{N}$.
+
+$$ \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  $$
+$$ \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  $$
+$$ \gamma = \arccos \frac{N_z}{\left|\vec{N}\right|}  $$
+
+In the application the arcus cosinus values are precalculated to save computational time.
+The possible input range for the arcus cosinus function lies between -1 and 1, so it was decided
+to precalculate 2000 values for the lookup table. This means the possible input values are now
+-1000 to 1000. To bring them into the possible range 1000 needs to be added to all input values.
+The precalulated values also include the transformation from radian to degree and are stored as 
+integers values which were multiplied by 100 to save two digits behind the comma.
+
+So the precalculation for the values $v_i$ in the array was done with the following formula:
+
+$v_i=\lfloor \arccos ((i-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor$
+
+To obtain the values from the array the result of the devision from a vector part through its length
+must be multiplied with 1000 and added to 1000. To be able to display the angles easily for debuging 
+it was later decided to put the values in a matrix for an RGB image, so each value has to be devided 
+by 100 again because unsigned char only supports values from 0 to 255.
+
+The following listing \vref{lst:AngleMap} shows the code for the angle calculation function.
+
+\begin{lstlisting}[caption={createAngleMap - Function}\label{lst:AngleMap},language=c++]
+void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
+{
+	angles=cv::Mat::zeros(normals.rows,normals.cols,CV_8UC3);
+	int size_x=normals.cols, size_y=normals.rows;
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		y=i/size_x;
+		x=i-y*size_x;
+
+		short g1=(normals.at<Vec3shrt>(y,x)[0]);
+		short g2=(normals.at<Vec3shrt>(y,x)[1]);
+		short g3=(normals.at<Vec3shrt>(y,x)[2]);
+
+		double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
+		if(!vector_length)continue;
+
+		angles.at<Vec3uchar>(y,x)[0]=preCalcCos[(int)(g1*1000/vector_length)+1000]/100;
+		angles.at<Vec3uchar>(y,x)[1]=preCalcCos[(int)(g2*1000/vector_length)+1000]/100;
+		angles.at<Vec3uchar>(y,x)[2]=preCalcCos[(int)(g3*1000/vector_length)+1000]/100;
+	}
+}	
+\end{lstlisting}
+
 \subsection{Angle Bluring}
+
+To blur the angles the same method as mentioned in chapter \vref{sect:blurFilter} was used.
+%TODO MORE TEXT + FORMULA
+
+Listing \vref{lst:AngleBlur} contains the source for the angle bluring function.
+
+\begin{lstlisting}[caption={crossAnglesBlur - Function}\label{lst:AngleBlur},language=c++]
+void crossAnglesBlur(const cv::Mat &angles, 
+                     const cv::Mat &neighbors, 
+                     cv::Mat &angles_out, int max_size)
+{
+
+	cv::Mat dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+	int size_x=angles.cols, size_y=angles.rows;
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		y=i/size_x;
+		x=i-y*size_x;
+
+		//Get the neighbors of the current pixel
+		uchar cur_nb=neighbors.at<Vec3uchar>(y,x)[0];
+		if(cur_nb == 0) continue;
+
+
+		//Sum all pixels
+		int sum_x=angles.at<Vec3uchar>(y, x)[0];
+		int sum_y=angles.at<Vec3uchar>(y, x)[1];
+		int sum_z=angles.at<Vec3uchar>(y, x)[2];
+
+		//Count all values
+		int cnt=1;
+
+		//Usable neighbors
+		bool nb_top=(1<<1)&cur_nb;
+		bool nb_right=(1<<3)&cur_nb;
+		bool nb_bottom=(1<<5)&cur_nb;
+		bool nb_left=(1<<7)&cur_nb;
+
+		for(int j=1; j<=max_size; j++)
+		{
+			if(nb_top)
+			{
+				nb_top=neighbors.at<Vec3uchar>(y-j,x)[0]&(1<<1);
+				sum_x+=angles.at<Vec3uchar>(y-j, x)[0];
+				sum_y+=angles.at<Vec3uchar>(y-j, x)[1];
+				sum_z+=angles.at<Vec3uchar>(y-j, x)[2];
+				cnt++;
+			}
+			if(nb_right)
+			{
+				nb_right=neighbors.at<Vec3uchar>(y,x+j)[0]&(1<<3);
+				sum_x+=angles.at<Vec3uchar>(y, x+j)[0];
+				sum_y+=angles.at<Vec3uchar>(y, x+j)[1];
+				sum_z+=angles.at<Vec3uchar>(y, x+j)[2];
+				cnt++;
+			}
+			if(nb_bottom)
+			{
+				nb_bottom=neighbors.at<Vec3uchar>(y+j,x)[0]&(1<<5);
+				sum_x+=angles.at<Vec3uchar>(y+j, x)[0];
+				sum_y+=angles.at<Vec3uchar>(y+j, x)[1];
+				sum_z+=angles.at<Vec3uchar>(y+j, x)[2];
+				cnt++;
+			}
+			if(nb_left)
+			{
+				nb_left=neighbors.at<Vec3uchar>(y,x-j)[0]&(1<<7);
+				sum_x+=angles.at<Vec3uchar>(y, x-j)[0];
+				sum_y+=angles.at<Vec3uchar>(y, x-j)[1];
+				sum_z+=angles.at<Vec3uchar>(y, x-j)[2];
+				cnt++;
+			}
+
+			//If no suitable neighbor is available exit loop
+			if(nb_left + nb_right + nb_top + nb_bottom == 0) break;
+		}
+
+		dst.at<Vec3uchar>(y,x)[0]=sum_x/cnt;
+		dst.at<Vec3uchar>(y,x)[1]=sum_y/cnt;
+		dst.at<Vec3uchar>(y,x)[2]=sum_z/cnt;
+	}
+	angles_out=dst;
+}
+\end{lstlisting}
 
 \subsection{Angle Filtering}
 
+To get only surfaces which are interesting a angle filter was created. It's input parameters
+are the minimum and maxium for each angle. The output of this function is a grascale image
+where pixels all $P_o$ are initialized with 0 and those with suitable angles 
+in the input pixel $P_i$ get the value 255.
+
+ \[
+ 	\forall P_i(x,y) | (\alpha_i<=max\_\alpha \wedge \alpha_i>=min\_\alpha) \wedge
+ 	(\beta_i<=max\_\beta \wedge \beta_i>=min\_\beta) \]\[ \wedge (\gamma_i<=max\_\gamma \wedge \gamma_i>=min\_\gamma)
+ \]\[
+ 	\implies P_o(x,y) = 255;
+ \] 
+
+The function also features another mode where the output image contains the suitable angles instead of only 255.
+But this mode is not used. The full code of this, can be seen in the listing \vref{lst:angleFilter}.
+
+\begin{lstlisting}[caption={anglesFilter - Function}\label{lst:angleFilter},language=c++]
+void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out, 
+                  unsigned int x_angle_min,unsigned int x_angle_max,
+                  unsigned int y_angle_min,unsigned int y_angle_max,
+                  unsigned int z_angle_min,unsigned int z_angle_max, 
+                  bool binary)
+{
+	cv::Mat dst;
+	if(!binary)
+	{
+		dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC3);
+	}
+	else
+	{
+		dst=cv::Mat::zeros(angles.rows,angles.cols,CV_8UC1);
+	}
+
+	int size_x=angles.cols, size_y=angles.rows;
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		y=i/size_x;
+		x=i-y*size_x;
+		unsigned int a_x=angles.at<Vec3uchar>(y,x)[0];
+		unsigned int a_y=angles.at<Vec3uchar>(y,x)[1];
+		unsigned int a_z=angles.at<Vec3uchar>(y,x)[2];
+
+		if(a_x >= x_angle_min && a_x <= x_angle_max && 
+	 	   a_y >= y_angle_min && a_y <= y_angle_max && 
+	 	   a_z >= z_angle_min && a_z <= z_angle_max )
+		{
+			if(!binary)
+			{
+				dst.at<Vec3uchar>(y,x)[0]=a_x;
+				dst.at<Vec3uchar>(y,x)[1]=a_y;
+				dst.at<Vec3uchar>(y,x)[2]=a_z;
+			}
+			else
+			{
+				dst.at<Vec1uchar>(y,x)[0]=255;
+			}
+		}
+	}
+	angles_out=dst;
+}
+\end{lstlisting}
+
+
+
 \subsection{Surface Segmentation}
+
+Before the begining with segmenting the surfaces the pictures containing the pixels which show correct angles
+is blured to remove empty pixels or columns of empty pixels which seperate surfaces belonging together. After
+bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. The code is
+shown in listing \vref{lst:angleFilter}.
+
+\begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:angleFilter},language=c++]
+	cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
+	cv::threshold(angles_ok,angles_ok,1,255,0);
+\end{lstlisting}
+
+
+
+
+
+\pic{SurfaceSegmentation.pdf}{Segmentation Method}{\label{figure:segment}}{0.8}{h}
+
 
 \subsection{Proportion Enhanced Template Matching}
 

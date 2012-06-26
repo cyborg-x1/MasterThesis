@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.2 r9819"
-   sodipodi:docname="regionDetection.svg">
+   sodipodi:docname="SurfaceSegmentation.svg">
   <defs
      id="defs4">
     <marker
@@ -355,7 +355,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -707,7 +707,7 @@
          sodipodi:role="line"
          id="tspan5684"
          x="131.06729"
-         y="108.1221">Determine Surface ID for Current Pixel</tspan></text>
+         y="108.1221">1. Determine Surface ID for Current Pixel</tspan></text>
     <path
        style="fill:#008000;stroke:#008000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-mid:none;marker-end:url(#Arrow1Send)"
        d="m 222.4861,138.63664 42.93148,-0.25254"
@@ -775,7 +775,7 @@
          sodipodi:role="line"
          x="258.9433"
          y="107.31662"
-         id="tspan6231">Create Relation Between Different IDs</tspan></text>
+         id="tspan6231">2. Create Relation Between Different IDs</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:6px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
@@ -786,7 +786,7 @@
          sodipodi:role="line"
          id="tspan6239"
          x="131.82492"
-         y="31.097967">Scanning image in columns for pixels with the right angles. </tspan></text>
+         y="31.097967">Scanning image in columns for pixels with the suitable angles. </tspan></text>
     <rect
        style="fill:#cccccc;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect6241"
@@ -816,7 +816,7 @@
          id="tspan6249"
          x="130.81476"
          y="96.000267"
-         style="font-weight:bold;-inkscape-font-specification:Arial Bold">FOR EACH PIXEL WHICH HAS THE RIGHT NORMAL ANGLES (X,Y,Z):</tspan></text>
+         style="font-weight:bold;-inkscape-font-specification:Arial Bold">FOR EACH PIXEL WHICH HAS SUITABLE ANGLES (X,Y,Z):</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-mid:none;marker-end:url(#marker6180)"
        d="m 136.89597,45.179188 0,25.758889"
@@ -852,15 +852,16 @@
          y="141.99461">Legend:</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:6px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="197.02083"
+       style="font-size:6px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
+       x="206.86165"
        y="125.29364"
        id="text6959"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan6961"
          x="197.02083"
-         y="125.29364">START</tspan></text>
+         y="125.29364"
+         style="font-style:italic;font-weight:bold;-inkscape-font-specification:Arial Bold Italic;text-anchor:middle;text-align:center">START</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:6px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"

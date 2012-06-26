@@ -12,21 +12,21 @@ this pixel.
 There are a few cases when the Kinect is not able to deliver any depth data from a surface.
 
 First of all it does not work with translucent materials like glass. The projected
-points are just fractured away, when they hit in a small angle. It's be possible to look through 
-a translucent surface, but only if it's clear and the angle from the camera to the surface is not
-to big.
+points are just fractured away, when they hit in a small angle (see figure \vref{figure:glas}). 
+It's be possible to look through a translucent surface, but only if it's clear and the angle from the 
+camera to the surface is not to big.
 \pic{glas.png}{Glass (Webcam/Pointcloud)}{\label{figure:glas}}{1}{h}
 
 Another problem are mirrors. Mirrors will also fracture the ir spots away, 
 so it's not possible to get any depth data from their surfaces (see figure \vref{figure:mirror}).
 \pic{Mirror.png}{Mirror (Webcam/Pointcloud)}{\label{figure:mirror}}{1}{h}
 
-If the sun lights up a surface directly, it will outshine the ir-spots this will also blank out the surface
-in the resulting depth image (see figure \vref{figure:sun}).
+If the sun lights up a surface directly, it will outshine the ir-spots so this will blank out the surface
+in the resulting depth image too (see figure \vref{figure:sun}).
 \pic{Sun.png}{Sunlight on a surface (Pointcloud/Webcam)}{\label{figure:sun}}{0.8}{h}
 
 On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
-identifying their location (see figure \vref{figure:close}) that leads to the same result as in the previous cases.
+identifying their location (see figure \vref{figure:close}), what leads to the same result as in the previous cases.
 \pic{ToClose.png}{Kinect to Close to a Surface (IR sensor/Pointcloud)}{\label{figure:close}}{0.8}{h}
 
 \section{Data Characteristics} 
