@@ -712,7 +712,135 @@ shown in listing \vref{lst:angleFilter}.
 	cv::threshold(angles_ok,angles_ok,1,255,0);
 \end{lstlisting}
 
+\begin{lstlisting}[caption={SurfaceExtractor - Function}\label{lst:SFextract},language=c++]
 
+void SurfaceExtractor(const cv::Mat &pix_ok, 
+                      const cv::Mat &neighbors, 
+                      std::vector<cv::Rect> &rects, 
+                      int minWidth, 
+                      int minHeight, 
+                      int maxWidth, 
+                      int maxHeight)
+{
+	cv::Mat ids=cv::Mat::zeros(pix_ok.rows,pix_ok.cols,CV_32SC1);
+	int last_id=0;
+	std::set< std::pair<int,int> > relations;
+	std::vector< Range* > ranges;
+	std::vector< Range* > del_ranges;
+
+	int size_x=pix_ok.cols, size_y=pix_ok.rows;
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		//Move forward in vertical direction
+		x=i/size_y;
+		y=i-x*size_y;
+
+		int current_id=0;
+		uchar cur_neighbors=neighbors.at<Vec3uchar>(y,x)[0];
+		uchar cur_ok=pix_ok.at<Vec1uchar>(y,x)[0];
+		bool found=false;
+
+		if(cur_ok) //current pixel has neighbors and is ok (angle)...
+		{
+			int id_of_neighbor=0;
+			for(int j=0;j<4;j++)
+			{
+				int neighbor_present, y_n,x_n; //Values for neighbor
+				//which neighbor
+				switch(j)
+				{
+				case 0:
+					neighbor_present=cur_neighbors&(1<<1); //top
+					x_n=x;
+					y_n=y-1;
+					break;
+				case 1:
+					neighbor_present=cur_neighbors&(1<<0);	//top-left
+					x_n=x-1;
+					y_n=y-1;
+					break;
+				case 2:
+					neighbor_present=cur_neighbors&(1<<7); //left
+					x_n=x-1;
+					y_n=y;
+					break;
+				case 3:
+					neighbor_present=cur_neighbors&(1<<6); //bottom-left
+					x_n=x-1;
+					y_n=y+1;
+					break;
+				}
+
+				if(neighbor_present)
+				{
+				    //look if there is already an ID
+					id_of_neighbor=ids.at<Vec1int>(y_n,x_n)[0]; 
+
+					//if there is one and no ID was found before
+					if(id_of_neighbor>0 && !found) 
+					{
+						//set current id to the found one
+						current_id=id_of_neighbor;
+						ids.at<Vec1int>(y,x)[0]=current_id; //Store id to id mat
+						found = true; //and found to true
+					}
+					else if(id_of_neighbor>0 &&
+							id_of_neighbor!= current_id &&
+							found) //if there was is another ID and it's not the same
+					{
+						//Create relation
+						int first,second;
+						first=current_id;
+						second=id_of_neighbor;
+						relations.insert(std::pair<int,int>(first,second));
+					}
+				}
+			}
+
+
+			if(!found)//if no ID was found in the neighbors
+			{
+				//Create new id
+				last_id++;
+				ids.at<Vec1int>(y,x)[0]=last_id;
+				current_id=last_id;
+				ranges.push_back(new Range(x,y,&del_ranges));
+			}
+			else
+			{
+				ranges[current_id-1]->update(x,y);
+			}
+
+		}
+	}
+
+	//Merging...
+	for(std::set< std::pair<int,int> >::iterator it=relations.begin(); 
+	    it != relations.end();it++)
+	{
+		int f=(*it).first-1;
+		int s=(*it).second-1;
+		ranges[f]->merge(ranges[s]);
+	}
+
+	std::set<Range*> out;
+	for(std::vector<Range*>::iterator it=ranges.begin();it!=ranges.end();it++)
+	{
+		Range * r=*it;
+		r=r->getLast();
+		if(out.insert(r).second)//Check if element was inserted
+		{
+			cv::Rect cur_rect=r->getRect();
+			//Check if rect is inside minimum and maximum size
+			if(minHeight<=cur_rect.height && minWidth<=cur_rect.width&&
+			   maxHeight>=cur_rect.height && maxWidth>=cur_rect.width)
+			rects.push_back(cur_rect);
+		}
+	}
+}
+
+\end{lstlisting}
 
 
 
@@ -749,15 +877,6 @@ shown in listing \vref{lst:angleFilter}.
 % 
 % 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 % 			cv::threshold(angles_ok,angles_ok,1,255,0);
-
-
-
-
-
-
-
-
-
 
 \section{RGB Image Processing}
 
