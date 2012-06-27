@@ -30,6 +30,17 @@ namespace KinTo
 	typedef cv::Vec<int, 3> Vec3int;
 
 
+	class Match_Roi
+	{
+	public:
+		cv::Point top_left;
+		cv::Point top_right;
+		cv::Point bottom_left;
+		cv::Point bottom_right;
+		cv::Rect roi;
+	};
+
+
 	/**
 	 * This function converts a kinect depth image into steps
 	 *  @param [in] src The source image (CV_16UC1)
@@ -202,7 +213,7 @@ namespace KinTo
 	/**
 	 * This function creates seperate rects for each surface.
 	 */
-	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
+	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<Match_Roi> &rects, int minWidth=0, int minHeight=0, int maxWidth=INT_MAX, int maxHeight=INT_MAX);
 
 
 	/**

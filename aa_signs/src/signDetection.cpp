@@ -353,52 +353,184 @@ public:
 			KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
 
 
-			std::vector<cv::Rect> rois;
+			std::vector<KinTo::Match_Roi> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
 
 
 			//Look through the surfaces...
-			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
+			for(std::vector<KinTo::Match_Roi>::iterator it=rois.begin();it!=rois.end();it++)
 			{
+				cv::Mat roi_mat=imgPtrRGB->image(it->roi).clone();
 
-//				image_geometry::PinholeCameraModel model;
-//				model.fromCameraInfo(info_msg);
+//				//Calculate starting points
+//				float roi_x=it->roi.x;
+//				float roi_y=it->roi.y;
+//				float roi_w=it->width;
+//				float roi_h=it->height;
+//
+//				float roi_cx=roi_x+it->width/2;
+//				float roi_cy=roi_y+it->height/2;
+//
+//				float hor=roi_w/4;
+//				float ver=roi_h/4;
+//
+				//top left
+				float tl_orig_x=it->top_left.x;
+				float tl_orig_y=it->top_left.y;
+				cv::Point2f tl_orig(tl_orig_x,tl_orig_y);
 
-				cv::Mat roi_mat=imgPtrRGB->image(*it).clone();
+				float z_tl=imgPtrDepth->image.at<KinTo::Vec1shrt>(tl_orig_y,tl_orig_x)[0];
+				float y_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[0];
+				float x_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[1];
 
-				//Get normal from center
-				int center_x=it->x+it->width/2;
-				int center_y=it->y+it->height/2;
+				//bottom left
+				float bl_orig_x=it->bottom_left.x;
+				float bl_orig_y=it->bottom_left.x;
+				cv::Point2f bl_orig(bl_orig_x,bl_orig_y);
 
-				double nx=normals.at<KinTo::Vec3shrt>(center_y,center_x)[0];
-				double ny=normals.at<KinTo::Vec3shrt>(center_y,center_x)[1];
-				double nz=normals.at<KinTo::Vec3shrt>(center_y,center_x)[2];
+				float z_bl=imgPtrDepth->image.at<KinTo::Vec1shrt>(bl_orig_y,bl_orig_x)[0];
+				float y_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[0];
+				float x_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[1];
 
-				double nl=std::sqrt(std::pow(nx,2)+std::pow(ny,2)+std::pow(nz,2));
+				//top right
+				float tr_orig_x=it->top_right.x;
+				float tr_orig_y=it->top_right.y;
+				cv::Point2f tr_orig(tr_orig_x,tr_orig_y);
 
-				double wx=std::acos(nx/nl);
-				double wy=std::acos(ny/nl);
-				double wz=std::acos(nz/nl);
+				float z_tr=imgPtrDepth->image.at<KinTo::Vec1shrt>(tr_orig_y,tr_orig_x)[0];
+				float y_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[0];
+				float x_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[1];
 
-				//HUH?
-				double alpha=wz*0.001;
-				double beta=wy*0.001;
+				//bottom right
+				float br_orig_x=it->bottom_right.x;
+				float br_orig_y=it->bottom_right.y;
+				cv::Point2f br_orig(br_orig_x,br_orig_y);
 
+				float z_br=imgPtrDepth->image.at<KinTo::Vec1shrt>(br_orig_y,br_orig_x)[0];
+				float y_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[0];
+				float x_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[1];
 
-					 cv::Mat R = (cv::Mat_<double>(3, 3) <<
-					 std::cos(beta),      0,    std::sin(beta),
-					      0, 	  1,                 0,
-					-std::sin(beta),      0,  std::cos(beta));
-
-					  cv::Mat R2 = (cv::Mat_<double>(3, 3) <<
-						  1,          			0,                0,
-						  0, 	  std::cos(alpha), -std::sin(alpha),
-						  0,      std::sin(alpha),  std::cos(alpha));
-
-				cv::warpPerspective(roi_mat, roi_mat, R*R2, cv::Size(roi_mat.cols,roi_mat.rows));
+				cv::circle(imgPtrRGB->image,it->top_left,2,cv::Scalar(0,0,255),2);//red
+				cv::circle(imgPtrRGB->image,it->top_right,2,cv::Scalar(0,255,0),2);//green
+				cv::circle(imgPtrRGB->image,it->bottom_left,2,cv::Scalar(255,0,0),2);//blue
+				cv::circle(imgPtrRGB->image,it->bottom_right,2,cv::Scalar(255,255,0),2);//yellow
 
 
+				float tltr=std::sqrt(pow(x_tr-x_tl,2)+pow(y_tr-y_tl,2)+pow(z_tr-z_tl,2));
+				float tlbr=std::sqrt(pow(x_br-x_tl,2)+pow(y_br-y_tl,2)+pow(z_br-z_tl,2));
+				float tlbl=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
 
+				float tltr_px=std::sqrt(pow(tl_orig_x-tr_orig_x,2)+pow(tl_orig_y-tr_orig_y,2));
+				float tlbr_px=std::sqrt(pow(tl_orig_x-br_orig_x,2)+pow(tl_orig_y-br_orig_y,2));
+				float tlbl_px=std::sqrt(pow(tl_orig_x-bl_orig_x,2)+pow(tl_orig_y-bl_orig_y,2));
+
+
+				if((int)tltr*100 && (int)tlbr*100 && (int)tlbl*100 && (int)tltr_px*100 && (int)tlbr_px*100 && (int)tlbl_px*100)
+				{
+					float factor=tltr/tltr_px;
+					//new pixel length of bl and br
+					float tlbr_px_n=tlbr/factor;
+					float tlbl_px_n=tlbl/factor;
+
+					//new coords of bl and br
+					float factor_tlbl_x_dist=(tl_orig_x-bl_orig_x);
+					float factor_tlbl_y_dist=(tl_orig_y-bl_orig_y);
+
+
+//					float factor_tlbr_xy=std::abs(tl_orig_y-br_orig_y)/std::abs(tl_orig_x-br_orig_x);
+//
+//					float tlbl_x_part=factor_tlbl_xy*tlbl_px_n;
+//				    float tlbl_y_part=
+				}
+
+//				float length_t=
+//				float length_l=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
+//				float length_r=std::sqrt(pow(x_br-x_tr,2)+pow(y_br-y_tr,2)+pow(z_br-z_tr,2));
+//				float length_b=std::sqrt(pow(x_br-x_bl,2)+pow(y_br-y_bl,2)+pow(z_br-z_bl,2));
+
+//				float length_t_pix=tr_orig_x-tl_orig_x;
+//				float length_l_pix=bl_orig_y-tl_orig_y;
+//				float length_r_pix=br_orig_y-tr_orig_y;
+//				float length_b_pix=br_orig_x-bl_orig_x;
+
+//
+//				if(!length_t || !length_r || !length_l || !length_b)
+//				{
+//					std::cout<<"PIX "<<tr_orig_x<<" "<<tr_orig_y<<" "<<tl_orig_x<<" "<<tl_orig_y<<" "<<br_orig_x<<" "<<br_orig_y<<" "<<bl_orig_x<<" "<<bl_orig_y<<" "<<std::endl;
+//					std::cout<<"PIX "<<length_t_pix<<" "<<length_r_pix<<" "<<length_l_pix<<" "<<length_b_pix<<std::endl;
+//					std::cout<<"REAL"<<length_t<<" "<<length_r<<" "<<length_l<<" "<<length_b<<std::endl;
+//				}
+
+
+
+
+
+
+
+
+//
+//				//Get normal from center
+//				int center_x=it->x+it->width/2;
+//				int center_y=it->y+it->height/2;
+//
+//				double nx=normals.at<KinTo::Vec3shrt>(center_y,center_x)[0];
+//				double ny=normals.at<KinTo::Vec3shrt>(center_y,center_x)[1];
+//				double nz=normals.at<KinTo::Vec3shrt>(center_y,center_x)[2];
+//
+//
+//				std::cout<<"NNN: "<<nx<<" "<<ny<<" "<<nz<<std::endl;
+//
+//				double nl=std::sqrt(std::pow(nx,2)+std::pow(ny,2)+std::pow(nz,2));
+//
+//				double wx=std::acos(nx/nl);
+//				double wy=std::acos(ny/nl);
+//				double wz=std::acos(nz/nl);
+
+
+
+
+//				//HUH?
+//				double alpha=(wy)*0.001;
+//				double beta=(wz)*0.001;
+//				double gamma=(wx)*0.001;
+//
+//				// Rotation matrix x
+//				  cv::Mat Rx = (cv::Mat_<double>(3, 3) <<
+//					  1,          			0,                0,
+//					  0, 	  std::cos(alpha), -std::sin(alpha),
+//					  0,      std::sin(alpha),  std::cos(alpha));
+//
+//				 // Rotation matrix y
+//						  cv::Mat Ry = (cv::Mat_<double>(3, 3) <<
+//				 std::cos(beta),      0,    std::sin(beta),
+//					  0, 	  1,                 0,
+//				-std::sin(beta),      0,  std::cos(beta));
+//
+//				 // Rotation matrix z
+//						  cv::Mat Rz = (cv::Mat_<double>(3, 3) <<
+//				std::cos(gamma),      -std::sin(gamma),                 0,
+//				std::sin(gamma), 	   std::cos(gamma),                 0,
+//					  0,               0,                 				1);
+//
+//				cv::warpPerspective(roi_mat, roi_mat, Rx*Ry*Rz*, cv::Size(roi_mat.cols+20,roi_mat.rows+20));
+//
+//
+//				//HUH?
+//				double alpha=wz*0.001;
+//				double beta=wy*0.001;
+//
+//
+//					 cv::Mat R = (cv::Mat_<double>(3, 3) <<
+//					 std::cos(beta),      0,    std::sin(beta),
+//					      0, 	  1,                 0,
+//					-std::sin(beta),      0,  std::cos(beta));
+//
+//					  cv::Mat R2 = (cv::Mat_<double>(3, 3) <<
+//						  1,          			0,                0,
+//						  0, 	  std::cos(alpha), -std::sin(alpha),
+//						  0,      std::sin(alpha),  std::cos(alpha));
+//
+//				cv::warpPerspective(roi_mat, roi_mat, R*R2, cv::Size(roi_mat.cols,roi_mat.rows));
 
 				if(new_template_matching)//proportion enhanced template matching
 				{
@@ -439,7 +571,7 @@ public:
 					{
 						std::string str;
 						str+=bestMatch.name[0];
-						cv::Mat paint_roi=imgPtrRGB->image(*it);
+						cv::Mat paint_roi=imgPtrRGB->image(it->roi);
 						cv::putText(paint_roi,str,bestMatch.center,CV_FONT_NORMAL,1,cv::Scalar(0,0,255));
 						bestMatch.printMatch();
 					}
@@ -448,7 +580,7 @@ public:
 				{
 					//Circledetection taken from http://opencv.willowgarage.com/documentation/cpp/imgproc_feature_detection.html:
 					//and modified
-					cv::Mat current_surface=filtered_bgr(*it),gray;
+					cv::Mat current_surface=filtered_bgr(it->roi),gray;
 				    cv::cvtColor(current_surface, gray, CV_BGR2GRAY);
 				    // smooth it, otherwise a lot of false circles may be detected
 				    cv::GaussianBlur( gray, gray, cv::Size(5, 5), 2, 2 );
@@ -467,8 +599,8 @@ public:
 
 				    	 if(center.x-radius>0 &&
 				    	    center.y-radius>0 &&
-				    	    center.x+radius<(*it).width &&
-				    	    center.y+radius<(*it).height && center.x>0 && center.y>0
+				    	    center.x+radius<(it->roi).width &&
+				    	    center.y+radius<(it->roi).height && center.x>0 && center.y>0
 				    	    )
 				    	 {
 
@@ -478,14 +610,14 @@ public:
 							 int end_x=center.x+radius+10;
 							 int end_y=center.y+radius+10;
 
-							 if(end_x>=(*it).width)end_x=(*it).width-1;
-							 if(end_y>=(*it).height)end_y=(*it).height-1;
+							 if(end_x>=(it->roi).width)end_x=(it->roi).width-1;
+							 if(end_y>=(it->roi).height)end_y=(it->roi).height-1;
 
 							 if(start_x<0)start_x=0;
 							 if(start_y<0)start_y=0;
 
 							 //ROI
-							 cv::Mat circleplace=imgPtrRGB->image(*it)(cv::Rect(start_x,start_y,end_x-start_x,end_y-start_y));
+							 cv::Mat circleplace=imgPtrRGB->image(it->roi)(cv::Rect(start_x,start_y,end_x-start_x,end_y-start_y));
 
 							 for(std::vector<sign>::iterator it2=signs.begin();it2!=signs.end();it2++)
 							 {
@@ -531,7 +663,7 @@ public:
 					    	 if(found)
 					    	 {
 
-					    		cv::Mat blub=imgPtrRGB->image(*it);
+					    		cv::Mat blub=imgPtrRGB->image(it->roi);
 					    		ROS_INFO("Found sign: %s",found_sign->getName().c_str());
 					    		if(found_sign->getName()=="left")
 					    		{
@@ -554,15 +686,15 @@ public:
 			}
 
 
-			for(std::vector<cv::Rect>::iterator it=rois.begin();it!=rois.end();it++)
+			for(std::vector<KinTo::Match_Roi>::iterator it=rois.begin();it!=rois.end();it++)
 			{
 				if(show_angles_ok)
 				{
-					cv::rectangle(angles_ok,*it,cv::Scalar(100),1,0,0);
+					cv::rectangle(angles_ok,it->roi,cv::Scalar(100),1,0,0);
 				}
 				else
 				{
-					cv::rectangle(imgPtrRGB->image,*it,cv::Scalar(100),1,0,0);
+					cv::rectangle(imgPtrRGB->image,it->roi,cv::Scalar(100),1,0,0);
 				}
 			}
 

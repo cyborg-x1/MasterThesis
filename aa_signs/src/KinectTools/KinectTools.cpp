@@ -25,6 +25,12 @@ namespace KinTo
 		int y_min;
 		int y_max;
 
+		cv::Point top_left;
+		cv::Point top_right;
+		cv::Point bottom_left;
+		cv::Point bottom_right;
+
+
 	public:
 		Range(int x,int y, std::vector< Range* > *del_vec=NULL)
 		: next_range(NULL)
@@ -35,6 +41,10 @@ namespace KinTo
 		, x_max(x)
 		, y_min(y)
 		, y_max(y)
+		, top_left(x,y)
+		, top_right(x,y)
+		, bottom_left(x,y)
+		, bottom_right(x,y)
 		{
 			if(del_vec)del_vec->push_back(this);
 		}
@@ -63,6 +73,47 @@ namespace KinTo
 		,y_max((r1->y_max>r2->y_max)?r1->y_max:r2->y_max)
 		{
 			if(del_vec)del_vec->push_back(this);
+
+			//top_left point
+			if((r1->top_left.x+r1->top_left.y)>(r2->top_left.x+r2->top_left.y))
+			{
+				top_left=r2->top_left;
+			}
+			else
+			{
+				top_left=r1->top_left;
+			}
+
+			//bottom_right
+			if((r1->bottom_right.x+r1->bottom_right.y)<(r2->bottom_right.x+r2->bottom_right.y))
+			{
+				bottom_right=r2->bottom_right;
+			}
+			else
+			{
+				bottom_right=r1->bottom_right;
+			}
+
+
+			//top_right point
+			if(x_max-r1->top_right.x+r1->top_right.y<(x_max-r2->top_right.x+r2->top_right.y))
+			{
+				top_right=r2->top_right;
+			}
+			else
+			{
+				top_right=r1->top_right;
+			}
+
+			//bottom_left point
+			if(x_max-r1->bottom_left.x+r1->bottom_left.y>(x_max-r2->bottom_left.x+r2->bottom_left.y))
+			{
+				bottom_left=r2->bottom_left;
+			}
+			else
+			{
+				bottom_left=r1->bottom_left;
+			}
 		}
 
 		~Range()
@@ -85,6 +136,34 @@ namespace KinTo
 			if(x>x_max)x_max=x;
 			if(y<y_min)y_min=y;
 			if(y>y_max)y_max=y;
+
+			//top_left point
+			if(top_left.x+top_left.y>(x+y))
+			{
+				top_left.x=x;
+				top_left.y=y;
+			}
+
+			//bottom_right
+			if(bottom_right.x+bottom_right.y<(x+y))
+			{
+				bottom_right.x=x;
+				bottom_right.y=y;
+			}
+
+			//top_right point
+			if(x_max-top_right.x+top_right.y<(x_max-x+y))
+			{
+				top_right.x=x;
+				top_right.y=y;
+			}
+
+			//bottom_left point
+			if(x_max-bottom_left.x+bottom_left.y>(x_max-x+y))
+			{
+				bottom_left.x=x;
+				bottom_left.y=y;
+			}
 		}
 
 		Range *getLast()
@@ -106,12 +185,16 @@ namespace KinTo
 			r2->next_range=r1->next_range=new Range(r1,r2);
 		}
 
-		cv::Rect getRect()
+		Match_Roi getMatchRoi()
 		{
-			return cv::Rect(x_min,y_min,x_max-x_min,y_max-y_min);
+			Match_Roi roi;
+			roi.top_left=top_left;
+			roi.top_right=top_right;
+			roi.bottom_left=bottom_left;
+			roi.bottom_right=bottom_right;
+			roi.roi=cv::Rect(x_min,y_min,x_max-x_min,y_max-y_min);
+			return roi;
 		}
-
-
 	};
 
 
@@ -269,19 +352,19 @@ namespace KinTo
 
 		//These variables will be true after the first pixel in each row/col
 		bool h_start=0; //hor
-		bool v_start=0; //vert
+//		bool v_start=0; //vert
 
 		//These variables will store the coordinates for the begin of the current gap (last non NAN pixel)
 		int h_gap_start=-1;
-		int v_gap_start=-1;
+//		int v_gap_start=-1;
 
 		//These variables are true if we are inside a gap
 		bool h_inside_gap=false;
-		bool v_inside_gap=false;
+//		bool v_inside_gap=false;
 
 		//These variables are the counters for the gap length
 		int h_gap_len=0;
-		int v_gap_len=0;
+//		int v_gap_len=0;
 
 		//Locate the gaps
 		for (int i = 0; i < (size_x*size_y); i++)
@@ -290,7 +373,7 @@ namespace KinTo
 			int y_H=i/size_x, x_H=i-y_H*size_x;
 
 			//Scanning vertical
-			int x_V=i/size_y, y_V=i-x_V*size_y;
+//			int x_V=i/size_y, y_V=i-x_V*size_y;
 
 			//Reset the start condition at the begin of each col/row
 			if(x_H==0)
@@ -830,19 +913,15 @@ namespace KinTo
 	{
 		angles=cv::Mat::zeros(normals.rows,normals.cols,CV_8UC3);
 		int size_x=normals.cols, size_y=normals.rows;
-		//bool variables
 		int y,x;
 		for (int i = 0; i < (size_x*size_y); i++)
 		{
 			y=i/size_x;
 			x=i-y*size_x;
 
-
 			short g1=(normals.at<Vec3shrt>(y,x)[0]);
 			short g2=(normals.at<Vec3shrt>(y,x)[1]);
 			short g3=(normals.at<Vec3shrt>(y,x)[2]);
-
-
 
 			double vector_length=sqrt(g1*g1+g2*g2+g3*g3);
 			if(!vector_length)continue;
@@ -995,7 +1074,7 @@ namespace KinTo
 		}
 	}
 
-	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<cv::Rect> &rects, int minWidth, int minHeight, int maxWidth, int maxHeight)
+	void SurfaceExtractor(const cv::Mat &pix_ok, const cv::Mat &neighbors, std::vector<Match_Roi> &rois, int minWidth, int minHeight, int maxWidth, int maxHeight)
 	{
 
 		cv::Mat ids=cv::Mat::zeros(pix_ok.rows,pix_ok.cols,CV_32SC1);
@@ -1105,11 +1184,12 @@ namespace KinTo
 			r=r->getLast();
 			if(out.insert(r).second)//Check if element was inserted
 			{
-				cv::Rect cur_rect=r->getRect();
+				Match_Roi roi=r->getMatchRoi();
+				cv::Rect &cur_rect=roi.roi;
 				//Check if rect is inside minimum and maximum size
 				if(minHeight<=cur_rect.height && minWidth<=cur_rect.width&&
 				   maxHeight>=cur_rect.height && maxWidth>=cur_rect.width)
-				rects.push_back(cur_rect);
+				rois.push_back(roi);
 			}
 		}
 	}
