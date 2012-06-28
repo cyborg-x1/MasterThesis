@@ -346,16 +346,21 @@ public:
 
 
 
-			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
+			cv::blur(angles_ok,angles_ok,cv::Size(3,3),cv::Point(-1,-1),0);
+			cv::threshold(angles_ok,angles_ok,1,255,0);
+
+			cv::blur(angles_ok,angles_ok,cv::Size(3,3),cv::Point(-1,-1),0);
+			cv::threshold(angles_ok,angles_ok,1,255,0);
+
+			cv::blur(angles_ok,angles_ok,cv::Size(3,3),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
 			if(!new_template_matching)KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
 
-			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
-			cv::threshold(angles_ok,angles_ok,1,255,0);
 
 			std::vector<KinTo::Match_Roi> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
+
 
 
 			//Look through the surfaces...
@@ -364,143 +369,225 @@ public:
 				cv::Mat roi_mat=imgPtrRGB->image(it->roi).clone();
 
 
-				//top left
-				float tl_orig_x=it->top_left.x;
-				float tl_orig_y=it->top_left.y;
-				cv::Point2f tl_orig(tl_orig_x,tl_orig_y);
-				float z_tl=imgPtrDepth->image.at<KinTo::Vec1shrt>(tl_orig_y,tl_orig_x)[0];
-				float y_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[0];
-				float x_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[1];
-
-				//bottom left
-				float bl_orig_x=it->bottom_left.x;
-				float bl_orig_y=it->bottom_left.y;
-				cv::Point2f bl_orig(bl_orig_x,bl_orig_y);
-				float z_bl=imgPtrDepth->image.at<KinTo::Vec1shrt>(bl_orig_y,bl_orig_x)[0];
-				float y_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[0];
-				float x_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[1];
-
-				//top right
-				float tr_orig_x=it->top_right.x;
-				float tr_orig_y=it->top_right.y;
-				cv::Point2f tr_orig(tr_orig_x,tr_orig_y);
-				float z_tr=imgPtrDepth->image.at<KinTo::Vec1shrt>(tr_orig_y,tr_orig_x)[0];
-				float y_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[0];
-				float x_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[1];
-
-				//bottom right
-				float br_orig_x=it->bottom_right.x;
-				float br_orig_y=it->bottom_right.y;
-				cv::Point2f br_orig(br_orig_x,br_orig_y);
-				float z_br=imgPtrDepth->image.at<KinTo::Vec1shrt>(br_orig_y,br_orig_x)[0];
-				float y_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[0];
-				float x_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[1];
-
-				//Length in reality
-				float tltr=std::sqrt(pow(x_tr-x_tl,2)+pow(y_tr-y_tl,2)+pow(z_tr-z_tl,2));
-				float tlbr=std::sqrt(pow(x_br-x_tl,2)+pow(y_br-y_tl,2)+pow(z_br-z_tl,2));
-				float tlbl=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
-				//Length in pixels
-				float tltr_px=std::sqrt(pow(tl_orig_x-tr_orig_x,2)+pow(tl_orig_y-tr_orig_y,2));
-				float tlbr_px=std::sqrt(pow(tl_orig_x-br_orig_x,2)+pow(tl_orig_y-br_orig_y,2));
-				float tlbl_px=std::sqrt(pow(tl_orig_x-bl_orig_x,2)+pow(tl_orig_y-bl_orig_y,2));
-
-
-
-
-				bool done=false;
-
 				//Top left variables
-				cv::Point tl_begin_corner=it->top_left;
-				cv::Point tl_first_corner=it->top_left;
-				cv::Point tl_second_corner=it->top_left;
-				cv::Point tl_end_corner=it->top_left;
+				cv::Point tl_end1;
+				cv::Point tr_end1;
+				cv::Point bl_end1;
+				cv::Point br_end1;
 
 				int tl_x=it->top_left.x;
 				int tl_y=it->top_left.y;
-				int tl_corner=0;
-				int tl_cnt=0;
-				bool tl_done=false;
+				int tr_x=it->top_right.x;
+				int tr_y=it->top_right.y;
 
-				while(!done)
+				int br_x=it->bottom_right.x;
+				int br_y=it->bottom_right.y;
+				int bl_x=it->bottom_left.x;
+				int bl_y=it->bottom_left.y;
+
+				int tl_done=0;
+				int tr_done=0;
+				int br_done=0;
+				int bl_done=0;
+
+				while(!(tl_done && tr_done && br_done && bl_done))
 				{
-					switch(tl_corner)
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<4))
+					&& angles_ok.at<KinTo::Vec1uchar>(tl_y+1,tl_x+1)[0])
 					{
-					case 0:
-						//has right neighbor
-						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<3))
-						   && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0]
-						   && tl_x<(it->roi.width*3/4+it->roi.x))
-						{
-							tl_x++;
-							//has bottom neighbor
-							if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<5))
-							   && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])//
-							{
-
-								tl_first_corner.x=tl_x;
-							}
-						}
-						else
-						{
-							std::cout<<tl_x<<std::endl;
-							tl_x=tl_first_corner.x;
-							tl_second_corner.x=tl_x;
-							tl_corner=1;
-						}
-						break;
-					case 1:
-						//has bottom neighbor
-						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<5))
-							&& angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])
-						{
-							tl_y++;
-							//has left neighbor
-							if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<7))//
-							    && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0]
-							    && tl_y<(it->roi.height*3/4+it->roi.y))
-							{
-								tl_second_corner.y=tl_y;
-							}
-						}
-						else
-						{
-							std::cout<<tl_y<<std::endl;
-							tl_y=tl_second_corner.y;
-							tl_corner=2;
-						}
-						break;
-
-					case 2:
-						//has left and x is bigger or equal to begin
-						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<7))&& tl_x>tl_begin_corner.x
-						    && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])
-						{
-							tl_x--;
-						}
-						else
-						{
-							std::cout<<tl_x<<std::endl;
-							tl_begin_corner.x=tl_x;
-							tl_end_corner.x=tl_x;
-							tl_end_corner.y=tl_y;
-							done=true;
-						}
-						break;
+						tl_y++;
+						tl_x++;
 					}
+					else
+					{
+						tl_end1=cv::Point(tl_x,tl_y);
+						tl_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(tr_y,tr_x)[0]&(1<<6))
+					&& angles_ok.at<KinTo::Vec1uchar>(tr_y+1,tr_x+1)[0])
+					{
+						tr_y++;
+						tr_x--;
+					}
+					else
+					{
+						tr_end1=cv::Point(tr_x,tr_y);
+						tr_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(br_y,br_x)[0]&(1<<0))
+					&& angles_ok.at<KinTo::Vec1uchar>(br_y+1,br_x+1)[0])
+					{
+						br_y--;
+						br_x--;
+					}
+					else
+					{
+						br_end1=cv::Point(br_x,br_y);
+						br_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(bl_y,bl_x)[0]&(1<<2))
+					&& angles_ok.at<KinTo::Vec1uchar>(bl_y+1,bl_x+1)[0])
+					{
+						bl_y--;
+						bl_x++;
+					}
+					else
+					{
+						bl_end1=cv::Point(bl_x,bl_y);
+						bl_done=true;
+					}
+
 				}
 
 
 
 
 
+				//calculate xy dist between centers of points (x==y -> diagonal)
+				int tl_dist=std::abs(it->top_left.x-tl_end1.x);
+				int tr_dist=std::abs(it->top_right.x-tr_end1.x);
+				int br_dist=std::abs(it->bottom_right.x-br_end1.x);
+				int bl_dist=std::abs(it->bottom_left.x-bl_end1.x);
+
+
+
+
+
+				//bring them to a even distance
+				if(tl_dist%2){tl_end1.x--; tl_end1.y--; tl_dist--;}
+				if(tr_dist%2){tr_end1.x--; tr_end1.y--; tr_dist--;}
+				if(br_dist%2){br_end1.x--; br_end1.y--; br_dist--;}
+				if(bl_dist%2){bl_end1.x--; bl_end1.y--; bl_dist--;}
+
+				cv::Point tl_center=cv::Point(it->top_left.x+tl_dist/2,it->top_left.y+tl_dist/2);
+				cv::Point tr_center=cv::Point(it->top_right.x+tr_dist/2,it->top_right.y+tr_dist/2);
+				cv::Point bl_center=cv::Point(it->bottom_left.x+bl_dist/2,it->bottom_left.y+bl_dist/2);
+				cv::Point br_center=cv::Point(it->bottom_right.x+br_dist/2,it->bottom_right.y+br_dist/2);
+
+
+				int tl_dist2=0;
+				int tr_dist2=0;
+				int br_dist2=0;
+				int bl_dist2=0;
+
+				 tl_done = 0;
+				 tr_done = 0;
+				 br_done = 0;
+				 bl_done = 0;
+
+				while(!(tl_done && tr_done && br_done && bl_done))
+				{
+					if((neighbor_map.at<KinTo::Vec3shrt>(tl_center.y+tl_dist2,tl_center.x+tl_dist2)[0]&(1<<2))
+					 &&(neighbor_map.at<KinTo::Vec3shrt>(tl_center.y+tl_dist2,tl_center.x+tl_dist2)[0]&(1<<6))
+					 && angles_ok.at<KinTo::Vec1uchar>(tl_center.y+tl_dist2+1,tl_center.x+tl_dist2+1)[0]
+					 && angles_ok.at<KinTo::Vec1uchar>(tl_center.y+tl_dist2+1,tl_center.x+tl_dist2+1)[0]
+					 && tl_dist2<tl_dist)
+					{
+						tl_dist2++;
+					}
+					else
+					{
+						tl_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(tr_center.y+tr_dist2,tr_center.x+tr_dist2)[0]&(1<<0))
+					 &&(neighbor_map.at<KinTo::Vec3shrt>(tr_center.y+tr_dist2,tr_center.x+tr_dist2)[0]&(1<<4))
+					 && angles_ok.at<KinTo::Vec1uchar>(tr_center.y+tr_dist2+1,tr_center.x+tr_dist2+1)[0]
+					 && angles_ok.at<KinTo::Vec1uchar>(tr_center.y+tr_dist2+1,tr_center.x+tr_dist2+1)[0]
+					 && tr_dist2<tr_dist)
+					{
+						tr_dist2++;
+					}
+					else
+					{
+						tr_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(br_center.y+br_dist2,br_center.x+br_dist2)[0]&(1<<2))
+					 &&(neighbor_map.at<KinTo::Vec3shrt>(br_center.y+br_dist2,br_center.x+br_dist2)[0]&(1<<6))
+					 && angles_ok.at<KinTo::Vec1uchar>(br_center.y+br_dist2+1,br_center.x+br_dist2+1)[0]
+					 && angles_ok.at<KinTo::Vec1uchar>(br_center.y+br_dist2+1,br_center.x+br_dist2+1)[0]
+					 && br_dist2<br_dist)
+					{
+						br_dist2++;
+					}
+					else
+					{
+						br_done=true;
+					}
+
+					if((neighbor_map.at<KinTo::Vec3shrt>(bl_center.y+bl_dist2,bl_center.x+bl_dist2)[0]&(1<<0))
+					 &&(neighbor_map.at<KinTo::Vec3shrt>(bl_center.y+bl_dist2,bl_center.x+bl_dist2)[0]&(1<<4))
+					 && angles_ok.at<KinTo::Vec1uchar>(bl_center.y+bl_dist2+1,bl_center.x+bl_dist2+1)[0]
+					 && angles_ok.at<KinTo::Vec1uchar>(bl_center.y+bl_dist2+1,bl_center.x+bl_dist2+1)[0]
+					 && bl_dist2<bl_dist)
+					{
+						bl_dist2++;
+					}
+					else
+					{
+						bl_done=true;
+					}
+				}
+
+
+
+
+				//getting the biggest
+				int max=tl_dist2;
+				cv::Point n_c=tl_center;
+				if(tr_dist2>max)
+				{
+					max=tr_dist2;
+					n_c=tr_center;
+				}
+				if(br_dist2>max)
+				{
+					max=br_dist2;
+					n_c=br_center;
+				}
+				if(bl_dist2>max)
+				{
+					max=bl_dist2;
+					n_c=bl_center;
+				}
+
+
+				cv::Point n_tl, n_tr, n_br, n_bl;
+
+				n_tl=n_tr=n_br=n_bl=n_c;
+
+				std::cout<<max<<std::endl;
+				n_tl.x-=max;
+				n_tl.y-=max;
+
+				n_tr.x+=max;
+				n_tr.y-=max;
+
+				n_br.x+=max;
+				n_br.y+=max;
+
+				n_bl.x-=max;
+				n_bl.y+=max;
 
 
 				//show points
-				cv::circle(imgPtrRGB->image,tl_begin_corner,2,cv::Scalar(0,0,255),2);//red
-				cv::circle(imgPtrRGB->image,tl_first_corner,2,cv::Scalar(0,255,0),2);//green
-				cv::circle(imgPtrRGB->image,tl_second_corner,2,cv::Scalar(255,0,0),2);//blue
-				cv::circle(imgPtrRGB->image,tl_end_corner,2,cv::Scalar(255,255,0),2);//yellow
+				cv::circle(imgPtrRGB->image,tl_center,2,cv::Scalar(255,127,0),2);//red
+				cv::circle(imgPtrRGB->image,tr_center,2,cv::Scalar(255,127,0),2);//green
+				cv::circle(imgPtrRGB->image,br_center,2,cv::Scalar(255,127,0),2);//blue
+				cv::circle(imgPtrRGB->image,bl_center,2,cv::Scalar(255,127,0),2);//yellow
+
+
+
+				//show points
+				cv::circle(imgPtrRGB->image,n_tl,2,cv::Scalar(0,0,255),2);//red
+				cv::circle(imgPtrRGB->image,n_tr,2,cv::Scalar(0,255,0),2);//green
+				cv::circle(imgPtrRGB->image,n_br,2,cv::Scalar(255,0,0),2);//blue
+				cv::circle(imgPtrRGB->image,n_bl,2,cv::Scalar(255,255,0),2);//yellow
 
 
 //
