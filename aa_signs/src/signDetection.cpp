@@ -363,18 +363,6 @@ public:
 			{
 				cv::Mat roi_mat=imgPtrRGB->image(it->roi).clone();
 
-//				//Calculate starting points
-//				float roi_x=it->roi.x;
-//				float roi_y=it->roi.y;
-//				float roi_w=it->width;
-//				float roi_h=it->height;
-//
-//				float roi_cx=roi_x+it->width/2;
-//				float roi_cy=roi_y+it->height/2;
-//
-//				float hor=roi_w/4;
-//				float ver=roi_h/4;
-//
 
 				//top left
 				float tl_orig_x=it->top_left.x;
@@ -504,91 +492,15 @@ public:
 
 
 
+
+
+
+
 				//show points
 				cv::circle(imgPtrRGB->image,tl_begin_corner,2,cv::Scalar(0,0,255),2);//red
 				cv::circle(imgPtrRGB->image,tl_first_corner,2,cv::Scalar(0,255,0),2);//green
 				cv::circle(imgPtrRGB->image,tl_second_corner,2,cv::Scalar(255,0,0),2);//blue
 				cv::circle(imgPtrRGB->image,tl_end_corner,2,cv::Scalar(255,255,0),2);//yellow
-
-
-
-
-//				if((int)tltr*100 && (int)tlbr*100 && (int)tlbl*100 && (int)tltr_px*100 && (int)tlbr_px*100 && (int)tlbl_px*100)
-//				{
-//					//Length factor if we consider tltr_px as fixed
-//					float factor=tltr/tltr_px;
-//
-//					std::cout<<tltr<<" "<<tlbr<<" "<<tlbl<<" "<<tltr_px<<" "<<tlbr_px<<" "<<tlbl_px<<" "<<std::endl;
-//
-////					std::cout<<"Factor: "<<factor<<std::endl;
-//					//new pixel length of bl and br
-//					float tlbr_px_n=tlbr/factor;
-//					float tlbl_px_n=tlbl/factor;
-//
-////					std::cout<<"size new tlbr: "<<tlbl_px_n<<std::endl;
-////					std::cout<<"size new tlbl: "<<tlbl_px_n<<std::endl;
-//
-//					//Point multiplication factors
-//					float fact_br=tlbr_px/tlbr_px_n;
-//					float fact_bl=tlbl_px/tlbl_px_n;
-//
-////					std::cout<<"fact tlbr: "<<fact_br<<std::endl;
-////					std::cout<<"fact tlbl: "<<fact_bl<<std::endl;
-//
-//					cv::Point2f points[4];
-//					points[0]=it->top_left;
-//					points[1]=it->top_right;
-//					points[2]=it->bottom_left;
-//					points[3]=it->bottom_right;
-//
-//					cv::Point2f pointgoals[4];
-//					pointgoals[0]=it->top_left;
-//					pointgoals[1]=it->top_right;
-//					pointgoals[2]=it->bottom_left;
-//					pointgoals[3]=it->bottom_right;
-//
-//					pointgoals[2].x*=fact_bl;
-//					pointgoals[2].y*=fact_bl;
-//
-//					pointgoals[3].x*=fact_br;
-//					pointgoals[3].y*=fact_br;
-//
-//					float fact_imgsize=(fact_bl>fact_br)?fact_bl:fact_br;
-//
-//					//cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points,pointgoals), cv::Size(roi_mat.cols*fact_imgsize,roi_mat.rows*fact_imgsize));
-//
-//				}
-
-
-
-
-
-
-
-
-//				float length_t=
-//				float length_l=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
-//				float length_r=std::sqrt(pow(x_br-x_tr,2)+pow(y_br-y_tr,2)+pow(z_br-z_tr,2));
-//				float length_b=std::sqrt(pow(x_br-x_bl,2)+pow(y_br-y_bl,2)+pow(z_br-z_bl,2));
-
-//				float length_t_pix=tr_orig_x-tl_orig_x;
-//				float length_l_pix=bl_orig_y-tl_orig_y;
-//				float length_r_pix=br_orig_y-tr_orig_y;
-//				float length_b_pix=br_orig_x-bl_orig_x;
-
-//
-//				if(!length_t || !length_r || !length_l || !length_b)
-//				{
-//					std::cout<<"PIX "<<tr_orig_x<<" "<<tr_orig_y<<" "<<tl_orig_x<<" "<<tl_orig_y<<" "<<br_orig_x<<" "<<br_orig_y<<" "<<bl_orig_x<<" "<<bl_orig_y<<" "<<std::endl;
-//					std::cout<<"PIX "<<length_t_pix<<" "<<length_r_pix<<" "<<length_l_pix<<" "<<length_b_pix<<std::endl;
-//					std::cout<<"REAL"<<length_t<<" "<<length_r<<" "<<length_l<<" "<<length_b<<std::endl;
-//				}
-
-
-
-
-
-
 
 
 //
