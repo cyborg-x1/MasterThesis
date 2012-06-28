@@ -345,13 +345,14 @@ public:
 			///
 
 
+
 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
-			//filtered_bgr=imgPtrRGB->image;
-			//KinTo::BGRFilter(imgPtrRGB->image,filtered_bgr,0,70,0,70,50,255);
-			KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
+			if(!new_template_matching)KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
 
+			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
+			cv::threshold(angles_ok,angles_ok,1,255,0);
 
 			std::vector<KinTo::Match_Roi> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
@@ -374,20 +375,19 @@ public:
 //				float hor=roi_w/4;
 //				float ver=roi_h/4;
 //
+
 				//top left
 				float tl_orig_x=it->top_left.x;
 				float tl_orig_y=it->top_left.y;
 				cv::Point2f tl_orig(tl_orig_x,tl_orig_y);
-
 				float z_tl=imgPtrDepth->image.at<KinTo::Vec1shrt>(tl_orig_y,tl_orig_x)[0];
 				float y_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[0];
 				float x_tl=xy.at<KinTo::Vec2shrt>(tl_orig_y,tl_orig_x)[1];
 
 				//bottom left
 				float bl_orig_x=it->bottom_left.x;
-				float bl_orig_y=it->bottom_left.x;
+				float bl_orig_y=it->bottom_left.y;
 				cv::Point2f bl_orig(bl_orig_x,bl_orig_y);
-
 				float z_bl=imgPtrDepth->image.at<KinTo::Vec1shrt>(bl_orig_y,bl_orig_x)[0];
 				float y_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[0];
 				float x_bl=xy.at<KinTo::Vec2shrt>(bl_orig_y,bl_orig_x)[1];
@@ -396,7 +396,6 @@ public:
 				float tr_orig_x=it->top_right.x;
 				float tr_orig_y=it->top_right.y;
 				cv::Point2f tr_orig(tr_orig_x,tr_orig_y);
-
 				float z_tr=imgPtrDepth->image.at<KinTo::Vec1shrt>(tr_orig_y,tr_orig_x)[0];
 				float y_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[0];
 				float x_tr=xy.at<KinTo::Vec2shrt>(tr_orig_y,tr_orig_x)[1];
@@ -405,43 +404,167 @@ public:
 				float br_orig_x=it->bottom_right.x;
 				float br_orig_y=it->bottom_right.y;
 				cv::Point2f br_orig(br_orig_x,br_orig_y);
-
 				float z_br=imgPtrDepth->image.at<KinTo::Vec1shrt>(br_orig_y,br_orig_x)[0];
 				float y_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[0];
 				float x_br=xy.at<KinTo::Vec2shrt>(br_orig_y,br_orig_x)[1];
 
-				cv::circle(imgPtrRGB->image,it->top_left,2,cv::Scalar(0,0,255),2);//red
-				cv::circle(imgPtrRGB->image,it->top_right,2,cv::Scalar(0,255,0),2);//green
-				cv::circle(imgPtrRGB->image,it->bottom_left,2,cv::Scalar(255,0,0),2);//blue
-				cv::circle(imgPtrRGB->image,it->bottom_right,2,cv::Scalar(255,255,0),2);//yellow
-
-
+				//Length in reality
 				float tltr=std::sqrt(pow(x_tr-x_tl,2)+pow(y_tr-y_tl,2)+pow(z_tr-z_tl,2));
 				float tlbr=std::sqrt(pow(x_br-x_tl,2)+pow(y_br-y_tl,2)+pow(z_br-z_tl,2));
 				float tlbl=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
-
+				//Length in pixels
 				float tltr_px=std::sqrt(pow(tl_orig_x-tr_orig_x,2)+pow(tl_orig_y-tr_orig_y,2));
 				float tlbr_px=std::sqrt(pow(tl_orig_x-br_orig_x,2)+pow(tl_orig_y-br_orig_y,2));
 				float tlbl_px=std::sqrt(pow(tl_orig_x-bl_orig_x,2)+pow(tl_orig_y-bl_orig_y,2));
 
 
-				if((int)tltr*100 && (int)tlbr*100 && (int)tlbl*100 && (int)tltr_px*100 && (int)tlbr_px*100 && (int)tlbl_px*100)
+
+
+				bool done=false;
+
+				//Top left variables
+				cv::Point tl_begin_corner=it->top_left;
+				cv::Point tl_first_corner=it->top_left;
+				cv::Point tl_second_corner=it->top_left;
+				cv::Point tl_end_corner=it->top_left;
+
+				int tl_x=it->top_left.x;
+				int tl_y=it->top_left.y;
+				int tl_corner=0;
+				int tl_cnt=0;
+				bool tl_done=false;
+
+				while(!done)
 				{
-					float factor=tltr/tltr_px;
-					//new pixel length of bl and br
-					float tlbr_px_n=tlbr/factor;
-					float tlbl_px_n=tlbl/factor;
+					switch(tl_corner)
+					{
+					case 0:
+						//has right neighbor
+						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<3))
+						   && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0]
+						   && tl_x<(it->roi.width*3/4+it->roi.x))
+						{
+							tl_x++;
+							//has bottom neighbor
+							if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<5))
+							   && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])//
+							{
 
-					//new coords of bl and br
-					float factor_tlbl_x_dist=(tl_orig_x-bl_orig_x);
-					float factor_tlbl_y_dist=(tl_orig_y-bl_orig_y);
+								tl_first_corner.x=tl_x;
+							}
+						}
+						else
+						{
+							std::cout<<tl_x<<std::endl;
+							tl_x=tl_first_corner.x;
+							tl_second_corner.x=tl_x;
+							tl_corner=1;
+						}
+						break;
+					case 1:
+						//has bottom neighbor
+						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<5))
+							&& angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])
+						{
+							tl_y++;
+							//has left neighbor
+							if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<7))//
+							    && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0]
+							    && tl_y<(it->roi.height*3/4+it->roi.y))
+							{
+								tl_second_corner.y=tl_y;
+							}
+						}
+						else
+						{
+							std::cout<<tl_y<<std::endl;
+							tl_y=tl_second_corner.y;
+							tl_corner=2;
+						}
+						break;
 
-
-//					float factor_tlbr_xy=std::abs(tl_orig_y-br_orig_y)/std::abs(tl_orig_x-br_orig_x);
-//
-//					float tlbl_x_part=factor_tlbl_xy*tlbl_px_n;
-//				    float tlbl_y_part=
+					case 2:
+						//has left and x is bigger or equal to begin
+						if((neighbor_map.at<KinTo::Vec3shrt>(tl_y,tl_x)[0]&(1<<7))&& tl_x>tl_begin_corner.x
+						    && angles_ok.at<KinTo::Vec1uchar>(tl_y,tl_x)[0])
+						{
+							tl_x--;
+						}
+						else
+						{
+							std::cout<<tl_x<<std::endl;
+							tl_begin_corner.x=tl_x;
+							tl_end_corner.x=tl_x;
+							tl_end_corner.y=tl_y;
+							done=true;
+						}
+						break;
+					}
 				}
+
+
+
+				//show points
+				cv::circle(imgPtrRGB->image,tl_begin_corner,2,cv::Scalar(0,0,255),2);//red
+				cv::circle(imgPtrRGB->image,tl_first_corner,2,cv::Scalar(0,255,0),2);//green
+				cv::circle(imgPtrRGB->image,tl_second_corner,2,cv::Scalar(255,0,0),2);//blue
+				cv::circle(imgPtrRGB->image,tl_end_corner,2,cv::Scalar(255,255,0),2);//yellow
+
+
+
+
+//				if((int)tltr*100 && (int)tlbr*100 && (int)tlbl*100 && (int)tltr_px*100 && (int)tlbr_px*100 && (int)tlbl_px*100)
+//				{
+//					//Length factor if we consider tltr_px as fixed
+//					float factor=tltr/tltr_px;
+//
+//					std::cout<<tltr<<" "<<tlbr<<" "<<tlbl<<" "<<tltr_px<<" "<<tlbr_px<<" "<<tlbl_px<<" "<<std::endl;
+//
+////					std::cout<<"Factor: "<<factor<<std::endl;
+//					//new pixel length of bl and br
+//					float tlbr_px_n=tlbr/factor;
+//					float tlbl_px_n=tlbl/factor;
+//
+////					std::cout<<"size new tlbr: "<<tlbl_px_n<<std::endl;
+////					std::cout<<"size new tlbl: "<<tlbl_px_n<<std::endl;
+//
+//					//Point multiplication factors
+//					float fact_br=tlbr_px/tlbr_px_n;
+//					float fact_bl=tlbl_px/tlbl_px_n;
+//
+////					std::cout<<"fact tlbr: "<<fact_br<<std::endl;
+////					std::cout<<"fact tlbl: "<<fact_bl<<std::endl;
+//
+//					cv::Point2f points[4];
+//					points[0]=it->top_left;
+//					points[1]=it->top_right;
+//					points[2]=it->bottom_left;
+//					points[3]=it->bottom_right;
+//
+//					cv::Point2f pointgoals[4];
+//					pointgoals[0]=it->top_left;
+//					pointgoals[1]=it->top_right;
+//					pointgoals[2]=it->bottom_left;
+//					pointgoals[3]=it->bottom_right;
+//
+//					pointgoals[2].x*=fact_bl;
+//					pointgoals[2].y*=fact_bl;
+//
+//					pointgoals[3].x*=fact_br;
+//					pointgoals[3].y*=fact_br;
+//
+//					float fact_imgsize=(fact_bl>fact_br)?fact_bl:fact_br;
+//
+//					//cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points,pointgoals), cv::Size(roi_mat.cols*fact_imgsize,roi_mat.rows*fact_imgsize));
+//
+//				}
+
+
+
+
+
+
+
 
 //				float length_t=
 //				float length_l=std::sqrt(pow(x_bl-x_tl,2)+pow(y_bl-y_tl,2)+pow(z_bl-z_tl,2));
@@ -470,8 +593,8 @@ public:
 
 //
 //				//Get normal from center
-//				int center_x=it->x+it->width/2;
-//				int center_y=it->y+it->height/2;
+//				int center_x=it->roi.x+it->roi.width/2;
+//				int center_y=it->roi.y+it->roi.height/2;
 //
 //				double nx=normals.at<KinTo::Vec3shrt>(center_y,center_x)[0];
 //				double ny=normals.at<KinTo::Vec3shrt>(center_y,center_x)[1];
@@ -485,36 +608,6 @@ public:
 //				double wx=std::acos(nx/nl);
 //				double wy=std::acos(ny/nl);
 //				double wz=std::acos(nz/nl);
-
-
-
-
-//				//HUH?
-//				double alpha=(wy)*0.001;
-//				double beta=(wz)*0.001;
-//				double gamma=(wx)*0.001;
-//
-//				// Rotation matrix x
-//				  cv::Mat Rx = (cv::Mat_<double>(3, 3) <<
-//					  1,          			0,                0,
-//					  0, 	  std::cos(alpha), -std::sin(alpha),
-//					  0,      std::sin(alpha),  std::cos(alpha));
-//
-//				 // Rotation matrix y
-//						  cv::Mat Ry = (cv::Mat_<double>(3, 3) <<
-//				 std::cos(beta),      0,    std::sin(beta),
-//					  0, 	  1,                 0,
-//				-std::sin(beta),      0,  std::cos(beta));
-//
-//				 // Rotation matrix z
-//						  cv::Mat Rz = (cv::Mat_<double>(3, 3) <<
-//				std::cos(gamma),      -std::sin(gamma),                 0,
-//				std::sin(gamma), 	   std::cos(gamma),                 0,
-//					  0,               0,                 				1);
-//
-//				cv::warpPerspective(roi_mat, roi_mat, Rx*Ry*Rz*, cv::Size(roi_mat.cols+20,roi_mat.rows+20));
-//
-//
 //				//HUH?
 //				double alpha=wz*0.001;
 //				double beta=wy*0.001;
