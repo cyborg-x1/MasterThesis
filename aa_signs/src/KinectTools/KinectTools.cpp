@@ -1192,6 +1192,11 @@ namespace KinTo
 				rois.push_back(roi);
 			}
 		}
+
+		for(std::vector<Range*>::iterator it=del_ranges.begin();it!=del_ranges.end();it++)
+		{
+			delete *it;
+		}
 	}
 
 	void BGRFilter(const cv::Mat &bgr_in, cv::Mat &bgr_out, uchar min_b, uchar max_b, uchar min_g, uchar max_g, uchar min_r, uchar max_r)
