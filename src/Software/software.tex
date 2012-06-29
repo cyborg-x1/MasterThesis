@@ -19,48 +19,62 @@ then another blur filter is applied to remove possible noise resulting from that
 (see figure \vref{figure:blur} for results).
 
 \newpage
-%TODO include function header!!
 
-\begin{lstlisting}[caption={Code of the first Bluring Function}\label{lst:fstBlur},language=c++]  
-cv::Mat filter_in = src.clone();
-cv::Mat filter=filter_in.clone();
-cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
-cv::medianBlur(filter, filter, 3);
-
-//Update non zero pixels
-for (int y = 0; y < src.rows; y++)
+\begin{lstlisting}[caption={Code of the first Bluring Function}\label{lst:fstBlur},language=c++]
+void myFilter1(const cv::Mat &src, cv::Mat &dst)
 {
-	for (int x = 0; x < src.cols; x++)
+	cv::Mat filter_in = src.clone();
+	cv::Mat filter=filter_in.clone();
+	cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
+	cv::medianBlur(filter, filter, 3);
+	
+	//Update non zero pixels
+	for (int y = 0; y < src.rows; y++)
 	{
-		short realValue = filter_in.at<Vec1shrt>(y, x)[0];
-		short filteredValue = filter.at<Vec1shrt>(y, x)[0];
-		short maxDifference = pow((float)realValue, 2) / (480000);
-		if (realValue>0)
+		for (int x = 0; x < src.cols; x++)
 		{
-			if(abs(realValue - filteredValue) > maxDifference)
+			short realValue = filter_in.at<Vec1shrt>(y, x)[0];
+			short filteredValue = filter.at<Vec1shrt>(y, x)[0];
+			short maxDifference = pow((float)realValue, 2) / (480000);
+			if (realValue>0)
 			{
-				dst.at<Vec1shrt>(y, x)[0] = realValue;
-			}
-			else
-			{
-				dst.at<Vec1shrt>(y, x)[0] = filteredValue;
+				if(abs(realValue - filteredValue) > maxDifference)
+				{
+					dst.at<Vec1shrt>(y, x)[0] = realValue;
+				}
+				else
+				{
+					dst.at<Vec1shrt>(y, x)[0] = filteredValue;
+				}
 			}
 		}
 	}
+	cv::medianBlur(dst, dst, 3);
 }
-cv::medianBlur(dst, dst, 3);
 \end{lstlisting}
 
-\pic{myFilter1.png}{Blur Filter (Boxed/Median/Reset Borders/Median)}{\label{figure:blur}}{0.6}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{myFilter1.png}
+  \caption{Blur Filter (Boxed/Median/Reset Borders/Median)}
+  \label{figure:blur}
+\end{center}
+\end{figure}
 \clearpage
 
-\subsection{Neighborhood Map and New Blur Filter} \label{sect:blurFilter}
+\subsection{Neighborhood Map and New Blur Filter} \label{sect:blurFilter} 
 After realizing that there are only 824 depth values available, it was decided to transform the depth picture
 to the available depth steps. The resulting step map contains the number of each available depth like 
 shown in figure \vref{figure:stepMap}. The converting function uses an array. This array contains the number of the
 step when obtaining the cell number of its value. Each cell of a non-existing value contains -1. 
 
-\pic{stepmap.pdf}{Step Map Creation}{\label{figure:stepMap}}{1}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{stepmap.pdf}
+  \caption{Step Map Creation}
+  \label{figure:stepMap}
+\end{center}
+\end{figure}
 
 Listing \vref{lst:stpmap} contains the code of the converting function.
 
@@ -298,19 +312,31 @@ void createRelationNeighbourhoodMap(const cv::Mat &src,
 \end{lstlisting}
 
 
-\pic{neighborhoodmap.pdf}{Neighborhood-Map Creation}{\label{figure:neighborhoodmap}}{1}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{neighborhoodmap.pdf}
+  \caption{Neighborhood-Map Creation}
+  \label{figure:neighborhoodmap}
+\end{center}
+\end{figure}
 
 This information helps to write a more performance saving, effective and edge saving bluring method which 
 was named crossBlur because it blures each pixel with a specified number of it's neighbors on top, left, right and bottom.
 The neighborhood condition is needed because it will stop adding pixels on each side if the next pixel in the direction 
 is not a close neighbor to the current to preserve the edges. (see in figure \vref{figure:crossblur}).
 
-\pic{crossBlur.pdf}{Cross Blur Working Principle}{\label{figure:crossblur}}{1}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{crossBlur.pdf}
+  \caption{Cross Blur Working Principle}
+  \label{figure:crossblur}
+\end{center}
+\end{figure} 
 
 %TODO Formula
 %TODO Result picture
 
-Listing \vref{crossblur} shows the cross bluring function.
+Listing \vref{lst:crossblur} shows the cross bluring function.
 
 \begin{lstlisting}[caption={crossDepthBlur - Function}\label{lst:crossblur}, language=c++]
 void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors, 
@@ -493,7 +519,13 @@ If both normals can be calculated it takes the average of both normals (see figu
 
 $$ \vec{N} = \frac{\vec{N_{tr}} + \vec{N_{bl}}}{2}$$
 
-\pic{normals.pdf}{Normals Creation}{\label{figure:normals}}{0.8}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/3]{normals.pdf}
+  \caption{Normals Creation}
+  \label{figure:normals}
+\end{center}
+\end{figure}
 
 \subsection{Angle Calculation}
 
@@ -702,7 +734,7 @@ void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out,
 
 \subsection{Surface Segmentation}
 
-Before the begining with segmenting the surfaces the pictures containing the pixels which show correct angles
+Before the begining with segmenting the surfaces the picture containing the pixels which show correct angles
 is blured to remove empty pixels or columns of empty pixels which seperate surfaces belonging together. After
 bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. The code is
 shown in listing \vref{lst:angleFilter}.
@@ -712,16 +744,37 @@ shown in listing \vref{lst:angleFilter}.
 	cv::threshold(angles_ok,angles_ok,1,255,0);
 \end{lstlisting}
 
-\begin{lstlisting}[caption={SurfaceExtractor - Function}\label{lst:SFextract},language=c++]
+The segmentation algorithm uses a class named range to outline pixel blobs in regions. The class contains integer 
+variables for the minimal and maximal x and y values. The algorithm seeks for an pixel in the 
+neighborhood-map which are not zero, as shown in the chapter \vref{sect:blurFilter}, this means it has neighbors. 
 
+Then it starts to look if there is neighbor with the following order for the pixels, top, top-left, left and bottom-left.
+If it finds a pixel which is a neighbor then it gathers it's ID in the IDs matrix, sets the current pixel in the
+id matrix to this ID and calls the update function of the corresponding range object, which updates minimum and
+maximum values. After that it checks if the rest of the pixels not checked in step one. If it finds a neighbor
+which has a different ID, it creates a relation between them inside a set, a special form of vector which allows
+only unique items. If this is done for each of the remaining neighbors, the algorithm advances to the next pixel. 
+If a pixel contains neighbors, but doesn,t have a neighbor at the mentioned locations a new ID and range object are 
+created. The range objects minimum and maximum x and y are initialized to the values of the current pixel.
+This part of the algorithm is visualized in figure \vref{figure:segment} and the corresponding code is shown in listing
+\vref{lst:SFextract}.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{SurfaceSegmentation.pdf}
+  \caption{Segmentation Part 1}
+  \label{figure:segment}
+\end{center}
+\end{figure}
+
+\begin{lstlisting}[caption={SurfaceExtractor - Function Part 1}\label{lst:SFextract},language=c++]
 void SurfaceExtractor(const cv::Mat &pix_ok, 
-                      const cv::Mat &neighbors, 
-                      std::vector<cv::Rect> &rects, 
-                      int minWidth, 
-                      int minHeight, 
-                      int maxWidth, 
-                      int maxHeight)
+					  const cv::Mat &neighbors, 
+					  std::vector<Match_Roi> &rois, 
+					  int minWidth, int minHeight, 
+					  int maxWidth, int maxHeight)
 {
+
 	cv::Mat ids=cv::Mat::zeros(pix_ok.rows,pix_ok.cols,CV_32SC1);
 	int last_id=0;
 	std::set< std::pair<int,int> > relations;
@@ -799,7 +852,7 @@ void SurfaceExtractor(const cv::Mat &pix_ok,
 			}
 
 
-			if(!found)//if no ID was found in the neighbors
+			if(!found)
 			{
 				//Create new id
 				last_id++;
@@ -814,16 +867,226 @@ void SurfaceExtractor(const cv::Mat &pix_ok,
 
 		}
 	}
+	...
+\end{lstlisting}
 
+After passing the whole neighborhood-map, all range objects having a relation are merged together
+by a loop executing the merge function of on range class object with the relating one.
+The merge function first calls the getLast function of both objects which returns a pointer to the
+last range object this range was merged to. This is necessary to merge all objects together recursivly.
+How this works is shown in figure \vref{figure:Merging}. After that another object is created which 
+contains the merged minimum and maximum values of both ranges. At the end the regions for template matching
+are filtered by size and stored in the output array while the range objects are deleted. 
+
+The code for the range class objects can be seen in listing \vref{lst:RangeClass}.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{merging.pdf}
+  \caption{Merging Range Objects}
+  \label{figure:Merging}
+\end{center}
+\end{figure}
+
+\begin{lstlisting}[caption={Range Class)}\label{lst:RangeClass},language=c++]
+class Range
+{
+	Range *next_range;
+	Range *upper1, *upper2;
+
+	std::vector< Range* >* del_vec;
+
+	int x_min;
+	int x_max;
+	int y_min;
+	int y_max;
+
+	cv::Point top_left;
+	cv::Point top_right;
+	cv::Point bottom_left;
+	cv::Point bottom_right;
+
+
+public:
+	Range(int x,int y, std::vector< Range* > *del_vec=NULL)
+	: next_range(NULL)
+	, upper1(NULL)Surface
+	, upper2(NULL)
+	, del_vec(del_vec)
+	, x_min(x)
+	, x_max(x)
+	, y_min(y)
+	, y_max(y)
+	, top_left(x,y)
+	, top_right(x,y)
+	, bottom_left(x,y)
+	, bottom_right(x,y)
+	{
+		if(del_vec)del_vec->push_back(this);
+	}
+
+	Range(const Range &r, std::vector< Range* > *del_vec=NULL)
+	: next_range(NULL)
+	, upper1(NULL)
+	, upper2(NULL)
+	, del_vec(del_vec)
+	, x_min(r.x_min)
+	, x_max(r.x_max)
+	, y_min(r.y_min)
+	, y_max(r.y_max)
+	{
+		if(del_vec)del_vec->push_back(this);
+	}
+
+	Range(Range *r1, Range *r2)
+	: next_range(NULL)
+	, upper1(r1)
+	, upper2(r2)
+	, del_vec(r1->del_vec)
+	,x_min((r1->x_min<r2->x_min)?r1->x_min:r2->x_min)
+	,x_max((r1->x_max>r2->x_max)?r1->x_max:r2->x_max)
+	,y_min((r1->y_min<r2->y_min)?r1->y_min:r2->y_min)
+	,y_max((r1->y_max>r2->y_max)?r1->y_max:r2->y_max)
+	{
+		if(del_vec)del_vec->push_back(this);
+
+		//top_left point
+		if((r1->top_left.x+r1->top_left.y)>(r2->top_left.x+r2->top_left.y))
+		{
+			top_left=r2->top_left;
+		}
+		else
+		{
+			top_left=r1->top_left;
+		}
+
+		//bottom_right
+		if((r1->bottom_right.x+r1->bottom_right.y)<
+		   (r2->bottom_right.x+r2->bottom_right.y))
+		{
+			bottom_right=r2->bottom_right;
+		}
+		else
+		{
+			bottom_right=r1->bottom_right;
+		}
+
+
+		//top_right point
+		if(x_max-r1->top_right.x+
+		   r1->top_right.y<(x_max-r2->top_right.x+r2->top_right.y))
+		{
+			top_right=r2->top_right;
+		}
+		else
+		{
+			top_right=r1->top_right;
+		}
+
+		//bottom_left point
+		if(x_max-r1->bottom_left.x+
+		   r1->bottom_left.y>(x_max-r2->bottom_left.x+r2->bottom_left.y))
+		{
+			bottom_left=r2->bottom_left;
+		}
+		else
+		{
+			bottom_left=r1->bottom_left;
+		}
+	}
+
+	~Range()
+	{
+		if(del_vec)return;
+
+		if(upper1!=0)
+		{
+			upper1->next_range=NULL;
+		}
+		if(upper2!=0)
+		{
+			upper2->next_range=NULL;
+		}
+	}
+
+	void update(int x, int y)
+	{
+		if(x<x_min)x_min=x;
+		if(x>x_max)x_max=x;
+		if(y<y_min)y_min=y;
+		if(y>y_max)y_max=y;
+
+		//top_left point
+		if(top_left.x+top_left.y>(x+y))
+		{
+			top_left.x=x;
+			top_left.y=y;
+		}
+
+		//bottom_right
+		if(bottom_right.x+bottom_right.y<(x+y))
+		{
+			bottom_right.x=x;
+			bottom_right.y=y;
+		}
+
+		//top_right point
+		if(x_max-top_right.x+top_right.y<(x_max-x+y))
+		{
+			top_right.x=x;
+			top_right.y=y;
+		}
+
+		//bottom_left point
+		if(x_max-bottom_left.x+bottom_left.y>(x_max-x+y))
+		{
+			bottom_left.x=x;
+			bottom_left.y=y;
+		}
+	}
+
+	Range *getLast()
+	{
+		if(next_range!=NULL)
+		{
+			return next_range->getLast();
+		}
+		else
+		{
+			return this;
+		}
+	}
+
+	void merge(Range *range)
+	{
+		Range *r2=range->getLast();
+		Range *r1=this->getLast();
+		r2->next_range=r1->next_range=new Range(r1,r2);
+	}
+
+	Match_Roi getMatchRoi()
+	{
+		Match_Roi roi;
+		roi.top_left=top_left;
+		roi.top_right=top_right;
+		roi.bottom_left=bottom_left;
+		roi.bottom_right=bottom_right;
+		roi.roi=cv::Rect(x_min,y_min,x_max-x_min,y_max-y_min);
+		return roi;
+	}
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={SurfaceExtractor - Function Part 2)}\label{lst:SFextract2},language=c++]
 	//Merging...
 	for(std::set< std::pair<int,int> >::iterator it=relations.begin(); 
-	    it != relations.end();it++)
+	it != relations.end();it++)
 	{
 		int f=(*it).first-1;
 		int s=(*it).second-1;
 		ranges[f]->merge(ranges[s]);
 	}
-
+	
 	std::set<Range*> out;
 	for(std::vector<Range*>::iterator it=ranges.begin();it!=ranges.end();it++)
 	{
@@ -831,22 +1094,26 @@ void SurfaceExtractor(const cv::Mat &pix_ok,
 		r=r->getLast();
 		if(out.insert(r).second)//Check if element was inserted
 		{
-			cv::Rect cur_rect=r->getRect();
+			Match_Roi roi=r->getMatchRoi();
+			cv::Rect &cur_rect=roi.roi;
 			//Check if rect is inside minimum and maximum size
 			if(minHeight<=cur_rect.height && minWidth<=cur_rect.width&&
 			   maxHeight>=cur_rect.height && maxWidth>=cur_rect.width)
-			rects.push_back(cur_rect);
+			rois.push_back(roi);
 		}
 	}
+	for(std::vector<Range*>::iterator it=del_ranges.begin();it!=del_ranges.end();it++)
+	{
+		delete *it;
+	}
 }
-
 \end{lstlisting}
 
 
 
-\pic{SurfaceSegmentation.pdf}{Segmentation Method}{\label{figure:segment}}{0.8}{h}
 
 
+ 
 \subsection{Proportion Enhanced Template Matching}
 
 

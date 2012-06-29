@@ -16,7 +16,13 @@ where it can act as cheap laser scanner for their Turtlebot. The Turtlebot
 (/url{www.turtlebot.org}) was designed to give home users who are interested in 
 robotics the opportunity to experiment with robotics on their own.
 
-\pic{turtlebot.jpg}{Turtlebot EU-Version}{\label{figure:turtlebot}}{0.6}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/3]{turtlebot.jpg}
+  \caption{Turtlebot EU-Version}
+  \label{figure:turtlebot}
+\end{center}
+\end{figure}
 
 This thesis will have a look on the data characteristics and the accuracy of the
 Kinect camera and use the results to find surfaces arranged to the camera and to 
@@ -27,7 +33,7 @@ in the RGB picture.
 
 \section{Robot Operating System (ROS)}
   
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=2]{ROS_LOGO.pdf}
 	\caption{ROS Logo}
@@ -45,7 +51,7 @@ implements the realworld behaviour of publishers and subscribers (e.g. newspaper
 The publishing house advertises and publishes its newspaper or magazine while the subscribers look at the advertisements
 and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
 
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=0.7]{PS_Newspaper.pdf}
 	\caption{Publisher Subscriber Priciple in Reality}
@@ -62,7 +68,7 @@ and connects with them. An example of this is shown in figure \vref{figure:psp_R
 In the picture there are different nodes for the robots running gear, its laserscanner, the motion planing system and the graphical user interface.
 connected together by topics.
 
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=0.6]{PS_ROS.pdf}
 	\caption{Publisher Subscriber Pattern in ROS}
@@ -94,18 +100,18 @@ template matching and so on. It's the main vision package for usage with ROS.
 {0.6}{h}
 
 \section{Kinect}
-
-\begin{figure}[h]
+fadsfadsf 
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=0.7]{Kinect.pdf}
 	\caption{Microsoft Kinect Camera Overview}
-	\label{figure:kinect_ir}
+	\label{figure:kinect_camera}
 \end{figure}
 
 The Kinect is a combination of a standard color camera and a depth sensor produced by Microsoft, a so called RGB-D camera. 
 The depth sensor is produced by Primesense and it's working principle is currently a secret of the manufacturer. 
 The known facts are, that the Kinect uses an ir-projector to draw a grid of very small points onto each surface 
-(see figure \vref{figure:kinect_ir}) and an ir-camera to process the result somehow.  
+(see figure \vref{figure:kinect_camera}) and an ir-camera to process the result somehow.  
 There are different approaches on how it might work, the most resonable approach is that it uses 
 specific groups of points and their position on the resulting camera image to calculate how far 
 away they are. This is the same way a laser scanner works. 
@@ -121,14 +127,14 @@ In the recent past Microsoft created a new PC version of the Kinect, which is ca
 This camera offers a greater viewing angle, while being able to detect objects closer to the camera.
 The problem of objects being to close will be discussed later in this document.
 
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=1]{ir_kinect.png}
 	\caption{Kinect IR Sensor Image}
 	\label{figure:kinect_ir}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=0.5]{laserScannerPrinciple.pdf}
 	\caption{Laser Scanner Working Principle}
@@ -136,7 +142,7 @@ The problem of objects being to close will be discussed later in this document.
 \end{figure}
 
 
-\begin{figure}[h]
+\begin{figure}[htp]
 	\centering
 	\includegraphics[scale=0.5]{kinect_principle.pdf}
 	\caption{Kinect Working Principle}
@@ -149,7 +155,8 @@ The problem of objects being to close will be discussed later in this document.
 
 
 \section{Mobile Robots Pioneer 3dx}
-The Pioneer 3dx is a Research Robot created by Mobile Robots(\url{http://www.mobilerobots.com/ResearchRobots/PioneerP3DX.aspx}).
+The Pioneer 3dx is a Research Robot created by Mobile Robots.\\
+\url{http://www.mobilerobots.com/ResearchRobots/PioneerP3DX.aspx}
 With its two motored wheels and its stabilization wheel the robot is a so called point robot. That means it's able to 
 rotate around its center like a tank which makes path planing and movement a lot easier. 
 The robot features a internal microcontroller board which can be remote controlled from an external computing system, 

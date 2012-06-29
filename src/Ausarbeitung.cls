@@ -76,15 +76,15 @@
 \def\AbgabeDatumTok{\@empty}
 \def\FakultaetTok{\@empty}
 
-\def\kandidat       #1{\author{#1}}
-\def\titel          #1{\title{#1}}
+\def\kandidat#1{\author{#1}}
+\def\titel#1{\title{#1}}
 
-\def\diplomarbeit   {\subject{Diplomarbeit}}
-\def\bachelorthesis {\subject{Bachelorthesis}}
-\def\masterthesis   {\subject{Masterthesis}}
-\def\projektarbeit  {\subject{Projektarbeit}}
-\def\laborbericht  {\subject{Laborbericht}}
-\def\projektbericht  {\subject{Projektbericht}}
+\def\diplomarbeit{\subject{Diplomarbeit}}
+\def\bachelorthesis{\subject{Bachelorthesis}}
+\def\masterthesis{\subject{Masterthesis}}
+\def\projektarbeit{\subject{Projektarbeit}}
+\def\laborbericht{\subject{Laborbericht}}
+\def\projektbericht{\subject{Projektbericht}}
 
 \newboolean{mail}
 \setboolean{mail}{false}

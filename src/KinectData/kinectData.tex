@@ -15,33 +15,68 @@ First of all it does not work with translucent materials like glass. The project
 points are just fractured away, when they hit in a small angle (see figure \vref{figure:glas}). 
 It's be possible to look through a translucent surface, but only if it's clear and the angle from the 
 camera to the surface is not to big.
-\pic{glas.png}{Glass (Webcam/Pointcloud)}{\label{figure:glas}}{1}{h}
-
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[height=\textheight/3]{glas.png} 
+  \caption{Glass (Webcam/Pointcloud)}
+  \label{figure:glas}
+\end{center}
+\end{figure}
+ 
 Another problem are mirrors. Mirrors will also fracture the ir spots away, 
 so it's not possible to get any depth data from their surfaces (see figure \vref{figure:mirror}).
-\pic{Mirror.png}{Mirror (Webcam/Pointcloud)}{\label{figure:mirror}}{1}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[height=\textheight/3]{Mirror.png}
+  \caption{Mirror (Webcam/Pointcloud)}
+  \label{figure:mirror}
+\end{center}
+\end{figure}
 
 If the sun lights up a surface directly, it will outshine the ir-spots so this will blank out the surface
 in the resulting depth image too (see figure \vref{figure:sun}).
-\pic{Sun.png}{Sunlight on a surface (Pointcloud/Webcam)}{\label{figure:sun}}{0.8}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[scale=1.2]{Sun.png}
+  \caption{Sunlight on a surface (Pointcloud/Webcam)}
+  \label{figure:sun}
+\end{center}
+\end{figure}
 
 On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
 identifying their location (see figure \vref{figure:close}), what leads to the same result as in the previous cases.
-\pic{ToClose.png}{Kinect to Close to a Surface (IR sensor/Pointcloud)}{\label{figure:close}}{0.8}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[scale=0.7]{ToClose.png} 
+  \caption{Kinect to Close to a Surface (IR sensor/Pointcloud)}
+  \label{figure:close}
+\end{center}
+\end{figure}
+\clearpage
 
 \section{Data Characteristics} 
-
+ 
 \subsection{Analyzing Tools}
 
 While this work multiple analyzing tools have been created. Those were created as
 nodes to easily connect with the OpenNi driver package in the ROS system.
 
 \subsubsection{DepthImageAnalyzer}
-In the beginning a GUI node was created to get in touch with the depth images.
-It is able to show a depth image in and if the user clicks into the picture it
-will show the corresponding value of the pixel.
+In the beginning a Qt-GUI node was created to get in touch with the depth images and 
+their values and how they look like. It is able to show a depth image in the double
+format and if the user clicks into the picture it will show the corresponding 
+value of the pixel. It also allowed to set a depth range to highlight. 
+Figure \vref{figure:DIA} shows the GUI of this node with a highlighted depth range.
 
-%TODO DepthImageAnalyzer Picture
+\begin{figure}[h!tp]
+\begin{center}
+  \includegraphics[width=\textwidth]{DepthImageAnalyzer.jpg}
+  \caption{DepthImageAnalyzer GUI}
+  \label{figure:DIA}
+\end{center}
+\end{figure}
+\clearpage 
+
 
 In the later process of this work it was not needed anymore, because showing the point cloud
 in rViz showed to be more effective in analyzing data and debugging applications.
@@ -54,9 +89,7 @@ create specific launch files. Launch files are xml-files which are used to start
 go. 
 
 
-{%
-\tiny{}
-\begin{lstlisting}
+\begin{lstlisting}[caption={Standalone Point Cloud}\label{lst:stal_pcl},language=xml]
 <!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
 <node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
 
@@ -68,7 +101,7 @@ go.
     <remap from="depth_registered/points"     to="debug_cloud" />
 </node>
 \end{lstlisting}
-}
+
 
 
 As seen in the listing for creating a point cloud from different topics a nodelet manager and a 
@@ -96,24 +129,67 @@ so that it only will see this surface. Then a picture is created which stores th
 distance of the surface to be substracted from the following frames.
 This was a nice idea but it didn't work as expected. There some special vertical fractals (see in figure \vref{figure:verticals}) 
 inside the data which seem to be the result from an autoranging feature of the camera, 
-always creating one data step in the picture. The biggest problem is that the size of the noise fractals changes 
+always creating one data step in the picture. The biggest problem is that the scale of the noise fractals changes 
 with their appearance and their number. The number of those vertical lines ranges from 0 to a spotted maximum of 9. 
 They do always appear on a special range, seem to be symetrical or 
 nearly symetrical to the center and their number is never even but are not fixed to a special column of pixels. 
-\pic{noise.png}{Noise (Pointcloud)}{\label{figure:noise}}{0.8}{h}
-\pic{verticalFractals.png}{Vertical Fractals (Pointcloud)}{\label{figure:verticals}}{0.4}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{noise.png}
+  \caption{Noise (Pointcloud)}
+  \label{figure:noise}
+\end{center}
+\end{figure}
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{verticalFractals.png}
+  \caption{Vertical Fractals (Pointcloud)}
+  \label{figure:verticals}
+\end{center}
+\end{figure}
 
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
 device(see in figure \vref{figure:hilti}),it was realized that many values just do not exist. The camera does never output these values.
 After realizing this fact it was decided to look for the available values, their number and the values which never occur.
-The figures \vref{figure:depths_1} and \vref{figure:depths_2} show the distance on the left, the available values (black) and 
+The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, the available values (black) and 
 not availabe values (white) in the middle and the number of the missing values between them on the right. 
 Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.
 
-\pic{hiltipd38.jpg}{Hilti PD38 Laser Distance Measurement Device}{\label{figure:hilti}}{0.1}{h}
-\pic{LaserDistanceKinectDistance.png}{Distance measured by Laser and by Kinect}{\label{figure:LaserKinect}}{0.9}{h}
-\pic{availdepths0.png}{Available Depth Values from 0 to 4,8 m}{\label{figure:depths_1}}{0.1}{h}
-\pic{availdepths1.png}{Available Depth Values from 4,8 m to 9,8m}{\label{figure:depths_2}}{0.1}{h}
-\pic{DifferenceForegoing.png}{Missing values in relation to the depth}{\label{figure:DepthValueDiff}}{1}{h}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/3]{hiltipd38.jpg}
+  \caption{Hilti PD38 Laser Distance Measurement Device}
+  \label{figure:hilti}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[scale=1]{LaserDistanceKinectDistance.png}
+  \caption{Distance measured by Laser and by Kinect}
+  \label{figure:LaserKinect}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[scale=0.1]{availdepths0.png}
+  \caption{Available Depth Values from 0 to 4,8 m}
+  \label{figure:depths1}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[scale=0.1]{availdepths1.png}
+  \caption{Available Depth Values from 4,8 m to 9,8m}
+  \label{figure:depths2}
+\end{center}
+\end{figure}
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{DifferenceForegoing.png}
+  \caption{Missing values in relation to the depth}
+  \label{figure:DepthValueDiff}
+\end{center}
+\end{figure}
