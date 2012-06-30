@@ -1,20 +1,24 @@
-\chapter{SignRecognition}
 \graphicspath{{./Software/img/}}
+\chapter{SignRecognition}
  
+
 \section{Depth Image Processing}
+Before trying to do template matching in the camera image, it's necessary to limit the regions in which we are
+searching for known templates. Therefore it is necessary to find surfaces which are upright to the camera view.
+In beginning the focus almost lies on improving image quality by removing the noise and so it is here.
 
 \subsection{First Blur Filter}
-Bluring the depth image sounds like an easy task but if a simple boxed filter is used all edges are smothed to surfaces
-they do not belong to (see first picture in figure \vref{figure:blur}).
-At first it was tried to do all the filtering and reset all blured pixels $P_n$ which are to far away from their 
+Bluring the depth image to remove the noise sounds like an easy task but if a simple boxed filter is used 
+all edges are smothed to surfaces they do not belong to (see first picture in figure \vref{figure:blur}).
+At first it was tried to do all the filtering and reset all blured pixels $P_b$ which are to far away from their 
 original depth value by the following formula.
 
 \[
- \forall P_n(x,y)  |   \left(\left|{P_n(x,y)-P(x,y)}\right|>{\frac{P(x,y)^2}{480000}}\right)\implies P_n(x,y)=P(x,y)
+ \forall P_b(x,y)  |   \left(\left|{P_b(x,y)-P(x,y)}\right|>{\frac{P(x,y)^2}{480000}}\right)\implies P_b(x,y)=P(x,y)
 \]
 
 The following listing \vref{lst:fstBlur} shows the code of this first filter, which uses a box-filter and and a 
-median-blur filter from OpenCV. In the next step the previous formula is used to revert pixels as said above and 
+median-blur filter from OpenCV. In the next step the previous formula is used to revert pixels and 
 then another blur filter is applied to remove possible noise resulting from that procedure 
 (see figure \vref{figure:blur} for results).
 
@@ -66,7 +70,8 @@ void myFilter1(const cv::Mat &src, cv::Mat &dst)
 After realizing that there are only 824 depth values available, it was decided to transform the depth picture
 to the available depth steps. The resulting step map contains the number of each available depth like 
 shown in figure \vref{figure:stepMap}. The converting function uses an array. This array contains the number of the
-step when obtaining the cell number of its value. Each cell of a non-existing value contains -1. 
+step when obtaining the cell number of its value. Each cell of a non-existing value contains -1, so it is
+possible to check if something is wrong with the value and if it might be not an Kinect RAW picture. 
 
 \begin{figure}[htp]
 \begin{center}
@@ -125,7 +130,7 @@ void convertKinectRawToSteps(const cv::Mat &src, cv::Mat &dst)
 
 With that new image it's now possible to determine if a pixel is a direct neighbor to another one. This is mostly the case,
 when the value from the difference of the steps is smaller than or equal to one. A threshold of four is adequate to be sure 
-to eliminate the noise created by the fractals which can create a step difference of up to 3 inside of a surface. 
+to eliminate the noise created by the fractals which can create a step difference of up to 3 inside a surface. 
 So the neighborhood condition of one pixel $P$ to another pixel $P_i$ can be determind by the following formula.
 
 \[
@@ -458,7 +463,8 @@ void createXYMap(const cv::Mat &src,
 
 \subsection{3D RangeFilter}
 If the real X and Y values for each pixel $P_i$ are known, it is possible to get only the pixels $P_o$ for a 
-3-dimensional region of interest by setting minimum and maximum values for all axis.
+3-dimensional region of interest by setting minimum and maximum values for all axis and removing them from 
+the depth image.
 
 	$$
 		\forall P_i(x,y) | (X_i < Xmin \vee X_i > Xmax \vee Y_i > Ymax \vee Y_i < Ymin \vee Z_i < Zmin \vee Z_i > Zmax)
@@ -671,7 +677,7 @@ void crossAnglesBlur(const cv::Mat &angles,
 To get only surfaces which are interesting a angle filter was created. It's input parameters
 are the minimum and maxium for each angle. The output of this function is a grascale image
 where pixels all $P_o$ are initialized with 0 and those with suitable angles 
-in the input pixel $P_i$ get the value 255.
+for the input pixel $P_i$ get the value 255.
 
  \[
  	\forall P_i(x,y) | (\alpha_i<=max\_\alpha \wedge \alpha_i>=min\_\alpha) \wedge
@@ -871,9 +877,9 @@ void SurfaceExtractor(const cv::Mat &pix_ok,
 \end{lstlisting}
 
 After passing the whole neighborhood-map, all range objects having a relation are merged together
-by a loop executing the merge function of on range class object with the relating one.
+by a loop executing the merge function of one range class object with the relating one.
 The merge function first calls the getLast function of both objects which returns a pointer to the
-last range object this range was merged to. This is necessary to merge all objects together recursivly.
+last range object this range was merged to. This is necessary to merge all objects together recursively.
 How this works is shown in figure \vref{figure:Merging}. After that another object is created which 
 contains the merged minimum and maximum values of both ranges. At the end the regions for template matching
 are filtered by size and stored in the output array while the range objects are deleted. 
@@ -1109,6 +1115,8 @@ public:
 }
 \end{lstlisting}
 
+
+\section{RGB Image Processing}
 \subsection{Proportion Enhanced Template Matching}
 
 
