@@ -152,26 +152,28 @@ nearly symetrical to the center and their number is never even but are not fixed
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure \vref{figure:hilti}),it was realized that many values just do not exist. The camera does never output these values.
-After realizing this fact it was decided to look for the available values, their number and the values which never occur.
-The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, the available values (black) and 
-not availabe values (white) in the middle and the number of the missing values between them on the right. 
-Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.
+device(see in figure \vref{figure:hilti}),it was realized that many values just do not exist. The camera does never output 
+these values. After realizing this fact it was decided to look for the available values, their number and the values which 
+never occur.The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, 
+the available values (black) and not availabe values (white) in the middle and the number of the missing values between them 
+on the right. Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.
 
 \begin{figure}[htp]
 \begin{center}
-  \includegraphics[width=\textwidth/3]{hiltipd38.jpg}
+  \includegraphics[width=\textwidth/4]{hiltipd38.jpg}
   \caption{Hilti PD38 Laser Distance Measurement Device}
   \label{figure:hilti}
 \end{center}
 \end{figure}
 \begin{figure}[htp]
+
 \begin{center}
-  \includegraphics[scale=1]{LaserDistanceKinectDistance.png}
+  \includegraphics[scale=0.8]{LaserDistanceKinectDistance.png}
   \caption{Distance measured by Laser and by Kinect}
   \label{figure:LaserKinect}
 \end{center}
 \end{figure}
+
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[scale=0.1]{availdepths0.png}
@@ -179,6 +181,7 @@ Figure \vref{figure:DepthValueDiff} shows the number of missing values in relati
   \label{figure:depths1}
 \end{center}
 \end{figure}
+
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[scale=0.1]{availdepths1.png}
@@ -186,6 +189,7 @@ Figure \vref{figure:DepthValueDiff} shows the number of missing values in relati
   \label{figure:depths2}
 \end{center}
 \end{figure}
+
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{DifferenceForegoing.png}

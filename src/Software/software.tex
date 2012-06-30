@@ -561,7 +561,7 @@ void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
 	int size_x=normals.cols, size_y=normals.rows;
 	int y,x;
 	for (int i = 0; i < (size_x*size_y); i++)
-	{
+	{ 
 		y=i/size_x;
 		x=i-y*size_x;
 
@@ -737,9 +737,9 @@ void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out,
 Before the begining with segmenting the surfaces the picture containing the pixels which show correct angles
 is blured to remove empty pixels or columns of empty pixels which seperate surfaces belonging together. After
 bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. The code is
-shown in listing \vref{lst:angleFilter}.
+shown in listing \vref{lst:blurAthres}.
 
-\begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:angleFilter},language=c++]
+\begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:blurAthres},language=c++]
 	cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
 	cv::threshold(angles_ok,angles_ok,1,255,0);
 \end{lstlisting}
@@ -757,7 +757,7 @@ only unique items. If this is done for each of the remaining neighbors, the algo
 If a pixel contains neighbors, but doesn,t have a neighbor at the mentioned locations a new ID and range object are 
 created. The range objects minimum and maximum x and y are initialized to the values of the current pixel.
 This part of the algorithm is visualized in figure \vref{figure:segment} and the corresponding code is shown in listing
-\vref{lst:SFextract}.
+\vref{lst:SFextract1}.
 
 \begin{figure}[htp]
 \begin{center}
@@ -767,7 +767,7 @@ This part of the algorithm is visualized in figure \vref{figure:segment} and the
 \end{center}
 \end{figure}
 
-\begin{lstlisting}[caption={SurfaceExtractor - Function Part 1}\label{lst:SFextract},language=c++]
+\begin{lstlisting}[caption={SurfaceExtractor - Function Part 1}\label{lst:SFextract1},language=c++]
 void SurfaceExtractor(const cv::Mat &pix_ok, 
 					  const cv::Mat &neighbors, 
 					  std::vector<Match_Roi> &rois, 
@@ -888,7 +888,7 @@ The code for the range class objects can be seen in listing \vref{lst:RangeClass
 \end{center}
 \end{figure}
 
-\begin{lstlisting}[caption={Range Class)}\label{lst:RangeClass},language=c++]
+\begin{lstlisting}[caption={Range Class}\label{lst:RangeClass},language=c++]
 class Range
 {
 	Range *next_range;
@@ -1109,43 +1109,9 @@ public:
 }
 \end{lstlisting}
 
-
-
-
-
- 
 \subsection{Proportion Enhanced Template Matching}
 
 
-% 			cv::Mat steps, neighbor_map, normals, xy,angles, angles_ok, filtered_bgr;
-% 
-% 
-% 			//
-% 			KinTo::convertKinectRawToSteps(imgPtrDepth->image,steps);  ///?
-% 			KinTo::createRelationNeighbourhoodMap(steps,neighbor_map);
-% 			KinTo::crossDepthBlur(imgPtrDepth->image,neighbor_map,imgPtrDepth->image,blur_depth);
-% 			///
-% 
-% 			///
-% 			KinTo::createXYMap(imgPtrDepth->image,info_msg,xy);
-% 			KinTo::XYZrangeFilter(imgPtrDepth->image,xy,imgPtrDepth->image,x_min, x_max,  y_min, y_max, z_min, z_max);
-% 			///
-% 
-% 			///
-% 			KinTo::createNormalMap(imgPtrDepth->image,neighbor_map, xy,normals);
-% 			KinTo::createAngleMap(normals,angles);
-% 			///
-% 
-% 			///
-% 			KinTo::crossAnglesBlur(angles,neighbor_map,angles,blur_angles);
-% 			KinTo::anglesFilter(angles, angles_ok, x_angle_min, x_angle_max, y_angle_min, y_angle_max, z_angle_min, z_angle_max,true);
-% 			///
-% 
-% 
-% 			cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
-% 			cv::threshold(angles_ok,angles_ok,1,255,0);
-
-\section{RGB Image Processing}
 
 
 \section{Robot Control}
