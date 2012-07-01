@@ -536,7 +536,15 @@ $$ \vec{N} = \frac{\vec{N_{tr}} + \vec{N_{bl}}}{2}$$
 \subsection{Angle Calculation}
 
 The angles from vectors to the axes are basically calculated by the follwing formulas. Where $\alpha$, $\beta$ and $\gamma$ 
-are the angles to the x,y, and z-axis of the normal vector $\vec{N}$.
+are the angles to the x,y, and z-axis of the normal vector $\vec{N}$ as seen in figure \vref{figure:NormalAngles}.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/3]{Angles.pdf}
+  \caption[labelInTOC]{Angles of a Normal}
+  \label{figure:NormalAngles}
+\end{center}
+\end{figure}
 
 $$ \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  $$
 $$ \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  $$
@@ -587,8 +595,20 @@ void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
 
 \subsection{Angle Bluring}
 
-To blur the angles the same method as mentioned in chapter \vref{sect:blurFilter} was used.
-%TODO MORE TEXT + FORMULA
+To blur the angles the same method as mentioned in chapter \vref{sect:blurFilter} was used and
+the average was done for each angle seperately. The comparison between a blured and a non-blured
+angle picture is shown in figure \vref{figure:AnglesBlured}.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{AnglesMapBlured.png}
+  \caption{Angles Map non-blured and blured}
+  \label{figure:AnglesBlured}
+\end{center}
+\end{figure}
+
+
+
 
 Listing \vref{lst:AngleBlur} contains the source for the angle bluring function.
 
@@ -884,7 +904,8 @@ How this works is shown in figure \vref{figure:Merging}. After that another obje
 contains the merged minimum and maximum values of both ranges. At the end the regions for template matching
 are filtered by size and stored in the output array while the range objects are deleted. 
 
-The code for the range class objects can be seen in listing \vref{lst:RangeClass}.
+The code for the range class objects can be seen in listing \vref{lst:RangeClass} and a screen shot of
+a recognized surface in figure \vref{figure:AnglesOKSeg}.
 
 \begin{figure}[htp]
 \begin{center}
@@ -894,6 +915,15 @@ The code for the range class objects can be seen in listing \vref{lst:RangeClass
 \end{center}
 \end{figure}
 
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{AnglesOkSegment.png}
+  \caption[Angles OK Image and RGB Picture]{Angles OK image and RGB Picture\footnotemark}
+  \label{figure:AnglesOKSeg}
+\end{center}
+\end{figure}
+\footnotetext{Camera was held with hands thus pictures are not from the same distance and angle}
+\newpage
 \begin{lstlisting}[caption={Range Class}\label{lst:RangeClass},language=c++]
 class Range
 {
@@ -1116,8 +1146,93 @@ public:
 \end{lstlisting}
 
 
+
+
+
 \section{RGB Image Processing}
+
+%TODO Perspective ???
+If all surface regions have been determined, it's time to start with searching patterns in the
+regions. 
+
+\subsection{First template matching approach}
+The first approach on finding the signs was done with a HSV color filter and the hough transformation
+function from OpenCV, which finds circle in an image or a given region of an image.
+
+The color filter must be in HSV because with that color scheme it is possible to filter for colors
+with the H(hue) part of the pixel. In figure \vref{figure:hsv} the green boxes define the color range
+which is interesting. Every pixel with another color will be set to zero. The code of that function is
+shown in listing \vref{lst:redFilter} and a example picture in figure \vref{figure:redFilter}.
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{HSV.pdf}
+  \caption{HSV Color Range}
+  \label{figure:hsv}
+\end{center}
+\end{figure}
+
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{redFilterResult.png}
+  \caption{Result of the HSV based Red Filter}
+  \label{figure:redFilter}
+\end{center}
+\end{figure}
+
+
+\begin{lstlisting}[caption={RedFilter - Function)}\label{lst:redFilter},language=c++]
+void RedFilter(const cv::Mat &bgr, cv::Mat &red_out)
+{
+	cv::Mat hsv;
+	red_out=bgr.clone();
+	cv::cvtColor( bgr, hsv , CV_RGB2HSV);
+
+	int size_x=bgr.cols, size_y=bgr.rows;
+	int y,x;
+	for (int i = 0; i < (size_x*size_y); i++)
+	{
+		//Move forward in vertical direction
+		x=i/size_y;
+		y=i-x*size_y;
+
+		int h=hsv.at<Vec3uchar>(y,x)[0]*2.83;
+		int s=hsv.at<Vec3uchar>(y,x)[1]*0.39;
+		int v=hsv.at<Vec3uchar>(y,x)[2]*0.39;
+
+
+		if(!((h<=13 || h>=338) && s>45 &&v>35))
+		{
+			red_out.at<Vec3uchar>(y,x)[0]=0;
+			red_out.at<Vec3uchar>(y,x)[1]=0;
+			red_out.at<Vec3uchar>(y,x)[2]=0;
+		}
+	}
+}
+\end{lstlisting}
+
+As seen in the example picture only the circles, some other red objects and some fragments of
+other colored objects are visible. The next step is transfering the image to grayscale and 
+bluring the image. After that a hugh transformation is executed which will gather round
+objects in the picture. If a circle is found a the template is scaled to it's size and 
+searched in a region a bit bigger than the found circle.
+\newpage
+This will most likely bring some good results, but in many cases the inner circle is found
+instead of the outer one, and when that happens the image differences are mostly too small
+to determine that it is a wrong match(see example in figure \vref{figure:problemCircles}).
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/2]{robotSignProblem.pdf}
+  \caption{Problem with to small circle sizes}
+  \label{figure:problemCircles}
+\end{center}
+\end{figure}
+
 \subsection{Proportion Enhanced Template Matching}
+To optimize the template matching another way was found. This time the algorithm takes the
+
 
 
 
