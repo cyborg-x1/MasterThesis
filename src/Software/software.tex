@@ -472,7 +472,7 @@ the depth image.
 		\implies P_o(x,y) = 0;
 	$$
 
-Listing \vref{lst:range3d} shows the code of the 3D Range Filter
+Listing \vref{lst:range3d} shows the code of the 3D Range Filter and figure \vref{figure:xyzrange} the working principle.
 
 \begin{lstlisting}[caption={XYZrangeFilter - Function\label{lst:range3d}},language=C++]
 void XYZrangeFilter(const cv::Mat &depth, 
@@ -510,6 +510,17 @@ void XYZrangeFilter(const cv::Mat &depth,
 }
 \end{lstlisting}
 
+
+%\usepackage{graphics} is needed for \includegraphics
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{XYZFilter.pdf}
+  \caption{XYZ-Range-Filter Concept}
+  \label{figure:xyzrange}
+\end{center}
+\end{figure}
+
+
 \subsection{Normal Calculation}
 With the depth image and the xy map the normal of each pixel can be calculated. This is done with the scalar product.
 
@@ -541,9 +552,9 @@ are the angles to the x,y, and z-axis of the normal vector $\vec{N}$ as seen in 
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth/3]{Angles.pdf}
-  \caption[labelInTOC]{Angles of a Normal}
+  \caption{Angles of a Normal}
   \label{figure:NormalAngles}
-\end{center}
+\end{center} 
 \end{figure}
 
 $$ \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  $$
@@ -1231,11 +1242,26 @@ to determine that it is a wrong match(see example in figure \vref{figure:problem
 \end{figure}
 
 \subsection{Proportion Enhanced Template Matching}
-To optimize the template matching another way was found. This time the algorithm takes the
+To optimize the template matching another way was found. This algorithm
+takes the template picture and converts it to grayscale. It starts at the top left pixel
+and searches for the first non translucent pixel diagonally. If it has found one,
+it determines if the pixel is dark (value <= 127) or light (value>=127). Then it
+starts to seek for the next change, when the value passes 127 again. If it does
+it gathers the distance from pixel to pixel and searches for the next change.
+When that change appears, it calculates the proportion of both lengths.
+This proportion is stored with the location of the current pixel and the
+length of the from the first to the endpoint. This is now done as long
+as the algorithm reaches an edge of the template (for an Example see in figure \vref{figure:templateProp}).
 
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/2]{proportionGather.pdf}
+  \caption{Gathering Proportions in Template}
+  \label{figure:templateProp}
+\end{center}
+\end{figure}
 
-
-
+% If all templates have been measured this way the algorithm is going to 
 
 \section{Robot Control}
 \subsection{ROS Transform}
