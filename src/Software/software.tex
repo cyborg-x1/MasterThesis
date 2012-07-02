@@ -773,8 +773,8 @@ void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out,
 
 Before the begining with segmenting the surfaces the picture containing the pixels which show correct angles
 is blured to remove empty pixels or columns of empty pixels which seperate surfaces belonging together. After
-bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. The code is
-shown in listing \vref{lst:blurAthres}.
+bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. 
+The code is shown in listing \vref{lst:blurAthres}.
 
 \begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:blurAthres},language=c++]
 	cv::blur(angles_ok,angles_ok,cv::Size(5,5),cv::Point(-1,-1),0);
@@ -1124,7 +1124,7 @@ public:
 };
 \end{lstlisting}
 
-\begin{lstlisting}[caption={SurfaceExtractor - Function Part 2)}\label{lst:SFextract2},language=c++]
+\begin{lstlisting}[caption={SurfaceExtractor - Function Part 2}\label{lst:SFextract2},language=c++]
 	//Merging...
 	for(std::set< std::pair<int,int> >::iterator it=relations.begin(); 
 	it != relations.end();it++)
@@ -1163,6 +1163,8 @@ public:
 \section{RGB Image Processing}
 
 %TODO Perspective ???
+
+
 If all surface regions have been determined, it's time to start with searching patterns in the
 regions. 
 
@@ -1193,7 +1195,7 @@ shown in listing \vref{lst:redFilter} and a example picture in figure \vref{figu
 \end{figure}
 
 
-\begin{lstlisting}[caption={RedFilter - Function)}\label{lst:redFilter},language=c++]
+\begin{lstlisting}[caption={RedFilter - Function}\label{lst:redFilter},language=c++]
 void RedFilter(const cv::Mat &bgr, cv::Mat &red_out)
 {
 	cv::Mat hsv;
@@ -1245,11 +1247,13 @@ to determine that it is a wrong match(see example in figure \vref{figure:problem
 To optimize the template matching another way was found. This algorithm
 takes the template picture and converts it to grayscale. It starts at the top left pixel
 and searches for the first non translucent pixel diagonally. If it has found one,
-it determines if the pixel is dark (value <= 127) or light (value>=127). Then it
-starts to seek for the next change, when the value passes 127 again. If it does
-it gathers the distance from pixel to pixel and searches for the next change.
+it determines if the pixel is dark (value <= 127) or light (value>127). Then it
+starts to seek for the next change, when the value passes 127 again.
+When it changes the alogrithm gathers the distance from pixel to pixel and searches for the next change.
 When that change appears, it calculates the proportion of both lengths.
-This proportion is stored with the location of the current pixel and the
+The proportion will be negative if the next pixels are changing to dark, 
+this prevents finding negatives of the template.  
+The proportion is stored with the location of the current pixel and the
 length of the from the first to the endpoint. This is now done as long
 as the algorithm reaches an edge of the template (for an Example see in figure \vref{figure:templateProp}).
 
@@ -1261,7 +1265,580 @@ as the algorithm reaches an edge of the template (for an Example see in figure \
 \end{center}
 \end{figure}
 
-% If all templates have been measured this way the algorithm is going to 
+In the next step the algorithm searches the target picture with the same method, but
+it doesn't only search the diagonal row beginning in the top left corner, it searches
+through the whole picture. Always when it has two consecutive pixel strings it
+creates the proportion. Then it calls a method of the objects the templates are stored in.
+This method takes each proportion and checks if this proportion is available for
+the current template. If it is, it is stored inside a pair. If a pair of two
+consecutive proportions is found it takes the distance length of the last
+proportion in the target picture and devides it by the length of the matching proportion
+in the template. The resulting factor is used to scale the template to the size of the
+proportion in the picture and to determine the new point of the proportion in the scaled template.
+With this point the position, for trying to match the template, is calculated 
+(see in figure \vref{figure:findPropTempPlace}).
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{FindingProportions.pdf}
+  \caption{Finding Proportions and Template Placement}
+  \label{figure:findPropTempPlace}
+\end{center}
+\end{figure} 
+
+In the software this is realized by a class called MatchTempProfile in which the templates are stored.
+The images for the templates are specified in a xml file which is specified by a parameter in the launchfile.
+\newpage 
+In the code and the parameter name this file is called settings file. The settings file is read at node startup,
+so the code reading the XML file and loading the template pictures is located in the constructor of the
+signDetection class seen in listing \vref{lst:ConstructSetTemp}. On startup the node checks first,
+if there is a XML file given and if it can be loaded. Then it searches for the "signs"-Tag.
+Inside this tag it expects "sign"-Tags with the attributes "name", "file" and "file\_imp".
+
+Listing \vref{lst:xmlFile} shows the XML file used for this project.
+
+The "name" attribut specifies the string which is shown, when this template has been found in a image.
+Attribut file specifies the template file which can be a 1,3 or 4 (RGB with alpha channel) channel picture. 
+The second image "file\_imp" is optional but expects a grayscale image where important pixels are black and the others 
+white. In the special case of a missing or zero size name attribut, the template is called "NONAME" with an increasing number
+like "NONAME0, NONAME1 \ldots". If there is no file name specified for the template image or if loading the file
+fails, the template profile will not be created. If the file for the important pixel image will fail to load, there will
+be just a error message and the profile will be created without an important pixel image. If the paths are relative path 
+(beginning with ".." or without "/"), the source path will be the one of the XML file. If everything is ok a new 
+MatchTempProfile object (see header contents in figure \vref{lst:MatchTempProfile}) is created and stored in a std::vector.
+
+\begin{lstlisting}[caption={Setting XML File}\label{lst:xmlFile},language=xml]
+<?xml version="1.0" ?>
+<signs>
+<sign name="right"file="../graphics/right.png"file_imp="../graphics/right_imp.png"/>
+<sign name="left" file="../graphics/left.png" file_imp="../graphics/left_imp.png"/>
+<sign name="stop" file="../graphics/stop.png" file_imp="../graphics/stop_imp.png"/>
+</signs>
+  
+\end{lstlisting}
+
+\newpage
+\begin{lstlisting}[caption={signDetection Constructor: Settings File and Templates}\label{lst:ConstructSetTemp},language=c++]
+	signDetection() :
+	nh_("~"), it_out(nh_)
+{
+	...
+	// Read parameters
+	...
+	std::string settingsfile;
+
+	nh_.param<std::string>("settingsfile", settingsfile, "");
+
+	if(settingsfile.size())
+	{
+		ROS_INFO("Settingsfile: %s",settingsfile.c_str());
+		TiXmlDocument settings(settingsfile);
+
+		if(settings.LoadFile())
+		{
+			TiXmlNode *parent, *pChild;
+
+			static int nonames=0;
+			//Parsing the XML
+			parent=settings.FirstChildElement();
+
+			//Reading the settingsfile
+			for ( pChild = parent->FirstChild(); pChild != 0; 
+			      pChild = pChild->NextSibling())
+			{
+				//Look for Elements
+				if(pChild->Type()==TiXmlNode::TINYXML_ELEMENT)
+				{
+					TiXmlElement* pElement=pChild->ToElement();
+					if(pElement->ValueStr()=="sign")//If the element is sign
+					{
+						TiXmlAttribute* pAttrib=pElement->FirstAttribute();
+						bool imgloaded=false;
+						printf("\n");
+						std::string name;
+						std::string file;
+						std::string file_imp;
+						while (pAttrib) //fetch attributes
+						{
+							if(pAttrib->NameTStr()=="name") //sign name
+							{
+								name=pAttrib->Value();
+							}
+							if(pAttrib->NameTStr()=="file") //file name
+							{
+								file=pAttrib->Value();
+							}
+							if(pAttrib->NameTStr()=="file_imp") //file name (important pixels)
+							{
+								file_imp=pAttrib->Value();
+							}
+
+							pAttrib=pAttrib->Next();
+						}
+
+
+						if(!name.size())//if no name tag is specified create a noname
+						{
+							std::stringstream ss;
+							ss<<"NONAME_"<<nonames;
+							name=ss.str();
+							nonames++;
+						}
+
+						if(file.size())//Is there a filestring for template picture
+						{
+							boost::filesystem::path picturePath(file);
+							if(picturePath.is_relative())//Is it a relative path?
+							{
+								boost::filesystem::path xmlfilepath(settingsfile);
+								boost::filesystem::path xmldir=xmlfilepath.parent_path();
+								picturePath=xmldir/=picturePath;
+							}
+
+							//Is there a file for important pixels?
+							boost::filesystem::path picturePath2(file_imp);
+							if(picturePath2.is_relative()) //Is it a relative path?
+							{
+								boost::filesystem::path xmlfilepath(settingsfile);
+								boost::filesystem::path xmldir=xmlfilepath.parent_path();
+								picturePath2=xmldir/=picturePath2;
+							}
+
+							ROS_INFO("File: %s", picturePath.string().c_str());
+							cv::Mat img=cv::imread(picturePath.string());
+							cv::Mat img_imp=cv::imread(picturePath2.string());
+							if(!img.empty())
+							{
+								if(!img_imp.empty())
+								{
+									ROS_INFO("Loaded img_imp: %s",file_imp.c_str());
+									tempProfiles.push_back(
+									KinTo::MatchTempProfile
+									(img,img_imp,name,0.08,0.2,127,0.2,0.7,0.8));
+								}
+								else
+								{
+									tempProfiles.push_back(
+									KinTo::MatchTempProfile
+									(img,name,0.08,0.2,127,0.2,0.7,0.8));
+									if(file_imp.size())
+									{
+										ROS_ERROR("Could not load given imp_file: "
+										"%s, going on without it...",file_imp.c_str());
+									}
+								}
+
+								signs.push_back(sign(name,img));
+								imgloaded=true;
+							}
+						}
+						else
+						{
+							imgloaded=false;
+						}
+
+						if(imgloaded)
+						{
+							ROS_INFO("New Sign: %s",name.c_str());
+						}
+						else
+						{
+							ROS_INFO("Sign: %s, Could not be loaded!",name.c_str());
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			ROS_ERROR("Could not load settings file: %s", settingsfile.c_str());
+		}
+	}
+	else
+	{
+		ROS_ERROR("NO SETTINGS FILE GIVEN!!!");
+	}
+	...
+
+}
+\end{lstlisting}
+
+
+
+\begin{lstlisting}[caption={MatchTempProfile (Header)}\label{lst:MatchTempProfile},language=c++]
+class MatchTempProfile
+{
+public:
+
+	typedef std::pair<Proportion, Proportion> proportion_pair;
+
+private:
+	std::vector<Match> matches;
+	std::vector<Proportion> proportions;
+	cv::Mat tmp, gray;
+	cv::Point begin, end;
+	proportion_pair last_pair;
+	double max_proportion_diff;
+	double min_congruence;
+	double min_coverage;
+	std::string name;
+	double min_target_size;
+	double max_target_size;
+	cv::Mat important_pixels;
+	bool hasImportantPixels;
+
+	void constructor_extension(int threshold);
+	void templateMatching(Proportion fromTemplate,  
+	                      Proportion fromTarget,
+	                      const cv::Mat& target,
+	                      int threshold);
+public:
+	MatchTempProfile(const cv::Mat &tmp, std::string name, 
+	                 double minimal_target_size=.1, 
+	                 double max_target_size=0.25, 
+	                 uchar threshold=127, 
+	                 double max_proportion_diff=0.4, 
+	                 double min_coverage=0.6, 
+	                 double min_congruence=0.7);
+
+	MatchTempProfile(const cv::Mat &tmp, 
+					const cv::Mat &tmp_imp, 
+					std::string name, 
+					double minimal_target_size=.1, 
+					double max_target_size=0.25, 
+					uchar threshold=127, 
+					double max_proportion_diff=0.4, 
+					double min_coverage=0.6, 
+					double min_congruence=0.8);
+
+	void checkProportion(Proportion proportion, 
+						const cv::Mat &target, 
+						int threshold=127);
+
+	void reset_ProportionCheck();
+
+	const std::vector<Match>& getMatches()
+	{
+		return matches;
+	}
+
+	void clearMatches()
+	{
+		matches.clear();
+	}
+};
+\end{lstlisting}
+
+
+Later when there is a image or region of interest, where to search for the template, the function
+proportionEnhancedTemplateMatching (see source in listing \vref{lst:propEnhTM}) is called with the vector 
+of the MatchTempProfile objects and the target image/region as parameters. This function 
+scans the image as mentioned above and everytime it finds two dark/light changes, it creates a proportion
+object (see Source in listing \vref{lst:proportion}) and hands it to the checkProportion function
+(shown in listing \vref{lst:checkProportion}) in each MatchTempProfile inside the array.
+This function stores the current value into the second variable of a pair and sets the first to
+the second variable before. If it has two values for one pair it seeks  
+for this pair in the proportion array. If it finds a suitable pair of proportions (inside the given threshold) 
+it calls the function templateMatching of the MatchTempProfile object (see source in listing \vref{lst:templateMatching}).
+This function does the scaling of the template and the recalculation of the point and after this,
+it tries to match the template against the relevant region. Calculating the new point is
+done by multiplying both x and y coordinates with the scaling factor. The matching is done like
+the gathering of the proportions. Values are checked if they are both dark or light, if that
+is the case, the counter for equal pixels is increased by one. If a picture for important pixels
+is available a counter is increased if pixels on a important location do not match. For all compared
+pixels another counter is increased to determine the coverage factor of the pattern.
+
+In the end the following quotients are calculated:
+$$
+	\mbox{congruence} =\frac{\mbox{matching pixels}}{\mbox{compared pixels}}-\frac{\mbox{non-matching important pixels}}{2}
+$$
+$$
+	\mbox{coverage} = \frac{\mbox{compared pixels}}{\mbox{pixel count of template}}
+$$
+
+If the quotients are in the specified range which are given at the template creation, the results 
+are stored in form of a Match object inside a vector in the corresponding MatchTempProfile object.
+
+If all proportions of a region are checked for the current surface, the best matching template will
+be marked in the picture with the first letter of it's name. And then the arrays,
+which hold the Match objects for each profile, are cleared for the next region.
+
+This is the reason why the application only supports \textbf{one sign per surface} at the moment.
+
+An example result to this algorithm can be seen in figure \vref{figure:MatchingSigns}.
+
+\newpage
+\begin{lstlisting}[caption={proportionEnhancedTemplateMatching}\label{lst:propEnhTM},language=c++]
+void proportionEnhancedTemplateMatching(std::vector<MatchTempProfile> 
+                                        &templates, const cv::Mat &target, 
+                                        uchar threshold)
+{
+
+	cv::Mat blured;
+	cv::cvtColor(target, blured, CV_BGR2GRAY);
+	cv::equalizeHist(blured,blured);
+
+	cv::GaussianBlur(blured,blured,cv::Size(5,5),2,2,0);
+
+
+
+
+	int size_x=target.cols;
+	int size_y=target.rows;
+
+	int x_dia=size_x-1;
+	int y_dia=0;
+
+	int start_col=size_x-1;
+	int start_row=0;
+
+	int last_length=-1;
+	int current_length=0;
+	int dark=0;
+
+	for(int i=0; i<(size_x*size_y);i++)
+	{
+
+
+		if(y_dia>=size_y || x_dia>=size_x)
+		{
+			if(start_col>0)
+			{
+				start_col--;
+				x_dia=start_col;
+				y_dia=0;
+			}
+			else
+			{
+				start_row++;
+				x_dia=0;
+				y_dia=start_row;
+			}
+		}
+		///////////////////////////////////////////////////////
+		////////////////////////////////DIAGONAL X/Y///////////
+		if(y_dia == 0 || x_dia==0)
+		{
+			dark=blured.at<Vec1uchar>(y_dia,x_dia)[0]<threshold;
+			last_length=-1;
+			current_length=0;
+			for(std::vector<MatchTempProfile>::iterator it=templates.begin();
+										it!=templates.end();
+										it++)
+			{
+				it->reset_ProportionCheck();
+			}
+		}
+
+		bool current=blured.at<Vec1uchar>(y_dia,x_dia)[0]<threshold;
+
+		if(dark != current)
+		{
+			dark=current;
+			if(last_length!=-1)
+			{
+				Proportion prop;
+				prop.length_c=current_length;
+				prop.length_l=last_length;
+				prop.proportion=(1-2*dark)*(double)last_length/(double)current_length;
+				prop.x=x_dia;
+				prop.y=y_dia;
+
+				for(std::vector<MatchTempProfile>::iterator it=templates.begin();
+								it!=templates.end();
+								it++)
+				{
+					it->checkProportion(prop,blured,127);
+				}
+			}
+			last_length=current_length;
+			current_length=0;
+
+		}
+		current_length++;
+
+
+		///////////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////
+		x_dia++;
+		y_dia++;
+	}
+}
+\end{lstlisting}
+
+\newpage
+\begin{lstlisting}[caption={Proportion Class}\label{lst:proportion},language=c++]
+	class Proportion
+	{
+	public:
+		double proportion;
+		int x;
+		int y;
+		int length_l;
+		int length_c;
+	
+		Proportion()
+		:proportion(-1)
+		,x(-1)
+		,y(-1)
+		,length_l(-1)
+		,length_c(-1)
+		{}
+	};
+\end{lstlisting}
+
+\newpage
+\begin{lstlisting}[caption={MatchTempProfile::checkProportion - Function}\label{lst:checkProportion},language=c++]
+void MatchTempProfile::checkProportion(Proportion proportion, 
+                          const cv::Mat &target, int threshold)
+{
+	//Move second to first
+	last_pair.first=last_pair.second;
+	//Save current to second
+	last_pair.second=proportion;
+
+	//If it already contains a pair
+	if(last_pair.first.proportion!=-1)
+	{
+		//Seek for pair in proportions
+		for(std::vector<Proportion>::iterator it=proportions.begin()
+				;it!=proportions.end();it++)
+		{
+			Proportion *p1=&(*it);
+			if(std::fabs(p1->proportion-last_pair.first.proportion)<=max_proportion_diff)
+			{
+				if(it+1 != proportions.end())
+				{
+					Proportion *p2=&(*(it+1));
+					if(std::fabs(p2->proportion-last_pair.second.proportion)
+					   <=max_proportion_diff)
+					{
+						templateMatching(*(it+1), proportion, target, threshold);
+					}
+				}
+			}
+		}
+	}
+}
+\end{lstlisting}
+
+\newpage
+\begin{lstlisting}[caption={MatchTempProfile::templateMatching - Function}\label{lst:templateMatching},language=c++]
+void MatchTempProfile::templateMatching(Proportion fromTemplate, 
+                                        Proportion fromTarget,
+                                        const cv::Mat& target,
+                                        int threshold)
+{
+
+	//scaling factor for the template
+	double scaling_factor=(double)fromTarget.length_l+(double)fromTarget.length_c;
+	scaling_factor/=(double)fromTemplate.length_c+(double)fromTemplate.length_l;
+
+	if(scaling_factor<=0)
+	{
+		std::cerr<<"MatchTemplateProfile::templateMatching "
+		           "scaling_factor smaller or equal zero"<<std::endl;
+		return;
+	}
+
+
+	if(scaling_factor<min_target_size || scaling_factor>max_target_size)return;
+
+	//scale the template picture
+	cv::Mat scaled_template, scaled_imp_template;
+	cv::resize(gray,scaled_template,cv::Size(0,0),scaling_factor,scaling_factor);
+
+	if(!important_pixels.empty())
+	{
+		cv::resize(important_pixels,scaled_imp_template,
+		           cv::Size(0,0),scaling_factor,scaling_factor);
+	}
+
+
+
+	//recalculate the point of the proportion
+	int x_st=fromTemplate.x*scaling_factor;
+	int y_st=fromTemplate.y*scaling_factor;
+
+	//calculate the point for template placement
+	int x_tplace=fromTarget.x-x_st;
+	int y_tplace=fromTarget.y-y_st;
+
+	int size_x=scaled_template.cols;
+	int size_y=scaled_template.rows;
+
+	cv::Rect r;
+	r.height=scaled_template.rows;
+	r.width=scaled_template.cols;
+	r.x=x_tplace;
+	r.y=y_tplace;
+
+
+	int cnt_pixelsCmp=0;
+	int cnt_pixelsOk=0;
+	int cnt_pixelsNegative=0;
+
+
+
+	for(int i=0; i<(size_x*size_y);i++)
+	{
+		int y_temp=i/size_x;
+		int x_temp=i-y_temp*size_x;
+
+		int x_targ=x_temp+x_tplace;
+		int y_targ=y_temp+y_tplace;
+
+
+
+		if(x_targ>=0 && x_targ<target.cols &&
+		   y_targ>=0 && y_targ<target.rows )
+		{
+			//TODO ignore translucent pixels
+			cnt_pixelsCmp++;
+
+			bool val_tmp=scaled_template.at<Vec1uchar>(y_temp,x_temp)[0]>127;
+			bool val_trg=target.at<Vec1uchar>(y_targ,x_targ)[0]>127;
+
+
+			if(val_tmp==val_trg)
+			{
+				cnt_pixelsOk++;
+			}
+			else
+			{
+				if(hasImportantPixels)
+				{
+					if(scaled_imp_template.at<Vec1uchar>(y_temp,x_temp)[0]==0)
+					{
+						cnt_pixelsNegative++;
+					}
+				}
+			}
+		}
+	}
+	
+
+	double congruence=(double)cnt_pixelsOk/(double)cnt_pixelsCmp-cnt_pixelsNegative/2;
+	double coverage=(double)cnt_pixelsCmp/(double)(size_x*size_y);
+
+	if(congruence>=min_congruence && coverage>=min_coverage)
+	{
+		Match m;
+		m.congruence=congruence;
+		m.coverage=coverage;
+		m.rect.x=x_tplace;
+		m.rect.y=y_tplace;
+		m.rect.width=size_x;
+		m.rect.height=size_y;
+		m.center=cv::Point(x_tplace+size_x/2, y_tplace+size_y/2);
+		m.name=name;
+
+		matches.push_back(m);
+	}
+}
+\end{lstlisting}
+
+
 
 \section{Robot Control}
 \subsection{ROS Transform}
