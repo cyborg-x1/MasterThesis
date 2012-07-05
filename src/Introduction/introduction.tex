@@ -39,7 +39,7 @@ in the RGB picture.
 	\caption{ROS Logo}
 \end{figure} 
 
-The Robot Operating System or short ROS is a meta operating system from WillowGarage which is designed for usage with distributed 
+The Robot Operating System or short ROS is a meta operating system from WillowGarage, which is designed for usage with distributed 
 robot systems. It's called a meta operating system because it needs another operating system to run. It's mainly developed for Ubuntu 
 (a Linux distribution) but it also supports other Operating Systems like Windows and Mac OS, but the support for them can still be considered 
 as experimental. 
@@ -60,10 +60,10 @@ and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
 
 
 In the PSP the newspapers are now called topics. A PSP system is a subset of different applications, those applications are called nodes.  
-Each node can publish or subscribe multiple topics at the same time. So it is possible to create a network of different nodes which
+Each node can publish or subscribe multiple topics at the same time. So it is possible to create a network of different nodes, which
 do processing or act as user interface. The advertisements of the real world are replaced by a so called master. 
 The master knows everything about the communication channels, all nodes, the computer they run on and 
-which topics they subscribe and publish. When a new node starts up, it checks for other nodes publishing or subscribing the relevant topics
+which topics they subscribe and publish to. When a new node starts up, it checks for other nodes publishing or subscribing the relevant topics
 and connects with them. An example of this is shown in figure \vref{figure:psp_ROS}.
 In the picture there are different nodes for the robots running gear, its laserscanner, the motion planing system and the graphical user interface.
 connected together by topics.
@@ -78,6 +78,7 @@ connected together by topics.
 In this work the output of the rViz-node (short form for robot visualizer) will be used to display changes to the depth- and 
 rgb-image of the Kinect. rViz is a tool to display various informations like video streams, maps, paths, positions and the
 so called point cloud.
+\clearpage
 
 \section{Point Cloud}
 The point cloud is data set which contains the three dimensional position for each pixel of a 3D camera. 
@@ -85,9 +86,12 @@ If available, it can also contain the color or grayscale values of each pixel.
 The point cloud data can be collected from a stereo camera, a laser scanner which rotates around an axis or 
 from cameras like the Microsoft Kinect.
 
-
-%TODO Picture from rViz with the pointcloud and video
-
+\begin{figure}[htp]
+	\centering
+	\includegraphics[width=\textwidth]{RVizPointCloud.png}
+	\caption{Robot Visualizer displaying the Point Cloud}
+	\label{figure:RVizPointCloud.png}
+\end{figure}
 \clearpage
 
 \section{OpenCV}
@@ -100,7 +104,7 @@ Some well known companies that use OpenCV are Google, Yahoo, Microsoft, Intel, I
 
 It runs on Windows, Linux, Mac, Android and has C++, C, Python and Java (Android only) interfaces. OpenCV leans mostly towards real-time vision applications and takes advantage of MMX and SSE instructions when available. A CUDA interface is being developed right now. There are over 500 algorithms and about 10 times as many functions that compose or support those algorithms. OpenCV is written natively in C++ and has a templated interface that works seamlessly with std containers. Its native data type is a general matrix class that reference counts and leverages EIGEN.
 \cite{willowgarage:opencv}
-
+\clearpage
 
 \section{Kinect}
 \begin{figure}[htp]
@@ -184,7 +188,13 @@ like described in the last chapter.
 
 %TODO Picture Pioneer
 
-
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[height=\textheight/3]{pioneer.JPG}
+  \caption{Pioneer 3DX}
+  \label{figure:Pioneer}
+\end{center}
+\end{figure}
 
 
 

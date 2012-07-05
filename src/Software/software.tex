@@ -5,10 +5,11 @@
 \section{Depth Image Processing}
 Before trying to do template matching in the camera image, it's necessary to limit the regions in which we are
 searching for known templates. Therefore it is necessary to find surfaces which are upright to the camera view.
-In beginning the focus almost lies on improving image quality by removing the noise and so it is here.
+In beginning the focus in almost any image processing project lies on improving image quality by removing the 
+noise and this is also the case for this project.
 
 \subsection{First Blur Filter}
-Bluring the depth image to remove the noise sounds like an easy task but if a simple boxed filter is used 
+Bluring the depth image to remove the noise sounds like an easy task, but if a simple boxed filter is used 
 all edges are smothed to surfaces they do not belong to (see first picture in figure \vref{figure:blur}).
 At first it was tried to do all the filtering and reset all blured pixels $P_b$ which are to far away from their 
 original depth value by the following formula.
@@ -328,7 +329,7 @@ void createRelationNeighbourhoodMap(const cv::Mat &src,
 This information helps to write a more performance saving, effective and edge saving bluring method which 
 was named crossBlur because it blures each pixel with a specified number of it's neighbors on top, left, right and bottom.
 The neighborhood condition is needed because it will stop adding pixels on each side if the next pixel in the direction 
-is not a close neighbor to the current to preserve the edges. (see in figure \vref{figure:crossblur}).
+is not a close neighbor to the current, to preserve the edges. (see in figure \vref{figure:crossblur}).
 
 \begin{figure}[htp]
 \begin{center}
@@ -338,8 +339,15 @@ is not a close neighbor to the current to preserve the edges. (see in figure \vr
 \end{center}
 \end{figure} 
 
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{crossBlurResult.png}
+  \caption{Cross Blur Result}
+  \label{figure:crossblurResult}
+\end{center}
+\end{figure} 
 %TODO Formula
-%TODO Result picture
 
 Listing \vref{lst:crossblur} shows the cross bluring function.
 
@@ -411,7 +419,7 @@ void crossDepthBlur(const cv::Mat &depth, const cv::Mat &neighbors,
 \end{lstlisting}
 
 \subsection{Calculation of X and Y Distance}
-After bluring the depth the real world X and Y values of each point must be calculated. 
+After bluring the depth, the real world X and Y values of each point must be calculated. 
 This is done with the camera information delivered from ROS. 
 The code for this is mostly copied from the rgbxyz-point cloud nodelet from ROS with a few changes.
 All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
@@ -566,13 +574,13 @@ The possible input range for the arcus cosinus function lies between -1 and 1, s
 to precalculate 2000 values for the lookup table. This means the possible input values are now
 -1000 to 1000. To bring them into the possible range 1000 needs to be added to all input values.
 The precalulated values also include the transformation from radian to degree and are stored as 
-integers values which were multiplied by 100 to save two digits behind the comma.
+integer values which were multiplied by 100 to save two digits behind the comma.
 
 So the precalculation for the values $v_i$ in the array was done with the following formula:
 
 $v_i=\lfloor \arccos ((i-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor$
 
-To obtain the values from the array the result of the devision from a vector part through its length
+To obtain the values from the array, the result of the devision from a vector part through its length
 must be multiplied with 1000 and added to 1000. To be able to display the angles easily for debuging 
 it was later decided to put the values in a matrix for an RGB image, so each value has to be devided 
 by 100 again because unsigned char only supports values from 0 to 255.
@@ -705,7 +713,7 @@ void crossAnglesBlur(const cv::Mat &angles,
 
 \subsection{Angle Filtering}
 
-To get only surfaces which are interesting a angle filter was created. It's input parameters
+To get only surfaces, which are interesting, a angle filter was created. It's input parameters
 are the minimum and maxium for each angle. The output of this function is a grascale image
 where pixels all $P_o$ are initialized with 0 and those with suitable angles 
 for the input pixel $P_i$ get the value 255.
@@ -717,7 +725,7 @@ for the input pixel $P_i$ get the value 255.
  	\implies P_o(x,y) = 255;
  \] 
 
-The function also features another mode where the output image contains the suitable angles instead of only 255.
+The function also features another mode, where the output image contains the suitable angles instead of only 255.
 But this mode is not used. The full code of this, can be seen in the listing \vref{lst:angleFilter}.
 
 \begin{lstlisting}[caption={anglesFilter - Function}\label{lst:angleFilter},language=c++]
@@ -771,9 +779,9 @@ void anglesFilter(const cv::Mat &angles, cv::Mat &angles_out,
 
 \subsection{Surface Segmentation}
 
-Before the begining with segmenting the surfaces the picture containing the pixels which show correct angles
-is blured to remove empty pixels or columns of empty pixels which seperate surfaces belonging together. After
-bluring them, the threshold function is used to bring all pixel which are not zero to the value 255. 
+Before the begining with segmenting the surfaces the picture containing the pixels, which show correct angles
+is blured to remove empty pixels or columns of empty pixels, which seperate surfaces belonging together. After
+bluring them, the threshold function is used to bring all pixels, which are not zero, to the value 255. 
 The code is shown in listing \vref{lst:blurAthres}.
 
 \begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:blurAthres},language=c++]
@@ -782,19 +790,19 @@ The code is shown in listing \vref{lst:blurAthres}.
 \end{lstlisting}
 
 The segmentation algorithm uses a class named range to outline pixel blobs in regions. The class contains integer 
-variables for the minimal and maximal x and y values. The algorithm seeks for an pixel in the 
+variables for the minimal and maximal x and y values. The algorithm seeks for pixels in the 
 neighborhood-map which are not zero, as shown in the chapter \vref{sect:blurFilter}, this means it has neighbors. 
 
 Then it starts to look if there is neighbor with the following order for the pixels, top, top-left, left and bottom-left.
-If it finds a pixel which is a neighbor then it gathers it's ID in the IDs matrix, sets the current pixel in the
-id matrix to this ID and calls the update function of the corresponding range object, which updates minimum and
-maximum values. After that it checks if the rest of the pixels not checked in step one. If it finds a neighbor
-which has a different ID, it creates a relation between them inside a set, a special form of vector which allows
-only unique items. If this is done for each of the remaining neighbors, the algorithm advances to the next pixel. 
-If a pixel contains neighbors, but doesn,t have a neighbor at the mentioned locations a new ID and range object are 
-created. The range objects minimum and maximum x and y are initialized to the values of the current pixel.
-This part of the algorithm is visualized in figure \vref{figure:segment} and the corresponding code is shown in listing
-\vref{lst:SFextract1}.
+If it finds a pixel, which is a neighbor, then it gathers it's ID in the IDs matrix, sets the current pixel in the
+ID matrix to this ID and calls the update function of the corresponding range object, which updates minimum and
+maximum values. After that it checks, if the rest of the pixels not checked in step one are neighbors. 
+If it finds a neighbor which has a different ID, it creates a relation between them inside a set, 
+a special form of vector which allows only unique items. If this is done for each of the remaining neighbors, 
+the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn,t have a neighbor at the mentioned 
+locations a new ID and range object are created. The range objects minimum and maximum x and y are initialized to the 
+values of the current pixel. This part of the algorithm is visualized in figure \vref{figure:segment} and 
+the corresponding code is shown in listing \vref{lst:SFextract1}.
 
 \begin{figure}[htp]
 \begin{center}
@@ -909,11 +917,11 @@ void SurfaceExtractor(const cv::Mat &pix_ok,
 
 After passing the whole neighborhood-map, all range objects having a relation are merged together
 by a loop executing the merge function of one range class object with the relating one.
-The merge function first calls the getLast function of both objects which returns a pointer to the
-last range object this range was merged to. This is necessary to merge all objects together recursively.
+The merge function first calls the getLast function of both objects, which returns a pointer to the
+last range object, this range was merged to. This is necessary to merge all objects together recursively.
 How this works is shown in figure \vref{figure:Merging}. After that another object is created which 
-contains the merged minimum and maximum values of both ranges. At the end the regions for template matching
-are filtered by size and stored in the output array while the range objects are deleted. 
+contains the merged minimum and maximum values of both ranges. At the end, the regions for template matching
+are filtered by size and stored in the output array, while the range objects are deleted. 
 
 The code for the range class objects can be seen in listing \vref{lst:RangeClass} and a screen shot of
 a recognized surface in figure \vref{figure:AnglesOKSeg}.
@@ -1253,8 +1261,8 @@ When it changes the alogrithm gathers the distance from pixel to pixel and searc
 When that change appears, it calculates the proportion of both lengths.
 The proportion will be negative if the next pixels are changing to dark, 
 this prevents finding negatives of the template.  
-The proportion is stored with the location of the current pixel and the
-length of the from the first to the endpoint. This is now done as long
+It is stored with the location of the current pixel and the
+length from the first change to the endpoint. This is now done as long
 as the algorithm reaches an edge of the template (for an Example see in figure \vref{figure:templateProp}).
 
 \begin{figure}[htp]
@@ -1286,25 +1294,25 @@ With this point the position, for trying to match the template, is calculated
 \end{center}
 \end{figure} 
 
-In the software this is realized by a class called MatchTempProfile in which the templates are stored.
-The images for the templates are specified in a xml file which is specified by a parameter in the launchfile.
+In software, this is realized by a class called MatchTempProfile, in which the templates are stored.
+The images for the templates are specified in a xml file, which is set by a parameter in the launchfile.
 \newpage 
 In the code and the parameter name this file is called settings file. The settings file is read at node startup,
 so the code reading the XML file and loading the template pictures is located in the constructor of the
-signDetection class seen in listing \vref{lst:ConstructSetTemp}. On startup the node checks first,
+signDetection class, seen in listing \vref{lst:ConstructSetTemp}. On startup the node checks first,
 if there is a XML file given and if it can be loaded. Then it searches for the "signs"-Tag.
 Inside this tag it expects "sign"-Tags with the attributes "name", "file" and "file\_imp".
 
 Listing \vref{lst:xmlFile} shows the XML file used for this project.
 
-The "name" attribut specifies the string which is shown, when this template has been found in a image.
-Attribut file specifies the template file which can be a 1,3 or 4 (RGB with alpha channel) channel picture. 
-The second image "file\_imp" is optional but expects a grayscale image where important pixels are black and the others 
+The "name" attribut specifies the string which is shown, when this template has been found in an image.
+Attribut file specifies the template file which can be a 1,3 or 4 (RGB with alpha) channel picture. 
+The second image "file\_imp" is optional, but expects a grayscale image where important pixels are black and the others 
 white. In the special case of a missing or zero size name attribut, the template is called "NONAME" with an increasing number
 like "NONAME0, NONAME1 \ldots". If there is no file name specified for the template image or if loading the file
 fails, the template profile will not be created. If the file for the important pixel image will fail to load, there will
-be just a error message and the profile will be created without an important pixel image. If the paths are relative path 
-(beginning with ".." or without "/"), the source path will be the one of the XML file. If everything is ok a new 
+be just a error message and the profile will be created without an important pixel image. If the paths are relative paths
+(beginning with ".." or without "/"), the source path will be the one of the XML file. If everything is ok, a new 
 MatchTempProfile object (see header contents in figure \vref{lst:MatchTempProfile}) is created and stored in a std::vector.
 
 \begin{lstlisting}[caption={Setting XML File}\label{lst:xmlFile},language=xml]
@@ -1530,14 +1538,14 @@ public:
 \end{lstlisting}
 
 
-Later when there is a image or region of interest, where to search for the template, the function
+Later, when there is a image or region of interest where to search for the template, the function
 proportionEnhancedTemplateMatching (see source in listing \vref{lst:propEnhTM}) is called with the vector 
 of the MatchTempProfile objects and the target image/region as parameters. This function 
 scans the image as mentioned above and everytime it finds two dark/light changes, it creates a proportion
 object (see Source in listing \vref{lst:proportion}) and hands it to the checkProportion function
 (shown in listing \vref{lst:checkProportion}) in each MatchTempProfile inside the array.
 This function stores the current value into the second variable of a pair and sets the first to
-the second variable before. If it has two values for one pair it seeks  
+the second variable before. If it has two values for one pair, it seeks  
 for this pair in the proportion array. If it finds a suitable pair of proportions (inside the given threshold) 
 it calls the function templateMatching of the MatchTempProfile object (see source in listing \vref{lst:templateMatching}).
 This function does the scaling of the template and the recalculation of the point and after this,
@@ -1545,7 +1553,7 @@ it tries to match the template against the relevant region. Calculating the new 
 done by multiplying both x and y coordinates with the scaling factor. The matching is done like
 the gathering of the proportions. Values are checked if they are both dark or light, if that
 is the case, the counter for equal pixels is increased by one. If a picture for important pixels
-is available a counter is increased if pixels on a important location do not match. For all compared
+is available, a counter is increased if pixels on a important location do not match. For all compared
 pixels another counter is increased to determine the coverage factor of the pattern.
 
 In the end the following quotients are calculated:
@@ -1556,7 +1564,7 @@ $$
 	\mbox{coverage} = \frac{\mbox{compared pixels}}{\mbox{pixel count of template}}
 $$
 
-If the quotients are in the specified range which are given at the template creation, the results 
+If the quotients are in the specified range, which is given at the template creation, the results 
 are stored in form of a Match object inside a vector in the corresponding MatchTempProfile object.
 
 If all proportions of a region are checked for the current surface, the best matching template will

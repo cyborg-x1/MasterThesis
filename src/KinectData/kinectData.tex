@@ -58,14 +58,14 @@ identifying their location (see figure \vref{figure:close}), what leads to the s
  
 \subsection{Analyzing Tools}
 
-While this work multiple analyzing tools have been created. Those were created as
+While this work, multiple analyzing tools have been created. Those were created as
 nodes to easily connect with the OpenNi driver package in the ROS system.
 
 \subsubsection{DepthImageAnalyzer}
 In the beginning a Qt-GUI node was created to get in touch with the depth images and 
 their values and how they look like. It is able to show a depth image in the double
 format and if the user clicks into the picture it will show the corresponding 
-value of the pixel. It also allowed to set a depth range to highlight. 
+value of the pixel. It also allows to set a depth range to highlight. 
 Figure \vref{figure:DIA} shows the GUI of this node with a highlighted depth range.
 
 \begin{figure}[h!tp]
@@ -82,9 +82,9 @@ In the later process of this work it was not needed anymore, because showing the
 in rViz showed to be more effective in analyzing data and debugging applications.
 
 \subsection{PointCloud creation with selected topics}
-Point clouds are very useful for debuging and filtering techniques. They can be displayed in
-3D and directly show what happens to the data when a special filter is applied.
-To create point cloud messages for other topics than those from the Kinect node it is necessary to
+A 3D display of the point cloud is very useful for debuging and filtering techniques, it directly shows what 
+happens to the data, when a special filter is applied.
+To create point cloud messages for other topics than those from the Kinect node, it is necessary to
 create specific launch files. Launch files are xml-files which are used to start multiple nodes in one
 go. 
 
@@ -109,17 +109,24 @@ depth\_image\_proc/point\_cloud\_xyzrgb nodlet is needed. Inside the node tag of
 there are the remapping tags, to connect the nodelet with the custom topics.
 
 \subsection{Tool for various data fetching and filter testing}
-The tool was named disturbance\_filter\_calculator, the name is still reminding what it was intended to do. It should
-filter out the noise by creating a picture of it on a flat surface. This didn't work because of the special autoranging
-feature of the Kinect which will be discussed later. Currently the Tool can be used to fetch data points or to
+The tool was named disturbance\_filter\_calculator, the name is still reminding what it was intended to do in the first place
+. It should filter out the noise by creating a picture of it on a flat surface. This didn't work because of the special 
+autoranging feature of the Kinect which will be discussed later. Currently the Tool can be used to fetch data points or to
 draw a pattern of lines in the RGB image which is mapped over the point cloud. It also can tell the users which data points
 are in a given distance and which not by painting the pixels of the RGB image green for being in the specified distance
 and red if not. This feature helped to realize about the missing values which are also discussed later. It also includes
 some of the first tries to filter and blur the depth image, but as the project advanced it was decided to move the 
 filter code to a new clean node in a new package to save compiling time, leaving the disturbance\_filter\_calculator 
-node as it was.
+node as it was. A screenshot of the robot visualizer displaying the point cloud with a few points in the specified distance
+can be seen in figure \vref{figure:distFilCal}.
 
-%TODO pictures filter_calculator
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth]{disturbanceFilterCalibrator.png}
+  \caption{disturbance\_filter\_calibrator: rviz and reconfigure\_gui}
+  \label{figure:distFilCal}
+\end{center}
+\end{figure}
 
 \section{Disturbances}
 While pointing the Kinect to a flat surface the noise fractals (see in figure \vref{figure:noise}) 
@@ -132,7 +139,7 @@ inside the data which seem to be the result from an autoranging feature of the c
 always creating one data step in the picture. The biggest problem is that the scale of the noise fractals changes 
 with their appearance and their number. The number of those vertical lines ranges from 0 to a spotted maximum of 9. 
 They do always appear on a special range, seem to be symetrical or 
-nearly symetrical to the center and their number is never even but are not fixed to a special column of pixels. 
+nearly symetrical to the center and their number is never even but they are not fixed to a special column of pixels. 
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[width=\textwidth]{noise.png}
@@ -150,9 +157,9 @@ nearly symetrical to the center and their number is never even but are not fixed
 \end{figure}
 
 \section{Resolution Depending the Depth} \label{resdepDepth}
-When creating the diagram (in figure \vref{figure:LaserKinect}) which shows the occuring values from the camera 
+When creating the diagram in figure \vref{figure:LaserKinect}, which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure \vref{figure:hilti}),it was realized that many values just do not exist. The camera does never output 
+device(see in figure \vref{figure:hilti}),it was realized, that many values just do not exist. The camera does never output 
 these values. After realizing this fact it was decided to look for the available values, their number and the values which 
 never occur.The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, 
 the available values (black) and not availabe values (white) in the middle and the number of the missing values between them 
