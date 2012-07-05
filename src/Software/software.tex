@@ -1,12 +1,147 @@
 \graphicspath{{./Software/img/}}
 \chapter{SignRecognition}
  
+ Before being able to do filtering, detect signs etc, it is necessary to get the data from the OpenNi nodletmanager
+ the node which supplies the depth and RGB data. Therefore the code for syncronizing RGB, 
+ depth and camera info messages (see in listing \vref{lst:basic}) was copied from the nodelet being responsible 
+ for point cloud creation. 
+ 
+ The function imageCb is the callback function where all the image processing is done.
+\begin{lstlisting}[caption={Code of the first Bluring Function}\label{lst:basic},language=c++]
+
+
+...
+
+namespace enc = sensor_msgs::image_encodings;
+
+...
+
+class signDetection
+{
+	//NodeHandle
+	ros::NodeHandle nh_;
+
+	//Dynamic reconfigure
+	dynamic_reconfigure::Server<aa_signs::signDetectionConfig> reconfServer;
+	dynamic_reconfigure::Server<aa_signs::signDetectionConfig>::CallbackType reconfCbType;
+
+	//Node handle
+	ros::NodeHandlePtr rgb_nh_;
+	boost::shared_ptr<image_transport::ImageTransport> rgb_it_, depth_it_;
+
+
+	//Image transports and synchronizers (stolen from xyzrgb-pointcloud-nodelet :-) *thanks* )
+	image_transport::SubscriberFilter sub_depth_, sub_rgb_;
+
+	message_filters::Subscriber<sensor_msgs::CameraInfo> sub_info_;
+
+	typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image,
+			sensor_msgs::Image, sensor_msgs::CameraInfo> SyncPolicy;
+
+	typedef message_filters::Synchronizer<SyncPolicy> Synchronizer;
+
+	boost::shared_ptr<Synchronizer> sync_;
+
+	image_geometry::PinholeCameraModel model_;
+
+public:
+	signDetection() :
+			nh_("~")
+	{
+		rgb_nh_.reset(new ros::NodeHandle(nh_, "rgb"));
+		ros::NodeHandle depth_nh(nh_, "depth_registered");
+		rgb_it_.reset(new image_transport::ImageTransport(*rgb_nh_));
+		depth_it_.reset(new image_transport::ImageTransport(depth_nh));
+
+		// Read parameters
+		int queue_size;
+		nh_.param("queue_size", queue_size, 5);
+
+		// Synchronize inputs. Topic subscriptions happen on demand in the connection callback.
+		sync_.reset(
+				new Synchronizer(SyncPolicy(queue_size), sub_depth_, sub_rgb_,
+						sub_info_));
+		sync_->registerCallback(
+				boost::bind(&signDetection::imageCb, this, _1, _2, _3));
+
+		//Advertise out camera
+		reconfCbType = boost::bind(&signDetection::reconfigCb, this, _1, _2);
+		reconfServer.setCallback(reconfCbType);
+
+		//Subscribe topics
+		sub_depth_.subscribe(*depth_it_, "image_rect", 1);
+		sub_rgb_.subscribe(*rgb_it_, "image_rect_color", 1);
+		sub_info_.subscribe(*rgb_nh_, "camera_info", 1);
+
+
+	}
+
+...
+
+	void imageCb(const sensor_msgs::ImageConstPtr& depth_msg,
+			     const sensor_msgs::ImageConstPtr& rgb_msg,
+			     const sensor_msgs::CameraInfoConstPtr& info_msg)
+	{...}
+
+};
+
+};
+
+...
+
+\end{lstlisting}
+
+To connect the node with the necessary topics of the OpenNi node, the launchfile in listing \vref{lst:launch}
+was used. It also creates a point cloud for debugging output of the processed data.
+
+\begin{lstlisting}[caption={Launchfile for }\label{lst:launch},language=xml]
+<launch>
+
+	<param name="/camera/driver/depth_registration" value="true" />	
+
+	<!-- Launch a reconfigure GUI -->
+	<node pkg="dynamic_reconfigure" type="reconfigure_gui" 
+	name="reconfigure_gui" output="screen" respawn="true"  />
+	
+	
+	<!-- Start the camera-->
+	<include file="$(find openni_launch)/launch/openni.launch" />
+	<node pkg="rviz" type="rviz" name="rviz_signDetect" output="screen" 
+	respawn="true"  />
+
+	<!-- SignDetector -->
+	<node pkg="aa_signs" type="signDetection" name="signDetection" output="screen" respawn="true" > 
+ 		<remap from="/signDetection/depth_registered/image_rect" 	to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/signDetection/rgb/image_rect_color" 			to="/camera/rgb/image_rect_color" />
+ 		<remap from="/signDetection/rgb/camera_info" 				to="/camera/rgb/camera_info" />
+ 		<param name="settingsfile" value="(find aa_signs)/settings/signs.xml" />
+	</node>
+
+  	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
+	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
+
+		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" 
+		args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
+	    <!-- Explicit topic remappings, shouldn't need all of these -->
+	    <remap from="rgb/image_rect_color"        to="/signDetection/out_rgb" />
+	    <remap from="rgb/camera_info"             to="/signDetection/camera_info" />
+	    <remap from="depth_registered/image_rect" to="/signDetection/out_depth" />
+	    <remap from="depth_registered/points"     to="debug_cloud" />
+  	</node>
+  	
+  	
+</launch>
+\end{lstlisting}
+
 
 \section{Depth Image Processing}
 Before trying to do template matching in the camera image, it's necessary to limit the regions in which we are
 searching for known templates. Therefore it is necessary to find surfaces which are upright to the camera view.
 In beginning the focus in almost any image processing project lies on improving image quality by removing the 
 noise and this is also the case for this project.
+
+
+
 
 \subsection{First Blur Filter}
 Bluring the depth image to remove the noise sounds like an easy task, but if a simple boxed filter is used 
@@ -24,7 +159,7 @@ then another blur filter is applied to remove possible noise resulting from that
 (see figure \vref{figure:blur} for results).
 
 \newpage
-
+ 
 \begin{lstlisting}[caption={Code of the first Bluring Function}\label{lst:fstBlur},language=c++]
 void myFilter1(const cv::Mat &src, cv::Mat &dst)
 {
@@ -1573,7 +1708,7 @@ which hold the Match objects for each profile, are cleared for the next region.
 
 This is the reason why the application only supports \textbf{one sign per surface} at the moment.
 
-An example result to this algorithm can be seen in figure \vref{figure:MatchingSigns}.
+%TODO ---- An example result to this algorithm can be seen in figure \vref{figure:MatchingSigns}.
 
 \newpage
 \begin{lstlisting}[caption={proportionEnhancedTemplateMatching}\label{lst:propEnhTM},language=c++]
