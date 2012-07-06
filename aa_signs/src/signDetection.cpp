@@ -126,7 +126,7 @@ public:
 				//Parsing the XML
 				parent=settings.FirstChildElement();
 
-
+				//Reading the settingsfile
 				for ( pChild = parent->FirstChild(); pChild != 0; pChild = pChild->NextSibling())
 				{
 					//Look for Elements
@@ -168,18 +168,19 @@ public:
 								nonames++;
 							}
 
-							if(file.size())
+							if(file.size())//Is there a filestring for template picture
 							{
 								boost::filesystem::path picturePath(file);
-								if(picturePath.is_relative())
+								if(picturePath.is_relative())//Is it a relative path?
 								{
 									boost::filesystem::path xmlfilepath(settingsfile);
 									boost::filesystem::path xmldir=xmlfilepath.parent_path();
 									picturePath=xmldir/=picturePath;
 								}
 
+								//Is there a file for important pixels?
 								boost::filesystem::path picturePath2(file_imp);
-								if(picturePath2.is_relative())
+								if(picturePath2.is_relative()) //Is it a relative path?
 								{
 									boost::filesystem::path xmlfilepath(settingsfile);
 									boost::filesystem::path xmldir=xmlfilepath.parent_path();
@@ -365,15 +366,18 @@ public:
 			///
 
 
-
 			cv::blur(angles_ok,angles_ok,cv::Size(3,3),cv::Point(-1,-1),0);
 			cv::threshold(angles_ok,angles_ok,1,255,0);
 
 
+			//Red Filter for circles
 			if(!new_template_matching)KinTo::RedFilter(imgPtrRGB->image,filtered_bgr);
 
+
+			//Finding surfaces
 			std::vector<KinTo::Match_Roi> rois;
 			KinTo::SurfaceExtractor(angles_ok,neighbor_map,rois,surface_w_min,surface_h_min,surface_w_max,surface_h_max);
+
 
 			std::vector< std::vector<KinTo::Match_Roi>::iterator > del_vec;
 
@@ -406,6 +410,7 @@ public:
 				}
 			}
 
+			//Erasing the surfaces from last step
 			for(std::vector< std::vector<KinTo::Match_Roi>::iterator >::iterator it = del_vec.begin();
 					it != del_vec.end(); ++it)
 			{
@@ -449,35 +454,82 @@ public:
 					}
 				}
 
+				enum
+				{
+					top_left=0,
+					top_right=1,
+					bottom_right=2,
+					bottom_left=3
+				};
+
 				cv::Point2f points_px[4];
-				points_px[0]=cv::Point2f(x-s,y-s);
-				points_px[1]=cv::Point2f(x+s,y-s);
-				points_px[2]=cv::Point2f(x+s,y+s);
-				points_px[3]=cv::Point2f(x-s,y+s);
+				points_px[top_left]=cv::Point2f(x-s,y-s); //top left
+				points_px[top_right]=cv::Point2f(x+s,y-s); //top right
+				points_px[bottom_right]=cv::Point2f(x+s,y+s); //bottom right
+				points_px[bottom_left]=cv::Point2f(x-s,y+s); //bottom left
 
 				cv::Point2f points_n[4];
-				points_n[0]=cv::Point2f(x-s+1,y-s+1);
-				points_n[1]=cv::Point2f(x+s+1,y-s+1);
-				points_n[2]=cv::Point2f(x+s+1,y+s+1);
-				points_n[3]=cv::Point2f(x-s+1,y+s+1);
+				points_n[top_left]=cv::Point2f(x-s+1,y-s+1);
+				points_n[top_right]=cv::Point2f(x+s+1,y-s+1);
+				points_n[bottom_right]=cv::Point2f(x+s+1,y+s+1);
+				points_n[bottom_left]=cv::Point2f(x-s+1,y+s+1);
 
+
+				//Get the points from the surface in 3D
 				cv::Point3f tl_3d=getPoint2D_3D(xy_roi,depth_roi,x-s,y-s);
 				cv::Point3f tr_3d=getPoint2D_3D(xy_roi,depth_roi,x+s,y-s);
 				cv::Point3f br_3d=getPoint2D_3D(xy_roi,depth_roi,x+s,y+s);
 				cv::Point3f bl_3d=getPoint2D_3D(xy_roi,depth_roi,x-s,y+s);
 
+				//3D distance
+				float top=distance_point3D<float>(tl_3d,tr_3d);
+				float left=distance_point3D<float>(tl_3d,bl_3d);
+				float right=distance_point3D<float>(tr_3d,br_3d);
+				float bottom=distance_point3D<float>(bl_3d,br_3d);
+
+				//2D distance
+				int dist_2D=s*2+1;
 
 
+
+				if(right!=0 && left!=0) //Just be sure its not zero
+				{
+					float shift=dist_2D*quot;
+
+					if(left<right)
+					{
+						//Distance quotient
+						float quot=right/left;
+
+						//Shift right part down
+						points_n[top_right].y+=shift/2;
+						points_n[bottom_right].y+=shift/2;
+
+						//Shift bottom left down
+						points_n[bottom_left].y+=shift;
+					}
+					else
+					{
+						float quot=left/right;
+
+						//Shift right part down
+						points_n[top_left].y+=shift/2;
+						points_n[bottom_left].y+=shift/2;
+
+						//Shift bottom left down
+						points_n[bottom_right].y+=shift;
+					}
+				}
 
 
 
 				if(s==0)continue;
-				cv::imshow("ROI_before",roi_mat);
 
-				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),imgPtrDepth->image.size(), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
+
+				//cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),imgPtrDepth->image.size(), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
 
 				//cv::imshow("ROI_after",roi_mat);
-				//cv::waitKey(500);
+				cv::waitKey(1);
 
 //				cv::circle(roi_mat,points_px[0],5,cv::Scalar(255,255,0),2);
 //				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
@@ -646,7 +698,7 @@ public:
 				}
 				else
 				{
-					cv::rectangle(imgPtrRGB->image,it->roi,cv::Scalar(100),1,0,0);
+					cv::rectangle(imgPtrRGB->image,it->roi,cv::Scalar(100,0,100),1,0,0);
 				}
 			}
 
