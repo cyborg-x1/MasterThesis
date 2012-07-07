@@ -486,50 +486,101 @@ public:
 				float left=distance_point3D<float>(tl_3d,bl_3d);
 				float right=distance_point3D<float>(tr_3d,br_3d);
 				float bottom=distance_point3D<float>(bl_3d,br_3d);
+				float dia=distance_point3D<float>(tl_3d,br_3d);
+
 
 				//2D distance
 				int dist_2D=s*2+1;
 
+				float shift_x=0,shift_y=0;
+				float size_x=0, size_y=0;
 
 
-				if(right!=0 && left!=0) //Just be sure its not zero
+				if(right!=0 && left!=0 	&& bottom!=0 && top!=0)
 				{
-					float shift=dist_2D*quot;
 
 					if(left<right)
 					{
+						size_y=right;
 						//Distance quotient
 						float quot=right/left;
+						shift_y=dist_2D*quot-dist_2D;
 
 						//Shift right part down
-						points_n[top_right].y+=shift/2;
-						points_n[bottom_right].y+=shift/2;
+						points_n[top_right].y+=shift_y/2;
+						points_n[bottom_right].y+=shift_y/2;
 
 						//Shift bottom left down
-						points_n[bottom_left].y+=shift;
+						points_n[bottom_left].y+=shift_y;
 					}
 					else
 					{
+						size_y=left;
 						float quot=left/right;
+						shift_y=dist_2D*quot-dist_2D;
 
-						//Shift right part down
-						points_n[top_left].y+=shift/2;
-						points_n[bottom_left].y+=shift/2;
+						//Shift left part down
+						points_n[top_left].y+=shift_y/2;
+						points_n[bottom_left].y+=shift_y/2;
 
-						//Shift bottom left down
-						points_n[bottom_right].y+=shift;
+						//Shift bottom right down
+						points_n[bottom_right].y+=shift_y;
 					}
-				}
+
+					if(top<bottom) //left=top
+					{
+						size_x=bottom;
+						//Distance quotient
+						float quot=bottom/top;
+						shift_x=dist_2D*quot-dist_2D;
+
+						points_n[bottom_left].x+=shift_x/2;
+						points_n[bottom_right].x+=shift_x/2;
+						points_n[top_right].x+=shift_x;
+					}
+					else
+					{
+						size_x=top;
+						float quot=left/right;
+						shift_x=dist_2D*quot-dist_2D;
+
+						points_n[top_left].x+=shift_x/2;
+						points_n[top_right].x+=shift_x/2;
+						points_n[bottom_right].x+=shift_x;
+					}
 
 
 
-				if(s==0)continue;
+					//EqualSize
+					if(size_x<size_y)
+					{
+						float fact=size_y/size_x;
+						float shift=dist_2D*fact-dist_2D;
+						points_n[top_right].x+=shift;
+						points_n[bottom_right].x+=shift;
+						shift_x+=shift;
+					}
+					else
+					{
+						float fact=size_x/size_y;
+						float shift=dist_2D*fact-dist_2D;
+						points_n[top_right].y+=shift;
+						points_n[bottom_right].y+=shift;
+						shift_y+=shift;
+					}
 
 
-				//cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),imgPtrDepth->image.size(), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
+			}
+			else
+			{
+				continue;
+			}
 
-				//cv::imshow("ROI_after",roi_mat);
-				cv::waitKey(1);
+
+				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),cv::Size(imgPtrDepth->image.cols+shift_x,imgPtrDepth->image.rows+shift_y), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
+
+				cv::imshow("ROI_after",roi_mat);
+				cv::waitKey(500);
 
 //				cv::circle(roi_mat,points_px[0],5,cv::Scalar(255,255,0),2);
 //				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
