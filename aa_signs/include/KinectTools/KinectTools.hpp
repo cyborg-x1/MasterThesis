@@ -226,6 +226,7 @@ namespace KinTo
 	 */
 	void RedFilter(const cv::Mat &bgr, cv::Mat &red_out);
 
+	unsigned char determineThreshold(const cv::Mat &bgr);
 
 } /* namespace KinTo */
 #endif /* KINECTTOOLS_H_ */

@@ -71,7 +71,7 @@ public:
 private:
 	std::vector<Match> matches;
 	std::vector<Proportion> proportions;
-	cv::Mat tmp, gray;
+	cv::Mat tmp, tmp2,gray;
 	cv::Point begin, end;
 	proportion_pair last_pair;
 	double max_proportion_diff;
@@ -84,6 +84,8 @@ private:
 	bool hasImportantPixels;
 
 	void constructor_extension(int threshold);
+	void removeAlpha(const cv::Mat &in, cv::Mat &out);
+
 	void templateMatching(Proportion fromTemplate, Proportion fromTarget,const cv::Mat& target,int threshold);
 public:
 	MatchTempProfile(const cv::Mat &tmp, std::string name, double minimal_target_size=.1, double max_target_size=0.25, uchar threshold=127, double max_proportion_diff=0.4, double min_coverage=0.6, double min_congruence=0.7);
@@ -98,8 +100,6 @@ public:
 	{
 		return matches;
 	}
-
-
 
 	void clearMatches()
 	{

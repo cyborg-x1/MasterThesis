@@ -10,13 +10,56 @@
 namespace KinTo
 {
 
+
+void MatchTempProfile::removeAlpha(const cv::Mat &in, cv::Mat &out)
+{
+
+	std::cout<<"Channels:"<<in.channels()<<std::endl;
+	if(in.channels()!=4)
+	{
+		out=in.clone();
+	}
+	else
+	{
+		int size_x=in.cols;
+		int size_y=in.rows;
+
+		std::cout<<"IN "<<in.channels()<<std::endl;
+		out=cv::Mat::zeros(in.size(),CV_8UC3);
+
+		for(int i=0;i<(size_x*size_y);i++)
+		{
+			int x=i/size_y;
+			int y=i-x*size_y;
+			if(in.at<Vec4uchar>(y,x)[3]==255)
+			{
+				out.at<Vec3uchar>(y,x)[0]=in.at<Vec4uchar>(y,x)[0];
+				out.at<Vec3uchar>(y,x)[1]=in.at<Vec4uchar>(y,x)[1];
+				out.at<Vec3uchar>(y,x)[2]=in.at<Vec4uchar>(y,x)[2];
+			}
+			else
+			{
+				out.at<Vec3uchar>(y,x)[0]=255;
+				out.at<Vec3uchar>(y,x)[1]=255;
+				out.at<Vec3uchar>(y,x)[2]=255;
+			}
+		}
+	}
+}
+
+
+
 void MatchTempProfile::constructor_extension(int threshold)
 {
+
+		tmp2=tmp.clone();
+		removeAlpha(tmp2,tmp);
+
 		cv::cvtColor(tmp, gray, CV_BGR2GRAY);
 		bool hasAlpha=false;
 
 		//Check if there is a alpha channel
-		switch(tmp.channels())
+		switch(tmp2.channels())
 		{
 		case 1:
 
@@ -25,7 +68,7 @@ void MatchTempProfile::constructor_extension(int threshold)
 
 			break;
 		case 4:
-			hasAlpha=true;
+			//hasAlpha=true;
 			break;
 		default:
 			std::cerr<<"Error: "<<__PRETTY_FUNCTION__<<" Unsupported amount of channels!"<<std::endl;
@@ -39,7 +82,6 @@ void MatchTempProfile::constructor_extension(int threshold)
 		//If it has an alpha channel set start to false
 		bool found_dia_start=!hasAlpha;
 		bool found_dia_end=false;
-
 
 		int last_change=0;
 		int last_size=0;
@@ -58,9 +100,8 @@ void MatchTempProfile::constructor_extension(int threshold)
 			{
 				if(found_dia_start)
 				{
-					if(tmp.at<Vec4uchar>(y_dia,x_dia)[3]==255 || !hasAlpha)
+					if(tmp2.at<Vec4uchar>(y_dia,x_dia)[3]==255 || !hasAlpha)
 					{
-
 						if(dark && gray.at<Vec1uchar>(y_dia,x_dia)[1]>=threshold)
 						{
 							int current_size=i-last_change;
@@ -73,6 +114,7 @@ void MatchTempProfile::constructor_extension(int threshold)
 								prop.length_c=current_size;
 								prop.proportion=(double)last_size/(double)current_size;
 								proportions.push_back(prop);
+								std::cout<<prop.proportion<<std::endl;
 							}
 							last_size=current_size;
 							last_change=i;
@@ -106,7 +148,7 @@ void MatchTempProfile::constructor_extension(int threshold)
 				}
 				else
 				{
-					if(tmp.at<Vec4uchar>(y_dia,x_dia)[3]==255)
+					if(tmp2.at<Vec4uchar>(y_dia,x_dia)[3]==255)
 					{
 						//get the first value of a non translucent pixel: dark/notDark;
 						dark=gray.at<Vec1uchar>(y_dia,x_dia)[0]<threshold;
@@ -173,8 +215,9 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 	if(scaling_factor<min_target_size || scaling_factor>max_target_size)return;
 
 	//scale the template picture
-	cv::Mat scaled_template, scaled_imp_template;
+	cv::Mat scaled_template, scaled_imp_template, scaled_alpha_tmp;
 	cv::resize(gray,scaled_template,cv::Size(0,0),scaling_factor,scaling_factor);
+	cv::resize(tmp2,scaled_alpha_tmp,cv::Size(0,0),scaling_factor,scaling_factor);
 
 	if(!important_pixels.empty())
 	{
@@ -204,8 +247,7 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 	int cnt_pixelsCmp=0;
 	int cnt_pixelsOk=0;
 	int cnt_pixelsNegative=0;
-
-
+	int pixelAlpha=0;
 
 	for(int i=0; i<(size_x*size_y);i++)
 	{
@@ -220,10 +262,18 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 		if(x_targ>=0 && x_targ<target.cols &&
 		   y_targ>=0 && y_targ<target.rows )
 		{
+
+
+			if(scaled_alpha_tmp.channels()==4 && scaled_alpha_tmp.at<Vec4uchar>(y_temp,x_temp)[3]==0)
+			{
+				pixelAlpha++;
+				continue;
+			}
 			cnt_pixelsCmp++;
 
+
 			bool val_tmp=scaled_template.at<Vec1uchar>(y_temp,x_temp)[0]>127;
-			bool val_trg=target.at<Vec1uchar>(y_targ,x_targ)[0]>127;
+			bool val_trg=target.at<Vec1uchar>(y_targ,x_targ)[0]>threshold;
 
 
 			if(val_tmp==val_trg)
@@ -241,15 +291,22 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 				}
 			}
 		}
-
-
 	}
 
 
 
+	double congruence=((double)cnt_pixelsOk-cnt_pixelsNegative/2)/(double)cnt_pixelsCmp;
+	double coverage=((double)cnt_pixelsCmp+pixelAlpha)/(double)(size_x*size_y);
 
-	double congruence=(double)cnt_pixelsOk/(double)cnt_pixelsCmp-cnt_pixelsNegative/2;
-	double coverage=(double)cnt_pixelsCmp/(double)(size_x*size_y);
+//	std::cout<<"congruence "<<congruence<<std::endl;
+//	std::cout<<"coverage   "<<coverage<<std::endl;
+//	std::cout<<"OK		   "<<cnt_pixelsOk<<std::endl;
+//	std::cout<<"Alpha      "<<pixelAlpha<<std::endl;
+//	std::cout<<"CMP        "<<cnt_pixelsCmp<<std::endl;
+//	std::cout<<"Negative   "<<cnt_pixelsNegative<<std::endl;
+//
+//
+//
 
 	if(congruence>=min_congruence && coverage>=min_coverage)
 	{
@@ -316,10 +373,12 @@ void proportionEnhancedTemplateMatching(std::vector<MatchTempProfile> &templates
 
 	cv::Mat blured;
 	cv::cvtColor(target, blured, CV_BGR2GRAY);
-	cv::equalizeHist(blured,blured);
+//	cv::equalizeHist(blured,blured);
+	cv::threshold(blured,blured,threshold,255,0);
 
-//	cv::GaussianBlur(blured,blured,cv::Size(3,3),2,2,0);
+	cv::GaussianBlur(blured,blured,cv::Size(3,3),2,2,0);
 
+//	cv::imshow("seek",blured);
 
 
 

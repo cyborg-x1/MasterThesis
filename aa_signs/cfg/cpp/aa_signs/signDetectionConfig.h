@@ -555,7 +555,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.x_min = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.x_min = -10000;
+      __default__.x_min = -300;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("x_min", "int", 0, "min x", "", &signDetectionConfig::x_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -565,7 +565,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.x_max = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.x_max = 10000;
+      __default__.x_max = 300;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("x_max", "int", 0, "max x", "", &signDetectionConfig::x_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -575,7 +575,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.y_min = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.y_min = -10000;
+      __default__.y_min = -200;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("y_min", "int", 0, "min y", "", &signDetectionConfig::y_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -585,7 +585,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.y_max = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.y_max = 10000;
+      __default__.y_max = 200;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("y_max", "int", 0, "max y", "", &signDetectionConfig::y_max)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
@@ -595,7 +595,7 @@ signDetectionConfig::GroupDescription<signDetectionConfig::DEFAULT, signDetectio
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       __max__.z_min = 10000;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
-      __default__.z_min = -10000;
+      __default__.z_min = 0;
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"
       Default.abstract_parameters.push_back(signDetectionConfig::AbstractParamDescriptionConstPtr(new signDetectionConfig::ParamDescription<int>("z_min", "int", 0, "min z", "", &signDetectionConfig::z_min)));
 //#line 254 "/opt/ros/fuerte/stacks/dynamic_reconfigure/src/dynamic_reconfigure/parameter_generator.py"

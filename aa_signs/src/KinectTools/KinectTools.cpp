@@ -1253,5 +1253,25 @@ namespace KinTo
 		}
 	}
 
+	unsigned char determineThreshold(const cv::Mat &bgr)
+	{
+		cv::Mat gray;
+		gray=bgr.clone();
+		cv::cvtColor( gray, gray , CV_RGB2GRAY);
+		std::set<unsigned char> values;
+
+		int size_x=bgr.cols, size_y=bgr.rows;
+		int y,x;
+		for (int i = 0; i < (size_x*size_y); i++)
+		{
+			//Move forward in vertical direction
+			x=i/size_y;
+			y=i-x*size_y;
+
+			values.insert(gray.at<Vec1uchar>(y,x)[0]);
+		}
+
+		return (*values.rbegin()+*values.begin())/2;
+	}
 
 } /* namespace KinTo */

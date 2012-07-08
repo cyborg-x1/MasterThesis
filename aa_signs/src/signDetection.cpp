@@ -188,18 +188,18 @@ public:
 								}
 
 								ROS_INFO("File: %s", picturePath.string().c_str());
-								cv::Mat img=cv::imread(picturePath.string());
+								cv::Mat img=cv::imread(picturePath.string(),CV_LOAD_IMAGE_UNCHANGED);
 								cv::Mat img_imp=cv::imread(picturePath2.string());
 								if(!img.empty())
 								{
 									if(!img_imp.empty())
 									{
 										ROS_INFO("Loaded img_imp: %s",file_imp.c_str());
-										tempProfiles.push_back(KinTo::MatchTempProfile(img,img_imp,name,0.08,0.2,127,0.2,0.7,0.8));
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,img_imp,name,0.08,0.2,127,0.2,0.7,0.87));
 									}
 									else
 									{
-										tempProfiles.push_back(KinTo::MatchTempProfile(img,name,0.08,0.2,127,0.2,0.7,0.8));
+										tempProfiles.push_back(KinTo::MatchTempProfile(img,name,0.08,0.2,127,0.2,0.7,0.87));
 										if(file_imp.size())
 										{
 											ROS_ERROR("Could not load given imp_file: %s, going on without it...",file_imp.c_str());
@@ -463,10 +463,10 @@ public:
 				};
 
 				cv::Point2f points_px[4];
-				points_px[top_left]=cv::Point2f(x-s,y-s); //top left
-				points_px[top_right]=cv::Point2f(x+s,y-s); //top right
-				points_px[bottom_right]=cv::Point2f(x+s,y+s); //bottom right
-				points_px[bottom_left]=cv::Point2f(x-s,y+s); //bottom left
+				points_px[top_left]=cv::Point2f(x-s,y-s);
+				points_px[top_right]=cv::Point2f(x+s,y-s);
+				points_px[bottom_right]=cv::Point2f(x+s,y+s);
+				points_px[bottom_left]=cv::Point2f(x-s,y+s);
 
 				cv::Point2f points_n[4];
 				points_n[top_left]=cv::Point2f(x-s+1,y-s+1);
@@ -486,7 +486,7 @@ public:
 				float left=distance_point3D<float>(tl_3d,bl_3d);
 				float right=distance_point3D<float>(tr_3d,br_3d);
 				float bottom=distance_point3D<float>(bl_3d,br_3d);
-				float dia=distance_point3D<float>(tl_3d,br_3d);
+		//		float dia=distance_point3D<float>(tl_3d,br_3d);
 
 
 				//2D distance
@@ -500,108 +500,61 @@ public:
 				//Something is wrong with the points when length is null so skip length null
 				if(!left || !right || !top || !bottom) continue;
 
-						if(left<right)
-						{
-							size_y=right;
-							//Distance quotient
-							float quot=right/left;
-							shift_y=dist_2D*quot-dist_2D;
+				if(left<right)
+				{
+					size_y=right;
+					//Distance quotient
+					float quot=right/left;
+					shift_y=dist_2D*quot-dist_2D;
 
-							//Shift right part down
-							points_n[top_right].y+=shift_y/2;
-							points_n[bottom_right].y+=shift_y/2;
+					//Shift right part down
+					points_n[top_right].y+=shift_y/2;
+					points_n[bottom_right].y+=shift_y/2;
 
-							//Shift bottom left down
-							points_n[bottom_left].y+=shift_y;
-						}
-						else
-						{
-							size_y=left;
-							float quot=left/right;
-							shift_y=dist_2D*quot-dist_2D;
+					//Shift bottom left down
+					points_n[bottom_left].y+=shift_y;
+				}
+				else
+				{
+					size_y=left;
+					float quot=left/right;
+					shift_y=dist_2D*quot-dist_2D;
 
-							//Shift left part down
-							points_n[top_left].y+=shift_y/2;
-							points_n[bottom_left].y+=shift_y/2;
+					//Shift left part down
+					points_n[top_left].y+=shift_y/2;
+					points_n[bottom_left].y+=shift_y/2;
 
-							//Shift bottom right down
-							points_n[bottom_right].y+=shift_y;
-						}
+					//Shift bottom right down
+					points_n[bottom_right].y+=shift_y;
+				}
 
+				float fact_t=left/top;
+				points_n[top_right].x+=dist_2D*fact_t-dist_2D;
+				points_n[bottom_right].x+=dist_2D*fact_t-dist_2D;
 
-
-
-						float fact_t=left/top;
-						points_n[top_right].x+=dist_2D*fact_t-dist_2D;
-						points_n[bottom_right].x+=dist_2D*fact_t-dist_2D;
+				shift_x+=dist_2D*fact_t-dist_2D;
 
 //
-//						if(top<bottom) //left=top
-//						{
-//							size_x=bottom;
-//							//Distance quotient
-//							float quot=bottom/top;
-//							shift_x=dist_2D*quot-dist_2D;
+//				std::cout<<"---------------------------------"<<std::endl;
+//				std::cout<<points_px[0].x<<"|"<<points_px[0].y<<std::endl;
+//				std::cout<<points_px[1].x<<"|"<<points_px[1].y<<std::endl;
+//				std::cout<<points_px[2].x<<"|"<<points_px[2].y<<std::endl;
+//				std::cout<<points_px[3].x<<"|"<<points_px[3].y<<std::endl;
 //
-//							points_n[bottom_left].x+=shift_x/2;
-//							points_n[bottom_right].x+=shift_x/2;
-//							points_n[top_right].x+=shift_x;
-//						}
-//						else
-//						{
-//							size_x=top;
-//							float quot=left/right;
-//							shift_x=dist_2D*quot-dist_2D;
 //
-//							points_n[top_left].x+=shift_x/2;
-//							points_n[top_right].x+=shift_x/2;
-//							points_n[bottom_right].x+=shift_x;
-//						}
-
-//					//EqualSize
-//					if(size_x<size_y)
-//					{
-//						float fact=size_y/size_x;
-//						loat shift=dist_2D*fact-dist_2D;
-//						points_n[top_right].x+=shift;
-//						points_n[bottom_right].x+=shift;
-//						shift_x+=shift;
-//					}
-//					else
-//					{
-//						float fact=size_x/size_y;
-//						float shift=dist_2D*fact-dist_2D;
-//						points_n[top_right].y+=shift;
-//						points_n[bottom_right].y+=shift;
-//						shift_y+=shift;
-//					}
+//				std::cout<<"---------------------------------"<<std::endl;
+//				std::cout<<points_n[0].x<<"|"<<points_n[0].y<<std::endl;
+//				std::cout<<points_n[1].x<<"|"<<points_n[1].y<<std::endl;
+//				std::cout<<points_n[2].x<<"|"<<points_n[2].y<<std::endl;
+//				std::cout<<points_n[3].x<<"|"<<points_n[3].y<<std::endl;
 
 
-
-
-
-
-
-				std::cout<<"---------------------------------"<<std::endl;
-				std::cout<<points_px[0].x<<"|"<<points_px[0].y<<std::endl;
-				std::cout<<points_px[1].x<<"|"<<points_px[1].y<<std::endl;
-				std::cout<<points_px[2].x<<"|"<<points_px[2].y<<std::endl;
-				std::cout<<points_px[3].x<<"|"<<points_px[3].y<<std::endl;
-
-
-				std::cout<<"---------------------------------"<<std::endl;
-				std::cout<<points_n[0].x<<"|"<<points_n[0].y<<std::endl;
-				std::cout<<points_n[1].x<<"|"<<points_n[1].y<<std::endl;
-				std::cout<<points_n[2].x<<"|"<<points_n[2].y<<std::endl;
-				std::cout<<points_n[3].x<<"|"<<points_n[3].y<<std::endl;
-
-
-				//Ignore to big changes they are not good.
+				//Ignore to big changes they are mostly not good.
 				if(roi_mat.cols*1.5<shift_x || roi_mat.rows*1.5<shift_y)continue;
 
 				cv::imshow("ROI_before",roi_mat);
 
-				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),cv::Size(roi_mat.cols+shift_x,roi_mat.rows+shift_y), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
+				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),cv::Size(roi_mat.cols*2,roi_mat.rows*2), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
 
 				cv::imshow("ROI_after",roi_mat);
 				cv::waitKey(1);
@@ -615,32 +568,48 @@ public:
 				if(new_template_matching)//proportion enhanced template matching
 				{
 
-					KinTo::proportionEnhancedTemplateMatching(tempProfiles,roi_mat,100);
-					int i=0;
+					KinTo::proportionEnhancedTemplateMatching(tempProfiles,roi_mat,KinTo::determineThreshold(roi_mat));
 					KinTo::Match bestMatch; //Best match for ROI
+					int bestCongruence=0;
 					bool matchfound=false;
+					//Get though the profiles to find the best match
 					for(std::vector<KinTo::MatchTempProfile>::iterator it_prof=tempProfiles.begin();it_prof!=tempProfiles.end();it_prof++)
 					{
-						KinTo::MatchTempProfile prof=(*it_prof);
-						const std::vector<KinTo::Match>& match_vec=prof.getMatches();
 
-						cv::Point last_center(-1,-1);
-						i++;
+						KinTo::Match bestLocalMatch;
+						float bestLocalCongruence=0;
+						int MatchCount=0;
+						bool localMatchfound=false;
 
-						bestMatch.congruence=0;
+						KinTo::MatchTempProfile prof=(*it_prof); //Get current profile
+						const std::vector<KinTo::Match>& match_vec=prof.getMatches(); //Get matches
 
 						for(std::vector<KinTo::Match>::const_reverse_iterator it_matches=match_vec.rbegin()
 								;it_matches!=match_vec.rend();it_matches++)
 						{
-
+							localMatchfound=true;
 							matchfound=true;
+							if(it_matches->congruence>0.8)MatchCount++;
 
-
-
-							if(it_matches->congruence>bestMatch.congruence)
+							if(it_matches->congruence>bestLocalCongruence)
 							{
+								bestLocalCongruence=it_matches->congruence;
+								bestLocalMatch=*it_matches;
+							}
+						}
 
-								bestMatch=*it_matches;
+
+						if(localMatchfound)
+						{
+
+							bestLocalCongruence+=0.1*MatchCount;
+
+							if(bestLocalCongruence>bestCongruence)
+							{
+								bestCongruence=bestLocalCongruence;
+								bestMatch=bestLocalMatch;
+								std::cout<<" fgfdg "<<bestLocalMatch.congruence<<std::endl;
+								std::cout<<" fgfdg "<<bestMatch.congruence<<std::endl;
 							}
 						}
 						it_prof->clearMatches();
@@ -665,6 +634,9 @@ public:
 				    // smooth it, otherwise a lot of false circles may be detected
 				    cv::GaussianBlur( gray, gray, cv::Size(5, 5), 2, 2 );
 				    std::vector<cv::Vec3f> circles;
+
+
+
 
 				    cv::HoughCircles(gray, circles, CV_HOUGH_GRADIENT, 2, gray.rows/4, 100, 50 );
 				    float lowest_global;
