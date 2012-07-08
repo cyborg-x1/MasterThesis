@@ -300,9 +300,7 @@ public:
 
 	cv::Point3f getPoint2D_3D(const cv::Mat &xy, const cv::Mat &z, int x, int y)
 	{
-
-		cv::Point3f(xy.at<KinTo::Vec2shrt>(y,x)[0],xy.at<KinTo::Vec2shrt>(y,x)[1],z.at<KinTo::Vec1shrt>(y,x)[0]);
-		return cv::Point3f();
+		return cv::Point3f(xy.at<KinTo::Vec2shrt>(y,x)[0],xy.at<KinTo::Vec2shrt>(y,x)[1],z.at<KinTo::Vec1shrt>(y,x)[0]);
 	}
 
 	template <class T>
@@ -422,7 +420,7 @@ public:
 			//Look through the surfaces...
 			for(std::vector<KinTo::Match_Roi>::iterator it=rois.begin();it!=rois.end();it++)
 			{
-				cv::Mat roi_mat=imgPtrRGB->image(it->roi);//.clone();
+				cv::Mat roi_mat=imgPtrRGB->image(it->roi).clone();
 				cv::Mat depth_roi=imgPtrDepth->image(it->roi);
 				cv::Mat angles_ok_roi=angles_ok(it->roi);
 				cv::Mat xy_roi=xy(it->roi);
@@ -448,11 +446,13 @@ public:
 						ok=false;
 					}
 
-					if(y-s<0 || x-s<0 || x+s>=roi_mat.cols || y+s>=roi_mat.rows)
+					if((y-s-1)<0 || (x-s-1)<0 || x+s>=roi_mat.cols || y+s>=roi_mat.rows)
 					{
 						ok=false;
 					}
 				}
+
+				if(s<4)continue;
 
 				enum
 				{
@@ -491,101 +491,126 @@ public:
 
 				//2D distance
 				int dist_2D=s*2+1;
+				int dist_2D_dia=sqrt(2)*dist_2D;
 
 				float shift_x=0,shift_y=0;
 				float size_x=0, size_y=0;
 
 
-				if(right!=0 && left!=0 	&& bottom!=0 && top!=0)
-				{
+				//Something is wrong with the points when length is null so skip length null
+				if(!left || !right || !top || !bottom) continue;
 
-					if(left<right)
-					{
-						size_y=right;
-						//Distance quotient
-						float quot=right/left;
-						shift_y=dist_2D*quot-dist_2D;
+						if(left<right)
+						{
+							size_y=right;
+							//Distance quotient
+							float quot=right/left;
+							shift_y=dist_2D*quot-dist_2D;
 
-						//Shift right part down
-						points_n[top_right].y+=shift_y/2;
-						points_n[bottom_right].y+=shift_y/2;
+							//Shift right part down
+							points_n[top_right].y+=shift_y/2;
+							points_n[bottom_right].y+=shift_y/2;
 
-						//Shift bottom left down
-						points_n[bottom_left].y+=shift_y;
-					}
-					else
-					{
-						size_y=left;
-						float quot=left/right;
-						shift_y=dist_2D*quot-dist_2D;
+							//Shift bottom left down
+							points_n[bottom_left].y+=shift_y;
+						}
+						else
+						{
+							size_y=left;
+							float quot=left/right;
+							shift_y=dist_2D*quot-dist_2D;
 
-						//Shift left part down
-						points_n[top_left].y+=shift_y/2;
-						points_n[bottom_left].y+=shift_y/2;
+							//Shift left part down
+							points_n[top_left].y+=shift_y/2;
+							points_n[bottom_left].y+=shift_y/2;
 
-						//Shift bottom right down
-						points_n[bottom_right].y+=shift_y;
-					}
-
-					if(top<bottom) //left=top
-					{
-						size_x=bottom;
-						//Distance quotient
-						float quot=bottom/top;
-						shift_x=dist_2D*quot-dist_2D;
-
-						points_n[bottom_left].x+=shift_x/2;
-						points_n[bottom_right].x+=shift_x/2;
-						points_n[top_right].x+=shift_x;
-					}
-					else
-					{
-						size_x=top;
-						float quot=left/right;
-						shift_x=dist_2D*quot-dist_2D;
-
-						points_n[top_left].x+=shift_x/2;
-						points_n[top_right].x+=shift_x/2;
-						points_n[bottom_right].x+=shift_x;
-					}
+							//Shift bottom right down
+							points_n[bottom_right].y+=shift_y;
+						}
 
 
 
-					//EqualSize
-					if(size_x<size_y)
-					{
-						float fact=size_y/size_x;
-						float shift=dist_2D*fact-dist_2D;
-						points_n[top_right].x+=shift;
-						points_n[bottom_right].x+=shift;
-						shift_x+=shift;
-					}
-					else
-					{
-						float fact=size_x/size_y;
-						float shift=dist_2D*fact-dist_2D;
-						points_n[top_right].y+=shift;
-						points_n[bottom_right].y+=shift;
-						shift_y+=shift;
-					}
+
+						float fact_t=left/top;
+						points_n[top_right].x+=dist_2D*fact_t-dist_2D;
+						points_n[bottom_right].x+=dist_2D*fact_t-dist_2D;
+
+//
+//						if(top<bottom) //left=top
+//						{
+//							size_x=bottom;
+//							//Distance quotient
+//							float quot=bottom/top;
+//							shift_x=dist_2D*quot-dist_2D;
+//
+//							points_n[bottom_left].x+=shift_x/2;
+//							points_n[bottom_right].x+=shift_x/2;
+//							points_n[top_right].x+=shift_x;
+//						}
+//						else
+//						{
+//							size_x=top;
+//							float quot=left/right;
+//							shift_x=dist_2D*quot-dist_2D;
+//
+//							points_n[top_left].x+=shift_x/2;
+//							points_n[top_right].x+=shift_x/2;
+//							points_n[bottom_right].x+=shift_x;
+//						}
+
+//					//EqualSize
+//					if(size_x<size_y)
+//					{
+//						float fact=size_y/size_x;
+//						loat shift=dist_2D*fact-dist_2D;
+//						points_n[top_right].x+=shift;
+//						points_n[bottom_right].x+=shift;
+//						shift_x+=shift;
+//					}
+//					else
+//					{
+//						float fact=size_x/size_y;
+//						float shift=dist_2D*fact-dist_2D;
+//						points_n[top_right].y+=shift;
+//						points_n[bottom_right].y+=shift;
+//						shift_y+=shift;
+//					}
 
 
-			}
-			else
-			{
-				continue;
-			}
 
 
-				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),cv::Size(imgPtrDepth->image.cols+shift_x,imgPtrDepth->image.rows+shift_y), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
+
+
+
+				std::cout<<"---------------------------------"<<std::endl;
+				std::cout<<points_px[0].x<<"|"<<points_px[0].y<<std::endl;
+				std::cout<<points_px[1].x<<"|"<<points_px[1].y<<std::endl;
+				std::cout<<points_px[2].x<<"|"<<points_px[2].y<<std::endl;
+				std::cout<<points_px[3].x<<"|"<<points_px[3].y<<std::endl;
+
+
+				std::cout<<"---------------------------------"<<std::endl;
+				std::cout<<points_n[0].x<<"|"<<points_n[0].y<<std::endl;
+				std::cout<<points_n[1].x<<"|"<<points_n[1].y<<std::endl;
+				std::cout<<points_n[2].x<<"|"<<points_n[2].y<<std::endl;
+				std::cout<<points_n[3].x<<"|"<<points_n[3].y<<std::endl;
+
+
+				//Ignore to big changes they are not good.
+				if(roi_mat.cols*1.5<shift_x || roi_mat.rows*1.5<shift_y)continue;
+
+				cv::imshow("ROI_before",roi_mat);
+
+				cv::warpPerspective(roi_mat, roi_mat, cv::getPerspectiveTransform(points_px,points_n),cv::Size(roi_mat.cols+shift_x,roi_mat.rows+shift_y), cv::INTER_CUBIC | cv::WARP_INVERSE_MAP);
 
 				cv::imshow("ROI_after",roi_mat);
-				cv::waitKey(500);
+				cv::waitKey(1);
 
 //				cv::circle(roi_mat,points_px[0],5,cv::Scalar(255,255,0),2);
 //				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
 //				cv::circle(roi_mat,points_px[2],5,cv::Scalar(255,0,0),2);
 //				cv::circle(roi_mat,points_px[3],5,cv::Scalar(0,0,255),2);
+
 
 				if(new_template_matching)//proportion enhanced template matching
 				{

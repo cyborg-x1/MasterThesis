@@ -220,7 +220,6 @@ void MatchTempProfile::templateMatching(Proportion fromTemplate, Proportion from
 		if(x_targ>=0 && x_targ<target.cols &&
 		   y_targ>=0 && y_targ<target.rows )
 		{
-			//TODO ignore translucent pixels
 			cnt_pixelsCmp++;
 
 			bool val_tmp=scaled_template.at<Vec1uchar>(y_temp,x_temp)[0]>127;
@@ -319,7 +318,7 @@ void proportionEnhancedTemplateMatching(std::vector<MatchTempProfile> &templates
 	cv::cvtColor(target, blured, CV_BGR2GRAY);
 	cv::equalizeHist(blured,blured);
 
-	cv::GaussianBlur(blured,blured,cv::Size(5,5),2,2,0);
+//	cv::GaussianBlur(blured,blured,cv::Size(3,3),2,2,0);
 
 
 
