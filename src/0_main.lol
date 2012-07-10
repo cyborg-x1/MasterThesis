@@ -10,7 +10,7 @@
 \contentsline {lstlisting}{\numberline {5.4}{crossDepthBlur - Function}}{42}{algorithm.1}
 \contentsline {lstlisting}{\numberline {5.5}createXYMap - Function}{44}{figure.caption.47}
 \contentsline {lstlisting}{\numberline {5.6}XYZrangeFilter - Function}{45}{figure.caption.47}
-\contentsline {lstlisting}{\numberline {5.7}{createAngleMap - Function}}{49}{figure.caption.50}
-\contentsline {lstlisting}{\numberline {5.8}{Bluring and Thresholding}}{51}{figure.caption.51}
-\contentsline {lstlisting}{\numberline {5.9}{Setting XML File}}{60}{figure.caption.60}
+\contentsline {lstlisting}{\numberline {5.7}{createAngleMap - Function}}{50}{figure.caption.50}
+\contentsline {lstlisting}{\numberline {5.8}{Bluring and Thresholding}}{52}{figure.caption.51}
+\contentsline {lstlisting}{\numberline {5.9}{Setting XML File}}{61}{figure.caption.60}
 \addvspace {10\p@ }

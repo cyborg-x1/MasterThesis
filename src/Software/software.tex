@@ -557,23 +557,53 @@ void XYZrangeFilter(const cv::Mat &depth,
 
 
 \subsection{Normal Calculation}
-With the depth image and the xy map the normal of each pixel can be calculated. This is done with the scalar product.
+With the depth image and the xy map the normal of each pixel can be calculated. This is done by the scalar product
+shown (figure \vref{eq:scalar}).
 
 \begin{equation}
- \vec{N} = \left( \begin{array}{c} x_u \\ y_u \\ z_u \end{array} \right) \times \left( \begin{array}{c} x_v \\ y_v \\ z_v \end{array} \right) 
-= \left( \begin{array}{c} y_u \cdot z_v - z_u \cdot y_v \\ z_u \cdot x_v - z_v \cdot x_u \\ x_u \cdot y_v - y_u \cdot x_v \end{array}\right)
+ \vec{N} =        \left( \begin{array}{c} x_u                           \\                           y_u \\ z_u                           \end{array} \right) 
+           \times \left( \begin{array}{c} x_v                           \\                           y_v \\ z_v                           \end{array} \right) 
+         =        \left( \begin{array}{c} y_u \cdot z_v - z_u \cdot y_v \\ z_u \cdot x_v - z_v \cdot x_u \\ x_u \cdot y_v - y_u \cdot x_v \end{array}\right)
+\label{eq:scalar}
 \end{equation}
 
 
-
-
 The current algorithm tries to calculate two normals, one calculated with the vector from the current pixel to the top and right 
-($\vec{N_{tr}}=\vec{V_t}\times\vec{V_r}$) and one to
-the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). 
-If both normals can be calculated it takes the average of both normals (see figure \vref{figure:normals}).
+($\vec{N_{tr}}=\vec{V_t}\times\vec{V_r}$) and one to the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). To check
+if the vectors can be calculated, the data from the neighborhood map is used again, so the values from equation 
+\vref{eq:neighbors_bit} are needed again for equations \vref{eq:vec_tr} and \vref{eq:vec_bl}. 
+
+
 \begin{equation}
-	\vec{N} = \frac{\vec{N_{tr}} + \vec{N_{bl}}}{2}
-\end{equation} 
+\begin{split}
+ \vec{N_{tr}}(x,y)=    \vec{V_t}(x,y) \times \vec{V_r}(x,y) =
+                  \left( \begin{array}{c}   X(x,y-1) -  X(x,y)  \\ Y(x,y-1) -  Y(x,y) \\ D(x,y-1) -  D(x,y)\end{array} \right) 
+           \times \left( \begin{array}{c}   X(x+1,y) -  X(x,y)  \\ Y(x+1,y) -  Y(x,y) \\ D(x+1,y) -  D(x,y)\end{array} \right)
+			\\\mbox{(When $b_1(x,y)=true$ and $b_3(x,y)=true$)}
+\end{split}
+\label{eq:vec_tr}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+ \vec{N_{bl}}(x,y)=    \vec{V_b}(x,y) \times \vec{V_l}(x,y) =
+                  \left( \begin{array}{c}   X(x,y+1) -  X(x,y)  \\ Y(x,y+1) -  Y(x,y) \\ D(x,y+1) -  D(x,y)\end{array} \right) 
+           \times \left( \begin{array}{c}   X(x-1,y) -  X(x,y)  \\ Y(x-1,y) -  Y(x,y) \\ D(x-1,y) -  D(x,y)\end{array} \right)
+			\\\mbox{(When $b_5(x,y)=true$ and $b_7(x,y)=true$)}
+\end{split}
+\label{eq:vec_bl}
+\end{equation}
+
+If both normals can be calculated it takes the average of both normals (see figure \vref{figure:normals}) with equation 
+\vref{eq:vec_avg}.
+
+\begin{gather}
+	\vec{N}(x,y) = \frac{\vec{N_{tr}(x,y)} + \vec{N_{bl}}(x,y)}{2}\nonumber\\
+\mbox{\hspace{0.5cm}(When $b_1(x,y)=true$, $b_3(x,y)=true$, $b_5(x,y)=true$ and $b_7(x,y)=true$)}
+\label{eq:vec_avg} 
+\end{gather} 
+
+
 \begin{figure}[H]
 \begin{center}
   \includegraphics[width=\textwidth/3]{normals.pdf}
@@ -595,9 +625,21 @@ are the angles to the x,y, and z-axis of the normal vector $\vec{N}$ as seen in 
 \end{center} 
 \end{figure}
 
-$$ \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  $$
-$$ \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  $$
-$$ \gamma = \arccos \frac{N_z}{\left|\vec{N}\right|}  $$
+\begin{equation}
+ \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  
+\label{eq:angle_a}
+\end{equation}
+
+\begin{equation}
+ \gamma = \arccos \frac{N_z}{\left|\vec{N}\right|}  
+\label{eq:angle_b}
+\end{equation}
+
+\begin{equation}
+ \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  
+\label{eq:angle_g}
+\end{equation}
+
 
 In the application the arcus cosinus values are precalculated to save computational time.
 The possible input range for the arcus cosinus function lies between -1 and 1, so it was decided
@@ -606,14 +648,27 @@ to precalculate 2000 values for the lookup table. This means the possible input 
 The precalulated values also include the transformation from radian to degree and are stored as 
 integer values which were multiplied by 100 to save two digits behind the comma.
 
-So the precalculation for the values $v_i$ in the array was done with the following formula:
+So the precalculation for the values in the arcus cosinus look-up table $acos_k$ 
+in the array are done with equation \vref{eq:acos_precalc}.
 
-$v_i=\lfloor \arccos ((i-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor$
+\begin{equation}
+	acos_k=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
+	\mbox{\hspace{0.5cm} (Where 0<=k<=1000)}
+	\label{eq:acos_precalc}
+\end{equation}
 
 To obtain the values from the array, the result of the devision from a vector part through its length
 must be multiplied with 1000 and added to 1000. To be able to display the angles easily for debuging 
 it was later decided to put the values in a matrix for an RGB image, so each value has to be devided 
 by 100 again because unsigned char only supports values from 0 to 255.
+
+For one vector in the normal map $\vec{N}$ this results in the equations\ldots
+
+\begin{equation}
+	
+\end{equation} 
+
+
 
 The following listing \vref{lst:AngleMap} shows the code for the angle calculation function.
 
