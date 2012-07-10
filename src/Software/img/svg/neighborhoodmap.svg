@@ -9,8 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="208.66684"
-   height="107.45481"
+   width="198.91919"
+   height="82.766121"
    id="svg3255"
    version="1.1"
    inkscape:version="0.48.2 r9819"
@@ -24,9 +24,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="121.84497"
-     inkscape:cy="31.307663"
+     inkscape:zoom="5.6"
+     inkscape:cx="113.6273"
+     inkscape:cy="29.241181"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -38,7 +38,7 @@
      inkscape:window-width="1920"
      inkscape:window-height="1025"
      inkscape:window-x="-2"
-     inkscape:window-y="-3"
+     inkscape:window-y="1197"
      inkscape:window-maximized="1"
      fit-margin-top="10"
      fit-margin-left="10"
@@ -52,7 +52,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -60,7 +60,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-255.47766,-108.9336)">
+     transform="translate(-260.38243,-122.25899)">
     <rect
        style="fill:#ffff00;fill-opacity:1;stroke:#000000;stroke-width:0.36520642"
        id="rect2985"
@@ -216,19 +216,14 @@
        xml:space="preserve"
        style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
        x="301.5311"
-       y="161.95601"
+       y="165.95601"
        id="text3375"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan3377"
          x="301.5311"
-         y="161.95601"
-         style="font-size:6px;text-align:center;text-anchor:middle">current</tspan><tspan
-         sodipodi:role="line"
-         x="301.5311"
-         y="169.45601"
+         y="165.95601"
          id="tspan3379"
-         style="font-size:6px;text-align:center;text-anchor:middle">pixel</tspan></text>
+         style="font-size:6px;text-align:center;text-anchor:middle">(x,y)</tspan></text>
     <rect
        style="fill:#ffffff;fill-opacity:1;stroke:#ff0000;stroke-width:0.36520642"
        id="rect2985-6-0"
@@ -245,49 +240,29 @@
        y="139.63873" />
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="367.71481"
-       y="141.28972"
-       id="text3417"
-       sodipodi:linespacing="125%"><tspan
+       x="364.87802"
+       y="151.91714"
+       id="text3417"><tspan
          sodipodi:role="line"
-         id="tspan3419"
-         x="367.71481"
-         y="141.28972">Pixel is a close neighbor</tspan><tspan
-         sodipodi:role="line"
-         x="367.71481"
-         y="151.28972"
-         id="tspan3454">|pixel - current pixel|&lt;4 </tspan><tspan
-         sodipodi:role="line"
-         x="367.71481"
-         y="161.28972"
-         id="tspan3456">&amp;&amp; pixel != 0</tspan></text>
+         x="364.87802"
+         y="151.91714"
+         id="tspan3456"
+         style="font-size:6px">b<tspan
+   style="font-size:6px;baseline-shift:sub"
+   id="tspan3036">i</tspan>=1</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="367.41516"
-       y="178.36107"
-       id="text3417-3"
-       sodipodi:linespacing="125%"><tspan
-         sodipodi:role="line"
-         id="tspan3419-5"
-         x="367.41516"
-         y="178.36107">|pixel - current pixel|&gt;=4</tspan><tspan
-         sodipodi:role="line"
-         x="367.41516"
-         y="188.36107"
-         id="tspan3026">|| pixel == 0</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="280.71429"
-       y="206.29076"
+       x="395.11407"
+       y="166.64227"
        id="text3458"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3460"
-         x="280.71429"
-         y="206.29076">0b<tspan
+         x="395.11407"
+         y="166.64227">P<tspan
+   style="font-size:65.00091553%;baseline-shift:sub"
+   id="tspan3166">n</tspan>=0b<tspan
    style="fill:#00ff00"
    id="tspan3462">111</tspan><tspan
    style="fill:#ff0000"
@@ -298,14 +273,37 @@
    id="tspan3474">0</tspan>11</tspan></tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="264.82141"
-       y="124.6836"
-       id="text3470"
+       x="364.3331"
+       y="178.51849"
+       id="text3417-3"><tspan
+         sodipodi:role="line"
+         x="364.3331"
+         y="178.51849"
+         id="tspan3456-7"
+         style="font-size:6px">b<tspan
+   style="font-size:6px;baseline-shift:sub"
+   id="tspan3036-3">i</tspan>=0</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
+       x="351.31348"
+       y="153.49625"
+       id="text3141"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan3472"
-         x="264.82141"
-         y="124.6836">For all image pixels != 0</tspan></text>
+         id="tspan3143"
+         x="351.31348"
+         y="153.49625">i</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
+       x="351.31348"
+       y="180.41829"
+       id="text3141-3"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3143-1"
+         x="351.31348"
+         y="180.41829">i</tspan></text>
   </g>
 </svg>
