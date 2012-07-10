@@ -549,7 +549,7 @@ public:
 //				std::cout<<points_n[3].x<<"|"<<points_n[3].y<<std::endl;
 
 
-				//Ignore to big changes they are mostly not good.
+				//Ignore to big changes they are mostly no good.
 				if(roi_mat.cols*1.5<shift_x || roi_mat.rows*1.5<shift_y)continue;
 
 				cv::imshow("ROI_before",roi_mat);
@@ -559,10 +559,6 @@ public:
 				cv::imshow("ROI_after",roi_mat);
 				cv::waitKey(1);
 
-//				cv::circle(roi_mat,points_px[0],5,cv::Scalar(255,255,0),2);
-//				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
-//				cv::circle(roi_mat,points_px[2],5,cv::Scalar(255,0,0),2);
-//				cv::circle(roi_mat,points_px[3],5,cv::Scalar(0,0,255),2);
 
 
 				if(new_template_matching)//proportion enhanced template matching
@@ -735,7 +731,14 @@ public:
 				    }
 				}
 
+				cv::circle(imgPtrRGB->image(r),points_px[0],5,cv::Scalar(255,255,0),2);
+				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
+				cv::circle(roi_mat,points_px[2],5,cv::Scalar(255,0,0),2);
+				cv::circle(roi_mat,points_px[3],5,cv::Scalar(0,0,255),2);
+
 			}
+
+
 
 
 			for(std::vector<KinTo::Match_Roi>::iterator it=rois.begin();it!=rois.end();it++)
