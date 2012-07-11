@@ -320,25 +320,25 @@ displays a result.
 	\For{$j=0 \to d$} 
 		\If {b$_t = true$} 
 			\State {$b_t \gets b_1(x,y-j)$}
-			\State {$sum=sum+D_{in}(x,y-j)$}
-			\State {$cnt=cnt+1$}
+			\State {$sum \gets sum+D_{in}(x,y-j)$}
+			\State {$cnt \gets cnt+1$}
 		\EndIf
 		\If {b$_r = true$} 
 			\State {$b_r \gets b_3(x+j,y)$}
-			\State {$sum=sum+D_{in}(x+j,y)$}
-			\State {$cnt=cnt+1$}
+			\State {$sum \gets sum+D_{in}(x+j,y)$}
+			\State {$cnt \gets cnt+1$}
 		\EndIf
 		\If {b$_b = true$} 
 			\State {$b_b \gets b_5(x,y+j)$}
-			\State {$sum=sum+D_{in}(x,y+j)$}
-			\State {$cnt=cnt+1$}
+			\State {$sum \gets sum+D_{in}(x,y+j)$}
+			\State {$cnt \gets cnt+1$}
 		\EndIf
 		\If {b$_l = true$} 
 			\State {$b_l \gets b_7(x-j,y)$}
-			\State {$sum=sum+D_{in}(x-j,y)$}
-			\State {$cnt=cnt+1$}
+			\State {$sum \gets sum+D_{in}(x-j,y)$}
+			\State {$cnt \gets cnt+1$}
 		\EndIf 
-		\State{$D_{out}(x,y)=\frac{sum}{cnt}$}
+		\State{$D_{out}(x,y) \gets \frac{sum}{cnt}$}
 	\EndFor
 \EndFor
 
@@ -574,25 +574,18 @@ if the vectors can be calculated, the data from the neighborhood map is used aga
 \vref{eq:neighbors_bit} are needed again for equations \vref{eq:vec_tr} and \vref{eq:vec_bl}. 
 
 
-\begin{equation}
-\begin{split}
+\begin{gather}
  \vec{N_{tr}}(x,y)=    \vec{V_t}(x,y) \times \vec{V_r}(x,y) =
                   \left( \begin{array}{c}   X(x,y-1) -  X(x,y)  \\ Y(x,y-1) -  Y(x,y) \\ D(x,y-1) -  D(x,y)\end{array} \right) 
-           \times \left( \begin{array}{c}   X(x+1,y) -  X(x,y)  \\ Y(x+1,y) -  Y(x,y) \\ D(x+1,y) -  D(x,y)\end{array} \right)
+           \times \left( \begin{array}{c}   X(x+1,y) -  X(x,y)  \\ Y(x+1,y) -  Y(x,y) \\ D(x+1,y) -  D(x,y)\end{array} \right)\nonumber
 			\\\mbox{(When $b_1(x,y)=true$ and $b_3(x,y)=true$)}
-\end{split}
-\label{eq:vec_tr}
-\end{equation}
-
-\begin{equation}
-\begin{split}
+\label{eq:vec_tr}\\
  \vec{N_{bl}}(x,y)=    \vec{V_b}(x,y) \times \vec{V_l}(x,y) =
                   \left( \begin{array}{c}   X(x,y+1) -  X(x,y)  \\ Y(x,y+1) -  Y(x,y) \\ D(x,y+1) -  D(x,y)\end{array} \right) 
-           \times \left( \begin{array}{c}   X(x-1,y) -  X(x,y)  \\ Y(x-1,y) -  Y(x,y) \\ D(x-1,y) -  D(x,y)\end{array} \right)
+           \times \left( \begin{array}{c}   X(x-1,y) -  X(x,y)  \\ Y(x-1,y) -  Y(x,y) \\ D(x-1,y) -  D(x,y)\end{array} \right)\nonumber
 			\\\mbox{(When $b_5(x,y)=true$ and $b_7(x,y)=true$)}
-\end{split}
 \label{eq:vec_bl}
-\end{equation}
+\end{gather}
 
 If both normals can be calculated it takes the average of both normals (see figure \vref{figure:normals}) with equation 
 \vref{eq:vec_avg}.
@@ -614,8 +607,9 @@ If both normals can be calculated it takes the average of both normals (see figu
 
 \subsection{Angle Calculation}
 
-The angles from vectors to the axes are basically calculated by the follwing formulas. Where $\alpha$, $\beta$ and $\gamma$ 
-are the angles to the x,y, and z-axis of the normal vector $\vec{N}$ as seen in figure \vref{figure:NormalAngles}.
+The angles from vectors to the axes are basically calculated by the equations \ref{eq:angle_a}, \ref{eq:angle_b} and
+\vref{eq:angle_g}. Where $\alpha$, $\beta$ and $\gamma$ are the angles to the x,y, and z-axis 
+of the normal vector $\vec{N}$ as seen in figure \vref{figure:NormalAngles}.
 
 \begin{figure}[H]
 \begin{center}
@@ -625,20 +619,14 @@ are the angles to the x,y, and z-axis of the normal vector $\vec{N}$ as seen in 
 \end{center} 
 \end{figure}
 
-\begin{equation}
+\begin{align}
  \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  
-\label{eq:angle_a}
-\end{equation}
-
-\begin{equation}
+\label{eq:angle_a}\\
  \gamma = \arccos \frac{N_z}{\left|\vec{N}\right|}  
-\label{eq:angle_b}
-\end{equation}
-
-\begin{equation}
+\label{eq:angle_b}\\
  \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  
 \label{eq:angle_g}
-\end{equation}
+\end{align}
 
 
 In the application the arcus cosinus values are precalculated to save computational time.
@@ -652,8 +640,8 @@ So the precalculation for the values in the arcus cosinus look-up table $acos_k$
 in the array are done with equation \vref{eq:acos_precalc}.
 
 \begin{equation}
-	acos_k=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
-	\mbox{\hspace{0.5cm} (Where 0<=k<=1000)}
+	pacos_k=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
+	\mbox{\hspace{0.5cm} (Where 0<=k<=2000)}
 	\label{eq:acos_precalc}
 \end{equation}
 
@@ -662,11 +650,26 @@ must be multiplied with 1000 and added to 1000. To be able to display the angles
 it was later decided to put the values in a matrix for an RGB image, so each value has to be devided 
 by 100 again because unsigned char only supports values from 0 to 255.
 
-For one vector in the normal map $\vec{N}$ this results in the equations\ldots
+For one vector in the normal map $\vec{N}(x,y)$ this results in the equations \ref{eq:angleX}, \ref{eq:angleY} and
+\vref{eq:angleZ} for the array index k.
 
-\begin{equation}
-	
-\end{equation} 
+\begin{align}
+	k_\alpha(x,y) = \left\lfloor\frac{N_X(x,y)*1000}{\sqrt{N_X(x,y)^2+N_Y(x,y)^2+N_Z(x,y)^2}}+1000 \right\rfloor
+	\label{eq:angleX}\\
+	k_\beta(x,y) = \left\lfloor\frac{N_Y(x,y)*1000}{\sqrt{N_X(x,y)^2+N_Y(x,y)^2+N_Z(x,y)^2}}+1000 \right\rfloor
+	\label{eq:angleY}\\
+	k_\gamma(x,y) = \left\lfloor\frac{N_Z(x,y)*1000}{\sqrt{N_X(x,y)^2+N_Y(x,y)^2+N_Z(x,y)^2}}+1000 \right\rfloor
+	\label{eq:angleZ}
+\end{align} 
+
+With the values for k the angles can be gathered from the look-up table resulting in the final equations \ref{eq:anglePX},
+\ref{eq:anglePY} and \vref{eq:anglePZ}.
+
+\begin{align}
+	\alpha(x,y)=\frac{pacos({k_\alpha(x,y)})}{100}\label{eq:anglePX}\\
+	\beta(x,y)=\frac{pacos({k_\beta(x,y)})}{100}\label{eq:anglePY}\\
+	\gamma(x,y)=\frac{pacos({k_\gamma(x,y)})}{100}\label{eq:anglePZ}	
+\end{align}
 
 
 
@@ -717,14 +720,14 @@ angle picture is shown in figure \vref{figure:AnglesBlured}.
 To get only surfaces, which are interesting, a angle filter was created. It's input parameters
 are the minimum and maxium for each angle. The output of this function is a grascale image
 where pixels all $P_o$ are initialized with 0 and those with suitable angles 
-for the input pixel $P_i$ get the value 255.
+for the input angles to get the value 255.
 
- \[
- 	\forall P_i(x,y) | (\alpha_i<=max\_\alpha \wedge \alpha_i>=min\_\alpha) \wedge
- 	(\beta_i<=max\_\beta \wedge \beta_i>=min\_\beta) \]\[ \wedge (\gamma_i<=max\_\gamma \wedge \gamma_i>=min\_\gamma)
- \]\[
- 	\implies P_o(x,y) = 255;
- \] 
+\begin{gather}
+(min\_\alpha  <= \alpha(x,y) <=max\_\alpha ) \wedge \nonumber\\ 
+(min\_\beta  <= \beta(x,y) <=max\_\beta )\wedge\nonumber\\
+(min\_\gamma  <= \gamma(x,y) <=max\_\gamma )\nonumber\\
+\implies P_o(x,y) = 255;
+\end{gather}
 
 The function also features another mode, where the output image contains the suitable angles instead of only 255.
 But this mode is not used in the project. 
