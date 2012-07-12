@@ -719,14 +719,14 @@ angle picture is shown in figure \vref{figure:AnglesBlured}.
 
 To get only surfaces, which are interesting, a angle filter was created. It's input parameters
 are the minimum and maxium for each angle. The output of this function is a grascale image
-where pixels all $P_o$ are initialized with 0 and those with suitable angles 
+where pixels all $P_{ok}$ are initialized with 0 and those with suitable angles 
 for the input angles to get the value 255.
 
 \begin{gather}
 (min\_\alpha  <= \alpha(x,y) <=max\_\alpha ) \wedge \nonumber\\ 
 (min\_\beta  <= \beta(x,y) <=max\_\beta )\wedge\nonumber\\
 (min\_\gamma  <= \gamma(x,y) <=max\_\gamma )\nonumber\\
-\implies P_o(x,y) = 255;
+\implies P_{ok}(x,y) = 255;
 \end{gather}
 
 The function also features another mode, where the output image contains the suitable angles instead of only 255.
@@ -735,8 +735,9 @@ But this mode is not used in the project.
 \subsection{Surface Segmentation}
 
 Before the begining with segmenting the surfaces the picture containing the pixels, which show correct angles
-is blured to remove empty pixels or columns of empty pixels, which seperate surfaces belonging together. After
-bluring them, the threshold function is used to bring all pixels, which are not zero, to the value 255. 
+is blured with an aperture of $5 \times 5$ to remove empty pixels or columns of empty pixels, 
+which seperate surfaces belonging together. After bluring them, the threshold function is used to bring 
+all pixels, which are not zero, to the value 255 (see equation \vref{eq:thresholdSeg}).
 The code is shown in listing \vref{lst:blurAthres}.
 
 \begin{lstlisting}[caption={Bluring and Thresholding}\label{lst:blurAthres},language=c++]
@@ -744,24 +745,61 @@ The code is shown in listing \vref{lst:blurAthres}.
 	cv::threshold(angles_ok,angles_ok,1,255,0);
 \end{lstlisting}
 
+\begin{equation}
+	P_{ok}(x,y)>=1 \implies P_{ok}(x,y)=255
+	\label{eq:thresholdSeg}
+\end{equation}
+
+
 The segmentation algorithm uses a class named range to outline pixel blobs in regions. The class contains integer 
 variables for the minimal and maximal x and y values. The algorithm seeks for pixels in the 
-neighborhood-map which are not zero, as shown in the chapter \vref{sect:blurFilter}, this means it has neighbors. 
+which are not zero in the $P_{ok}$-image and have neighbors.
 
-Then it starts to look if there is neighbor with the following order for the pixels, top, top-left, left and bottom-left.
-If it finds a pixel, which is a neighbor, then it gathers it's ID in the IDs matrix, sets the current pixel in the
-ID matrix to this ID and calls the update function of the corresponding range object, which updates minimum and
-maximum values. After that it checks, if the rest of the pixels not checked in step one are neighbors. 
-If it finds a neighbor which has a different ID, it creates a relation between them inside a set, 
-a special form of vector which allows only unique items. If this is done for each of the remaining neighbors, 
-the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn,t have a neighbor at the mentioned 
-locations a new ID and range object are created. The range objects minimum and maximum x and y are initialized to the 
-values of the current pixel. This part of the algorithm is visualized in figure \vref{figure:segment}.
+Then it starts to look if there is neighbor in the following pixels, top($b_1$), top-left($b_0$), 
+left($b_7$) and bottom-left($b_6$) ($b_i$ from equation \vref{eq:neighbors_bit} is used here).
+If it finds a pixel, which is a neighbor and has a suitable angle, then it gathers it's ID in the IDs matrix, 
+sets the current pixel $P_{ID}(x,y)$ in the ID matrix to this ID and calls the update function of the corresponding range object, 
+which updates minimum and maximum values. After that it checks, if the rest of the pixels not checked in step one are 
+neighbors and suitable angles. If it finds one which has a different ID, it creates a relation $R$ between 
+them inside a set, a special form of vector which allows only unique items. If this is done for each of the remaining 
+neighbors, the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn,t have a neighbor at the 
+mentioned locations a new ID and range object are created. The range objects minimum and maximum x and y are initialized 
+to the values of the current pixel. This part of the algorithm is visualized in figure \vref{figure:segment}.
+
+\begin{algorithm}[H]
+
+	\begin{algorithmic}
+\ForAll{x,y} 
+	\State {$b_t  \gets b_1(x,y) $}
+	\State {$b_tl \gets b_0(x,y) $}
+	\State {$b_l  \gets b_7(x,y) $}
+	\State {$b_bl \gets b_6(x,y) $}
+	\State {$p  \gets 0$}
+		\If{$b_t=true \wedge P_{id}(x,y-1)\neq 0 \wedge P_{ok}(x,y-1)$}
+				\State {$P_{id}(x,y) \gets P_{id}(x,y-1)$}
+				\State {$p \gets 1$}
+		\ElsIf{$b_tl=true \wedge P_{id}(x-1,y-1)\neq 0 \wedge P_{ok}(x-1,y-1)$}
+				\State {$P_{id}(x,y) \gets P_{id}(x-1,y-1)$}
+				\State {$p \gets 2$}
+		\ElsIf{$b_l=true \wedge P_{id}(x-1,y)\neq 0 \wedge P_{ok}(x-1,y)$}
+				\State {$P_{id}(x,y) \gets P_{id}(x-1,y)$}
+				\State {$p \gets 3$}
+		\ElsIf{$b_bl=true \wedge P_{id}(x-1,y+1)\neq 0 \wedge P_{ok}(x-1,y+1)$}
+				\State {$P_{id}(x,y) \gets P_{id}(x-1,y+1)$}
+				\State {$p \gets 4$}
+		\EndIf
+\EndFor
+
+	\end{algorithmic}
+ \caption{Segmentation: }
+ \label{alg:crossblur}
+\end{algorithm}
+
 
 \begin{figure}[H]
 \begin{center}
   \includegraphics[width=\textwidth]{SurfaceSegmentation.pdf}
-  \caption{Segmentation Part 1}
+  \caption{Segmentation: Getting ID - Creating Relations}
   \label{figure:segment}
 \end{center}
 \end{figure}
@@ -777,7 +815,7 @@ are filtered by size and stored in the output array, while the range objects are
 \begin{figure}[H]
 \begin{center}
   \includegraphics[width=\textwidth]{merging.pdf}
-  \caption{Merging Range Objects}
+  \caption{Segmentation: Merging Range Objects}
   \label{figure:Merging}
 \end{center}
 \end{figure}
@@ -955,3 +993,5 @@ be marked in the picture with the first letter of it's name. And then the arrays
 which hold the Match objects for each profile, are cleared for the next region.
 
 This is the reason why the application only supports \textbf{one sign per surface} at the moment.
+
+\section{Results}
