@@ -221,8 +221,10 @@ when the value from the difference of the steps is smaller than or equal to one.
 to eliminate the noise created by the fractals (shown in figure \vref{figure:noise}) 
 which can create a step difference of up to 3 inside a surface. So the value of a pixel $P_n$ in the neighborhood map
 can be determined as seen in equations \vref{eq:neighbors_xi} to \vref{eq:neighbors}, where $b_i$ is a bit of this value, 
-$D$ the value of a pixel in the depth map, while $u$ and $v$ represent the width and height of the image. 
-
+$S$ the value of a pixel in the step map, while $u$ and $v$ represent the width and height of the image. With this procedure 
+a neighborhood map is created which contains a 8-bit value for each pixel, where each bit shows the neighborhood 
+condition to one of the eight pixels $(x_i,y_i)$ around the current one(x,y). An example and the numbering of the pixels $i$ 
+can be seen in figure \vref{figure:neighborhoodmap}.
 
 \begin{equation}
  x_i = \left\{ 
@@ -252,7 +254,7 @@ $D$ the value of a pixel in the depth map, while $u$ and $v$ represent the width
 \begin{equation}
  b_i = \left\{ 
 	 \begin{array}{ll}
-	         1 & \left|D(x_i,y_i)-D(x,y)\right|<4  \wedge   D(x_i,y_i) \neq 0 \wedge 0<=x_i<u  \wedge 0<=y_i<v\\
+	         1 & \left|S(x_i,y_i)-S(x,y)\right|<4  \wedge   S(x_i,y_i) \neq 0 \wedge 0<=x_i<u  \wedge 0<=y_i<v\\
 	         0 & \mbox{otherwise} 
 	 \end{array}
 \right.        
@@ -270,8 +272,6 @@ $D$ the value of a pixel in the depth map, while $u$ and $v$ represent the width
 \end{equation}
  
  
-With this formula a neighborhood map is created which contains a 8-bit value for each pixel, where each bit shows the neighborhood 
-condition to one of the eight pixels around the current one (an example can be seen in figure \vref{figure:neighborhoodmap}).
 
 \begin{figure}[H]
 \begin{center}
@@ -445,9 +445,6 @@ Y(x,y)=\frac{(y-center_y) \cdot D(x,y)}{f_y}
 \label{eq:Y}
 \end{equation}
 
-
-
-
 The code for this is mostly copied from the rgbxyz-point cloud nodelet from ROS with a few changes.
 All of the float values are multiplied by 100 and converted to integer. This is used to increase the accuracy while
 calculating a integer value for x and y coordinates. The coordinates itself are stored as short. This was done to save
@@ -569,18 +566,18 @@ shown (figure \vref{eq:scalar}).
 
 
 The current algorithm tries to calculate two normals, one calculated with the vector from the current pixel to the top and right 
-($\vec{N_{tr}}=\vec{V_t}\times\vec{V_r}$) and one to the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). To check
+($\vec{N}_{tr}=\vec{V_t}\times\vec{V_r}$) and one to the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). To check
 if the vectors can be calculated, the data from the neighborhood map is used again, so the values from equation 
 \vref{eq:neighbors_bit} are needed again for equations \vref{eq:vec_tr} and \vref{eq:vec_bl}. 
 
 
 \begin{gather}
- \vec{N_{tr}}(x,y)=    \vec{V_t}(x,y) \times \vec{V_r}(x,y) =
+ \vec{N}_{tr}(x,y)=    \vec{V}_t(x,y) \times \vec{V}_r(x,y) =
                   \left( \begin{array}{c}   X(x,y-1) -  X(x,y)  \\ Y(x,y-1) -  Y(x,y) \\ D(x,y-1) -  D(x,y)\end{array} \right) 
            \times \left( \begin{array}{c}   X(x+1,y) -  X(x,y)  \\ Y(x+1,y) -  Y(x,y) \\ D(x+1,y) -  D(x,y)\end{array} \right)\nonumber
 			\\\mbox{(When $b_1(x,y)=true$ and $b_3(x,y)=true$)}
 \label{eq:vec_tr}\\
- \vec{N_{bl}}(x,y)=    \vec{V_b}(x,y) \times \vec{V_l}(x,y) =
+ \vec{N}_{bl}(x,y)=    \vec{V}_b(x,y) \times \vec{V}_l(x,y) =
                   \left( \begin{array}{c}   X(x,y+1) -  X(x,y)  \\ Y(x,y+1) -  Y(x,y) \\ D(x,y+1) -  D(x,y)\end{array} \right) 
            \times \left( \begin{array}{c}   X(x-1,y) -  X(x,y)  \\ Y(x-1,y) -  Y(x,y) \\ D(x-1,y) -  D(x,y)\end{array} \right)\nonumber
 			\\\mbox{(When $b_5(x,y)=true$ and $b_7(x,y)=true$)}
@@ -591,7 +588,7 @@ If both normals can be calculated it takes the average of both normals (see figu
 \vref{eq:vec_avg}.
 
 \begin{gather}
-	\vec{N}(x,y) = \frac{\vec{N_{tr}(x,y)} + \vec{N_{bl}}(x,y)}{2}\nonumber\\
+	\vec{N}(x,y) = \frac{\vec{N}_{tr}(x,y) + \vec{N}_{bl}(x,y)}{2}\nonumber\\
 \mbox{\hspace{0.5cm}(When $b_1(x,y)=true$, $b_3(x,y)=true$, $b_5(x,y)=true$ and $b_7(x,y)=true$)}
 \label{eq:vec_avg} 
 \end{gather} 
@@ -640,7 +637,7 @@ So the precalculation for the values in the arcus cosinus look-up table $acos_k$
 in the array are done with equation \vref{eq:acos_precalc}.
 
 \begin{equation}
-	pacos_k=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
+	pacos(k)=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
 	\mbox{\hspace{0.5cm} (Where 0<=k<=2000)}
 	\label{eq:acos_precalc}
 \end{equation}
@@ -751,20 +748,21 @@ The code is shown in listing \vref{lst:blurAthres}.
 \end{equation}
 
 
-The segmentation algorithm uses a class named range to outline pixel blobs in regions. The class contains integer 
-variables for the minimal and maximal x and y values. The algorithm seeks for pixels in the 
+The segmentation algorithm uses a class named $range$ to outline pixel blobs in regions. The class contains integer 
+variables for the minimal and maximal x and y values. The $range$ objects are stored inside  The algorithm seeks for pixels in the 
 which are not zero in the $P_{ok}$-image and have neighbors.
 
 Then it starts to look if there is neighbor in the following pixels, top($b_1$), top-left($b_0$), 
 left($b_7$) and bottom-left($b_6$) ($b_i$ from equation \vref{eq:neighbors_bit} is used here).
 If it finds a pixel, which is a neighbor and has a suitable angle, then it gathers it's ID in the IDs matrix, 
-sets the current pixel $P_{ID}(x,y)$ in the ID matrix to this ID and calls the update function of the corresponding range object, 
+sets the current pixel $P_{id}(x,y)$ in the ID matrix to this ID and calls the update function of the corresponding range object, 
 which updates minimum and maximum values. After that it checks, if the rest of the pixels not checked in step one are 
 neighbors and suitable angles. If it finds one which has a different ID, it creates a relation $R$ between 
 them inside a set, a special form of vector which allows only unique items. If this is done for each of the remaining 
 neighbors, the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn,t have a neighbor at the 
 mentioned locations a new ID and range object are created. The range objects minimum and maximum x and y are initialized 
-to the values of the current pixel. This part of the algorithm is visualized in figure \vref{figure:segment}.
+to the values of the current pixel. This part of the algorithm is shown in \vref{alg:IDs} 
+and visualized in figure \vref{figure:segment}.
 
 \begin{algorithm}[H]
 
@@ -775,24 +773,46 @@ to the values of the current pixel. This part of the algorithm is visualized in 
 	\State {$b_l  \gets b_7(x,y) $}
 	\State {$b_bl \gets b_6(x,y) $}
 	\State {$p  \gets 0$}
+	\State {$last_id \gets 0$}
+	
 		\If{$b_t=true \wedge P_{id}(x,y-1)\neq 0 \wedge P_{ok}(x,y-1)$}
 				\State {$P_{id}(x,y) \gets P_{id}(x,y-1)$}
 				\State {$p \gets 1$}
+				\State {Call $ranges[P_{id}(x,y)].update(x,y)$}
 		\ElsIf{$b_tl=true \wedge P_{id}(x-1,y-1)\neq 0 \wedge P_{ok}(x-1,y-1)$}
 				\State {$P_{id}(x,y) \gets P_{id}(x-1,y-1)$}
 				\State {$p \gets 2$}
+				\State {Call $ranges[P_{id}(x,y)].update(x,y)$}
 		\ElsIf{$b_l=true \wedge P_{id}(x-1,y)\neq 0 \wedge P_{ok}(x-1,y)$}
 				\State {$P_{id}(x,y) \gets P_{id}(x-1,y)$}
 				\State {$p \gets 3$}
+				\State {Call $ranges[P_{id}(x,y)].update(x,y)$}
 		\ElsIf{$b_bl=true \wedge P_{id}(x-1,y+1)\neq 0 \wedge P_{ok}(x-1,y+1)$}
 				\State {$P_{id}(x,y) \gets P_{id}(x-1,y+1)$}
 				\State {$p \gets 4$}
+				\State {Call $ranges[P_{id}(x,y)].update(x,y)$}
+		\Else
+				\State {$lastID \gets last_ID+1$}
+				\State {$ranges[lastID] \gets $ new range object}
+				\State {$P_{id}(x,y) \gets lastID$}
+				\State {$p \gets 5$}
+		\EndIf
+		
+		\If{$b_tl=true \wedge p<1 \wedge P_{id}(x-1,y-1) \neq P_{id}(x,y)$}
+			\State{$relations.insert(P_{id}(x,y), P_{id}(x-1,y-1))$}
+		\EndIf
+		
+		\If{$b_l=true \wedge p<2 \wedge P_{id}(x-1,y) \neq P_{id}(x,y)$}
+			\State{$relations.insert(P_{id}(x,y), P_{id}(x-1,y-1))$}
+		\EndIf
+		
+		\If{$b_bl=true \wedge p<3 \wedge P_{id}(x-1,y+1) \neq P_{id}(x,y)$}
+			\State{$relations.insert(P_{id}(x,y), P_{id}(x-1,y-1))$}
 		\EndIf
 \EndFor
-
 	\end{algorithmic}
- \caption{Segmentation: }
- \label{alg:crossblur}
+ \caption{Segmentation: ID Assignment}
+ \label{alg:IDs}
 \end{algorithm}
 
 
@@ -807,10 +827,13 @@ to the values of the current pixel. This part of the algorithm is visualized in 
 After passing the whole neighborhood-map, all range objects having a relation are merged together
 by a loop executing the merge function of one range class object with the relating one.
 The merge function first calls the getLast function of both objects, which returns a pointer to the
-last range object, this range was merged to. This is necessary to merge all objects together recursively.
-How this works is shown in figure \vref{figure:Merging}. After that another object is created which 
-contains the merged minimum and maximum values of both ranges. At the end, the regions for template matching
-are filtered by size and stored in the output array, while the range objects are deleted. 
+last range object, the range was merged to, then those objects are merged together. 
+This is necessary to merge all objects together recursively. At the end, the regions of the range objects are 
+filtered by size and stored in the output array for template matching. 
+
+\definecolor{darkgreen}{RGB}{0,128,0}
+How this works is shown in figure \vref{figure:Merging} where all ranges belong to one blob. For the range objects
+the following relations exist: 1-2, 3-4, \textcolor{red}{2-4}, 5-6 and \textcolor{darkgreen}{1-6}.
 
 \begin{figure}[H]
 \begin{center}
@@ -819,6 +842,9 @@ are filtered by size and stored in the output array, while the range objects are
   \label{figure:Merging}
 \end{center}
 \end{figure}
+ 
+
+
 
 \begin{figure}[H]
 \begin{center}
@@ -836,11 +862,52 @@ When all surface regions have been determined, it's time to start with fitting t
 to the right perspective to search for patterns in the regions. 
 
 
-\section{Fitting the Prespective}
-%TODO
+\section{Warping Prespective}
+For ajusting the perspective from a surface in the RGB image the OpenCV function warpPerspective
+ is used comination with getPerspectiveTransform.
+
+getPerspectiveTransform calculates the perspective transform from 4 pairs of the corresponding points.
+The function calculates the $3 \times 3 matrix$ of a perspective transform such that:
+\begin{gather}
+\begin{bmatrix} t_i x'_i \\ t_i y'_i \\ t_i \end{bmatrix} = \texttt{map\_matrix} \cdot \begin{bmatrix} x_i \\ y_i \\ 1 \end{bmatrix} 
+\nonumber\\\mbox{where}\nonumber\\dst(i)=(x'_i,y'_i), src(i)=(x_i, y_i), i=0,1,2 
+\end{gather}
+\cite{willowgarage:opencv:getPerspectiveTransform}.
+
+The function warpPerspective applies a perspective transformation to the source image using the specified matrix:
+\begin{gather}
+\texttt{dst} (x,y) = \texttt{src} \left ( \frac{M_{11} x + M_{12} y + M_{13}}{M_{31} x + M_{32} y + M_{33}} , \frac{M_{21} x + M_{22} y + M_{23}}{M_{31} x + M_{32} y + M_{33}} \right ) 
+\end{gather}
+\cite{willowgarage:opencv:warpPerspective}
+
+For calculating the points it is necessary to pick four points arranged in a quadrat (pixel coordinates)
+from the surface. After picking them, the real coordinates $X$, $Y$ and $Z$ ($D$) are obtained to calculate 
+the distances between the corresponding points in the real world. These are done with equation \vref{eq:distXYZ}.
+The distances are needed calculate the new proportions for the coordinates of the pixels in the RGB image, so that
+the texture will streched to the real proportions to do template matching. Normally this would be done like in
+figure \vref{figure:perspective} a), by scaling the smaller side to the bigger and then matching the proportions
+of height and width. In software this is done by \vref{figure:perspective} b). The lower point of the smaller side is 
+shifted down by the full difference of the sides while at the other, the bigger side, both points are both moved down 
+by the half of it.
+
+The distance for moving the points are calculated by the the distan
+
+\begin{equation}
+	d_{3D}=\sqrt{(x_1-x_2)^2+(y_1-y_2)^2+(z_1-z_2)^2}
+	\label{eq:distXYZ}
+\end{equation}
 
 
 
+
+
+\begin{figure}[H]
+\begin{center}
+  \includegraphics[width=\textwidth]{PerspectiveTransform.pdf}
+  \caption[]{Perspective Transform}
+  \label{figure:perspective}
+\end{center}
+\end{figure}
 
 \subsection{First template matching approach}
 The first approach on finding the signs was done with a HSV color filter and the hough transformation
@@ -848,8 +915,7 @@ function from OpenCV, which finds circle in an image or a given region of an ima
 
 The color filter must be in HSV because with that color scheme it is possible to filter for colors
 with the H(hue) part of the pixel. In figure \vref{figure:hsv} the green boxes define the color range
-which is interesting. Every pixel with another color will be set to zero. For an example picture see 
-figure \vref{figure:redFilter}.
+which is interesting. Every pixel with another color will be set to zero. 
 
 \begin{figure}[H]
 \begin{center}
@@ -869,9 +935,10 @@ figure \vref{figure:redFilter}.
 \end{figure}
 
 
-As seen in the example picture only the circles, some other red objects and some fragments of
+As seen in the example picture For a result picture see 
+figure. Only the circles and some other red objects and some fragments of
 other colored objects are visible. The next step is transfering the image to grayscale and 
-bluring the image. After that a hugh transformation is executed which will gather round
+bluring the image. After that a hugh transformation is done which will gather round
 objects in the picture. If a circle is found a the template is scaled to it's size and 
 searched in a region a bit bigger than the found circle.
 \newpage
@@ -890,16 +957,17 @@ to determine that it is a wrong match(see example in figure \vref{figure:problem
 \subsection{Proportion Enhanced Template Matching}
 To optimize the template matching another way was found. This algorithm
 takes the template picture and converts it to grayscale. It starts at the top left pixel
-and searches for the first non translucent pixel diagonally. If it has found one,
+and searches for the first non translucent pixel diagonally. If it has found it,
 it determines if the pixel is dark (value <= 127) or light (value>127). Then it
 starts to seek for the next change, when the value passes 127 again.
 When it changes the alogrithm gathers the distance from pixel to pixel and searches for the next change.
 When that change appears, it calculates the proportion of both lengths.
-The proportion will be negative if the next pixels are changing to dark, 
-this prevents finding negatives of the template.  
-It is stored with the location of the current pixel and the
-length from the first change to the endpoint. This is now done as long
-as the algorithm reaches an edge of the template (for an Example see in figure \vref{figure:templateProp}).
+Then it is stored with the location of the current pixel and the
+length from the first change to the endpoint. 
+The proportion will be negative if the next pixels are changing to dark,
+to prevent finding negatives of the template. 
+This is now done as long as the algorithm reaches an edge of the template 
+(for an Example see in figure \vref{figure:templateProp}).
 
 \begin{figure}[H]
 \begin{center}
@@ -973,25 +1041,23 @@ This function does the scaling of the template and the recalculation of the poin
 it tries to match the template against the relevant region. Calculating the new point is
 done by multiplying both x and y coordinates with the scaling factor. The matching is done like
 the gathering of the proportions. Values are checked if they are both dark or light, if that
-is the case, the counter for equal pixels is increased by one. If a picture for important pixels
-is available, a counter is increased if pixels on a important location do not match. For all compared
-pixels another counter is increased to determine the coverage factor of the pattern.
+is the case, the counter for equal pixels ($cnt_{equal}$) is increased by one. If a picture for important pixels
+is available, a counter ($cnt_{imp}$) is increased if pixels on a important location do not match. For all compared
+pixels another counter ($cnt_{cmp}$) is increased to determine the coverage factor to the patterns pixels ($cnt_{patt}$).
 
-In the end the following quotients are calculated:
-$$
-	\mbox{congruence} =\frac{\mbox{matching pixels}}{\mbox{compared pixels}}-\frac{\mbox{non-matching important pixels}}{2}
-$$
-$$
-	\mbox{coverage} = \frac{\mbox{compared pixels}}{\mbox{pixel count of template}}
-$$
+In the end, quotients for  congruence ($q_{con}$) and coverage ($q_{cov}$) are calculated with the equations
+\ref{eq:congruence} and \vref{eq:coverage}.
+\begin{gather}
+	q_{con} =\frac{cnt_{equal}}{cnt_{cmp}}-\frac{cnt_{imp}}{2} \label{eq:congruence}\\
+	q_{cov} = \frac{cnt_{cmp}}{cnt_{patt}}\label{eq:coverage}
+\end{gather}
 
-If the quotients are in the specified range, which is given at the template creation, the results 
+If the quotients are in the specified range, which is given at the templates creation, the results 
 are stored in form of a Match object inside a vector in the corresponding MatchTempProfile object.
 
 If all proportions of a region are checked for the current surface, the best matching template will
 be marked in the picture with the first letter of it's name. And then the arrays,
-which hold the Match objects for each profile, are cleared for the next region.
-
-This is the reason why the application only supports \textbf{one sign per surface} at the moment.
+which hold the Match objects for each profile, are cleared for the next region. This is the reason 
+why the application only supports \textbf{one sign per surface} at the moment.
 
 \section{Results}
