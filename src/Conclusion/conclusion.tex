@@ -1,2 +1,11 @@
 \chapter{Conclusion}
 \graphicspath{{./Conclusion/img/}}
+
+The current procedure mostly doesn't find signs in every frame, the reason for that is the very high congruence and coverage
+treshhold. When decreasing it, the signs are found more often, but there are also many false positives. False positives are
+even worse than only finding a surface once in 100 frames. When a robot drives along a track or just 
+straight forward in the direction of a sign. There are many different viewing angles and a lot of frames will pass the algorithm
+till it reaches a point where it can't see the sign, so there are a lot of chances to get a positive and a true match. But if
+using a lower minimum for the congruence a lot of false positives may occur, so a method has to be found to find out
+which one is a true and which one a false result if gathering two, or more different matches for a surface.
+

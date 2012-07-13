@@ -880,26 +880,63 @@ The function warpPerspective applies a perspective transformation to the source 
 \end{gather}
 \cite{willowgarage:opencv:warpPerspective}
 
-For calculating the points it is necessary to pick four points arranged in a quadrat (pixel coordinates)
-from the surface. After picking them, the real coordinates $X$, $Y$ and $Z$ ($D$) are obtained to calculate 
-the distances between the corresponding points in the real world. These are done with equation \vref{eq:distXYZ}.
+For calculating the points it is necessary to pick four points arranged in a quadrat with a side length of $s$
+(top-left $(x_{tl},y_{tl})$,top-right $(x_{tr},y_{tr})$, bottom-left $(x_{bl},y_{bl})$  and bottom-right point $(x_{br},y_{br})$) 
+from the surface. 
+After picking them, the real coordinates $X$, $Y$ and $Z$ ($D$) are obtained to calculate 
+the real distances between the corresponding points ($d_{top}$, $d_{left}$, $d_{right}$, $d_{bottom}$)
+(see equations \ref{eq:distT}, \ref{eq:distR}, \ref{eq:distB} and \vref{eq:distL}).
+These are done with the equations \vref{eq:distT} to \vref{eq:distL}.
 The distances are needed calculate the new proportions for the coordinates of the pixels in the RGB image, so that
 the texture will streched to the real proportions to do template matching. Normally this would be done like in
 figure \vref{figure:perspective} a), by scaling the smaller side to the bigger and then matching the proportions
-of height and width. In software this is done by \vref{figure:perspective} b). The lower point of the smaller side is 
-shifted down by the full difference of the sides while at the other, the bigger side, both points are both moved down 
-by the half of it.
-
-The distance for moving the points are calculated by the the distan
-
-\begin{equation}
-	d_{3D}=\sqrt{(x_1-x_2)^2+(y_1-y_2)^2+(z_1-z_2)^2}
-	\label{eq:distXYZ}
-\end{equation}
+of height and width. In software this is done with the method showed in \vref{figure:perspective} b). 
+The lower point of the smaller side is shifted down by the full difference of the sides while at the other, 
+the bigger side, both points are moved down by the half of it. When calculating the new point coordinates,
+always the smaller side is scaled to the bigger, that's why there are two different ways mentioned to 
+calculate the new coordinates in the equations \ref{eq:points_q} to \vref{eq:points_br_x}.
 
 
 
-
+{
+\footnotesize
+\begin{align}
+	d_{top}=\sqrt{(X_{tl}(x_{tl},y_{tl})-X_{tr}(x_{tr},y_{tr}))^2+(Y_{tl}(x_{tl},y_{tl})-Y_{tr}(x_{tr},y_{tr}))^2+(Z_{tl}(x_{tl},y_{tl})-Z_{tr}(x_{tr},y_{tr}))^2}\label{eq:distT}\\
+	d_{right}=\sqrt{(X_{br}(x_{br},y_{br})-X_{tr}(x_{tr},y_{tr}))^2+(Y_{br}(x_{br},y_{br})-Y_{tr}(x_{tr},y_{tr}))^2+(Z_{br}(x_{br},y_{br})-Z_{tr}(x_{tr},y_{tr}))^2}\label{eq:distR}\\
+	d_{bottom}=\sqrt{(X_{bl}(x_{bl},y_{bl})-X_{br}(x_{br},y_{br}))^2+(Y_{bl}(x_{bl},y_{bl})-Y_{br}(x_{br},y_{br}))^2+(Z_{bl}(x_{bl},y_{bl})-Z_{br}(x_{br},y_{br}))^2}\label{eq:distB}\\
+	d_{left}=\sqrt{(X_{tl}(x_{tl},y_{tl})-X_{bl}(x_{bl},y_{bl}))^2+(Y_{tl}(x_{tl},y_{tl})-Y_{bl}(x_{bl},y_{bl}))^2+(Z_{tl}(x_{tl},y_{tl})-Z_{bl}(x_{bl},y_{bl}))^2}\label{eq:distL}
+\end{align}
+}
+\begin{align}
+ q = \left\{ 
+	 \begin{array}{ll}
+	 {d_{right}}/{d_{left}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
+	 {d_{left}}/{d_{right}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array} 
+\right.\label{eq:points_q}\\
+y_{tr}=\left\{ 
+	 \begin{array}{ll}
+	 {y_{tr} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
+	 {y_{tr}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_tr_y}\\
+y_{br}=\left\{ 
+	 \begin{array}{ll}
+	 {y_{br} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
+	 {y_{br}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_br_y}\\
+y_{tl}=\left\{ 
+	 \begin{array}{ll}
+	 {y_{tl}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
+	 {y_{tl} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_tl_y}\\
+y_{bl}=\left\{ 
+	 \begin{array}{ll}
+	 {y_{bl}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
+	 {y_{bl} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_bl_y}\\
+ x_{tr} = x_{tr} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_tr_x}\\
+ x_{br} = x_{br} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_br_x}
+\end{align}  
 
 \begin{figure}[H]
 \begin{center}
@@ -1001,7 +1038,7 @@ With this point the position, for trying to match the template, is calculated
 In software, this is realized by a class called MatchTempProfile, in which the templates are stored.
 The images for the templates are specified in a xml file, which is set by a parameter in the launchfile.
 \newpage 
-In the code and the parameter name this file is called settings file. The settings file is read at node startup,
+In the code and the parameter name of this file is called settings file. The settings file is read at node startup,
 so the code reading the XML file and loading the template pictures is located in the constructor of the
 signDetection class. On startup the node checks first, if there is a XML file given and if it can be loaded. 
 Then it searches for the "signs"-Tag. Inside this tag it expects "sign"-Tags 
@@ -1059,5 +1096,13 @@ If all proportions of a region are checked for the current surface, the best mat
 be marked in the picture with the first letter of it's name. And then the arrays,
 which hold the Match objects for each profile, are cleared for the next region. This is the reason 
 why the application only supports \textbf{one sign per surface} at the moment.
+Figure \vref{figure:three} shows all three signs found by the algorithm.
 
-\section{Results}
+\begin{figure}[H]
+\begin{center}
+  \includegraphics[width=\textwidth]{three.png}
+  \caption[]{All Three Signs Matched}
+  \label{figure:three}
+\end{center}
+\end{figure}
+
