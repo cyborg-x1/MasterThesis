@@ -6,14 +6,14 @@ photography, recognizing parts and their arrangement in industry applications,
 face-recognition in photos or to scan objects with 3D cameras for creating
 models of them.
 
-Recently Microsoft startet to ship the Kinect camera, which was ment to enable
+Recently Microsoft startet to ship the Kinect camera, which was meant to enable
 gamers of the XBox-360 to control their in-game avatar with their own body.
 As soon it was released a contest was proclaimed to write a free driver to make it a
 usable on different systems, like Linux or Windows.
 
 Today the Kinect is also used in WillowGarages Robot Operating System,
 where it can act as cheap laser scanner for their Turtlebot. The Turtlebot 
-(/url{www.turtlebot.org}) was designed to give home users who are interested in 
+(\url{www.turtlebot.org}) was designed to give home users who are interested in 
 robotics the opportunity to experiment with robotics on their own.
 
 \begin{figure}[htp]
@@ -41,7 +41,7 @@ suitable in size can be skipped automatically.
 	\caption{ROS Logo}
 \end{figure} 
 
-The Robot Operating System or short ROS is a meta operating system from WillowGarage, which is designed for usage with distributed 
+The Robot Operating System or ROS for short is a meta operating system from WillowGarage, which is designed for usage with distributed 
 robot systems. It's called a meta operating system because it needs another operating system to run. It's mainly developed for Ubuntu 
 (a Linux distribution) but it also supports other Operating Systems like Windows and Mac OS, but the support for them can still be considered 
 as experimental. 
@@ -62,7 +62,7 @@ and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
 
 
 In the PSP the newspapers are now called topics. A PSP system is a subset of different applications, those applications are called nodes.  
-Each node can publish or subscribe multiple topics at the same time. So it is possible to create a network of different nodes, which
+Each node can publish or subscribe to multiple topics at the same time. So it is possible to create a network of different nodes, which
 do processing or act as user interface. The advertisements of the real world are replaced by a so called master. 
 The master knows everything about the communication channels, all nodes, the computer they run on and 
 which topics they subscribe and publish to. When a new node starts up, it checks for other nodes publishing or subscribing the relevant topics
@@ -96,7 +96,7 @@ from cameras like the Microsoft Kinect.
 \end{figure}
 \clearpage
 
-\section{OpenCV}
+\section[OpenCV]{OpenCV \footnote{Text for this section was taken from manufacturer website \url{http://opencv.org/about.html}\cite{willowgarage:opencv}}}
 
 The Open Source Computer Vision Library (OpenCV) is an open computer vision and machine learning software library. OpenCV was built to provide a common infrastructure for vision applications and to accelerate the use of machine perception in the commercial products. To enable this, OpenCV has a BSD license to make it easy for businesses to use and modify the code.
 
@@ -105,7 +105,6 @@ The library has more than 2500 optimized algorithms. OpenCV contains a comprehen
 Some well known companies that use OpenCV are Google, Yahoo, Microsoft, Intel, IBM, Sony, Honda, Toyota. Many startups such as Applied Minds, VideoSurf, and Zeitera make extensive use of OpenCV. OpenCV’s deployed uses span the range from stitching streetview images together, detecting intrusions in surveillance video in Israel, monitoring mine equipment in China, helping robots navigate and pick up objects at Willow Garage, detection swimming pool drowning events in Europe, running interactive art in Spain and New York, checking run ways for derbies in Turkey, inspecting labels on products in factories around the world on to rapid face detection in Japan.
 
 It runs on Windows, Linux, Mac, Android and has C++, C, Python and Java (Android only) interfaces. OpenCV leans mostly towards real-time vision applications and takes advantage of MMX and SSE instructions when available. A CUDA interface is being developed right now. There are over 500 algorithms and about 10 times as many functions that compose or support those algorithms. OpenCV is written natively in C++ and has a templated interface that works seamlessly with std containers. Its native data type is a general matrix class that reference counts and leverages EIGEN.
-\cite{willowgarage:opencv}
 \clearpage
 
 \section{Kinect}
@@ -117,9 +116,9 @@ It runs on Windows, Linux, Mac, Android and has C++, C, Python and Java (Android
 \end{figure}
 
 The Kinect is a combination of a standard color camera and a depth sensor produced by Microsoft, a so called RGB-D camera. 
-The depth sensor is produced by Primesense and it's working principle is currently a secret of the manufacturer. 
+The depth sensor is produced by Primesense and its working principle is currently a secret of the manufacturer. 
 The known facts are, that the Kinect uses an ir-projector to draw a grid of very small points onto each surface 
-(see figure \vref{figure:kinect_camera}) and an ir-camera to process the result somehow.  
+(see figure \vref{figure:kinect_camera}) and an IR-camera to process the result somehow.  
 There are different approaches on how it might work, the most resonable approach is that it uses 
 specific groups of points and their position on the resulting camera image to calculate how far 
 away they are. This is the same way a laser scanner works. 
@@ -138,7 +137,7 @@ The problem of objects being to close will be discussed later in this document.
 \begin{figure}[htp]
 	\centering
 	\includegraphics[scale=1]{ir_kinect.png}
-	\caption{Kinect IR Sensor Image}
+	\caption{Kinect IR Sensor Image making IR Spots visible)}
 	\label{figure:kinect_ir}
 \end{figure}
 
@@ -158,7 +157,7 @@ The problem of objects being to close will be discussed later in this document.
 \end{figure}
 \clearpage
 
-\section{OpenNi}
+\section[OpenNi]{OpenNi \footnote{Text for this section was taken from organisation website \url{http://www.openni.org/About.aspx} \cite{openni:about}}}
 
 About the OpenNI organization
 The OpenNI organization is an industry-led, not-for-profit organization formed to certify and 
@@ -174,7 +173,6 @@ The founding members of the OpenNI organization are:
   \item ASUS joins the OpenNI organization as an industry member providing hardware for purchase to promote Natural Interaction applications
   \item AppSide is the first end-to-end content marketplace for motion-controlled entertainment devices. 
 \end{itemize}
-\cite{openni:about} 
 
 \section{Mobile Robots Pioneer 3dx}
 The Pioneer 3dx is a Research Robot created by Mobile Robots.

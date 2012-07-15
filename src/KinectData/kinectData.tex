@@ -12,8 +12,8 @@ this pixel.
 There are a few cases when the Kinect is not able to deliver any depth data from a surface.
 
 First of all it does not work with translucent materials like glass. The projected
-points are just fractured away, when they hit in a small angle (see figure \vref{figure:glas}). 
-It's be possible to look through a translucent surface, but only if it's clear and the angle from the 
+points are just diffracted away, when they hit in a small angle (see figure \vref{figure:glas}). 
+It's possible to look through a translucent surface, but only if it's clear and the angle from the 
 camera to the surface is not to big.
 \begin{figure}[htp]
 \begin{center}
@@ -23,7 +23,7 @@ camera to the surface is not to big.
 \end{center}
 \end{figure}
  
-Another problem are mirrors. Mirrors will also fracture the ir spots away, 
+Another problem are mirrors. Mirrors will also diffract the IR spots away, 
 so it's not possible to get any depth data from their surfaces (see figure \vref{figure:mirror}).
 \begin{figure}[htp]
 \begin{center}
@@ -44,7 +44,7 @@ in the resulting depth image too (see figure \vref{figure:sun}).
 \end{figure}
 
 On surfaces which are to close to the camera, the IR spots will melt together preventing the camera from
-identifying their location (see figure \vref{figure:close}), what leads to the same result as in the previous cases.
+identifying their location (see figure \vref{figure:close}), which leads to the same result as in the previous cases.
 \begin{figure}[htp]
 \begin{center}
   \includegraphics[scale=0.7]{ToClose.png} 
@@ -85,8 +85,8 @@ in rViz showed to be more effective in analyzing data and debugging applications
 A 3D display of the point cloud is very useful for debuging and filtering techniques, it directly shows what 
 happens to the data, when a special filter is applied.
 To create point cloud messages for other topics than those from the Kinect node, it is necessary to
-create specific launch files. Launch files are xml-files which are used to start multiple nodes in one
-go. 
+create specific launch files. Launch files are xml-files which are used to start multiple nodes (applications) 
+in one go with the roslaunch tool from ROS. 
 
 
 \begin{lstlisting}[caption={Standalone Point Cloud}\label{lst:stal_pcl},language=xml]
@@ -102,11 +102,10 @@ go.
 </node>
 \end{lstlisting}
 
-
-
 As seen in the listing for creating a point cloud from different topics a nodelet manager and a 
 depth\_image\_proc/point\_cloud\_xyzrgb nodlet is needed. Inside the node tag of the nodelet
 there are the remapping tags, to connect the nodelet with the custom topics.
+
 
 \subsection{Tool for various data fetching and filter testing}
 The tool was named disturbance\_filter\_calculator, the name is still reminding what it was intended to do in the first place
@@ -130,14 +129,14 @@ can be seen in figure \vref{figure:distFilCal}.
 
 \section{Disturbances}
 While pointing the Kinect to a flat surface the noise fractals (see in figure \vref{figure:noise}) 
-seem to reappear at the same position. So it was decided to try to remove them with capturing a image from a flat surface.
-and subtract the number of data steps the noise produces. Therefore the kinect is arranged very close to a flat surface 
-so that it only will see this surface. Then a picture is created which stores the difference of the data to the 
-distance of the surface to be substracted from the following frames.
-This was a nice idea but it didn't work as expected. There some special vertical fractals (see in figure \vref{figure:verticals}) 
-inside the data which seem to be the result from an autoranging feature of the camera, 
-always creating one data step in the picture. The biggest problem is that the scale of the noise fractals changes 
-with their appearance and their number. The number of those vertical lines ranges from 0 to a spotted maximum of 9. 
+seem to reappear at the same position. So it was decided to try to remove them with capturing a single image 
+from a flat surface and subtract the current distance to get a picture which can be substracted from further collected
+frames to remove the noise. This was a nice idea but it didn't work as expected. 
+There are some special vertical fractals (see in figure \vref{figure:verticals}) 
+inside the image which seem to be the result from an autoranging feature of the camera, those fractals
+always create one data step in the picture. The biggest problem is that the structure of the noise fractals
+in figure \vref{figure:noise} changes with their appearance and their number. 
+The number of those vertical lines ranges from 0 to a spotted maximum of 9. 
 They do always appear on a special range, seem to be symetrical or 
 nearly symetrical to the center and their number is never even but they are not fixed to a special column of pixels. 
 \begin{figure}[htp]
@@ -159,7 +158,7 @@ nearly symetrical to the center and their number is never even but they are not 
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram in figure \vref{figure:LaserKinect}, which shows the occuring values from the camera 
 at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure \vref{figure:hilti}),it was realized, that many values just do not exist. The camera does never output 
+device(see in figure \vref{figure:hilti}),it was realized, that many values just do not exist. The camera does outputs 
 these values. After realizing this fact it was decided to look for the available values, their number and the values which 
 never occur.The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, 
 the available values (black) and not availabe values (white) in the middle and the number of the missing values between them 

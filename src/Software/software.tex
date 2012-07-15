@@ -888,13 +888,15 @@ the real distances between the corresponding points ($d_{top}$, $d_{left}$, $d_{
 (see equations \ref{eq:distT}, \ref{eq:distR}, \ref{eq:distB} and \vref{eq:distL}).
 These are done with the equations \vref{eq:distT} to \vref{eq:distL}.
 The distances are needed calculate the new proportions for the coordinates of the pixels in the RGB image, so that
-the texture will streched to the real proportions to do template matching. Normally this would be done like in
+the texture will be streched to the real proportions to do template matching. Normally this would be done like in
 figure \vref{figure:perspective} a), by scaling the smaller side to the bigger and then matching the proportions
 of height and width. In software this is done with the method showed in \vref{figure:perspective} b). 
 The lower point of the smaller side is shifted down by the full difference of the sides while at the other, 
 the bigger side, both points are moved down by the half of it. When calculating the new point coordinates,
 always the smaller side is scaled to the bigger, that's why there are two different ways mentioned to 
-calculate the new coordinates in the equations \ref{eq:points_q} to \vref{eq:points_br_x}.
+calculate the new coordinates. At the end, it is necessary to bring both sides to the same length,
+this is done by adapting the with to the height so that they are at the same size
+(see equations \ref{eq:points_q} to \vref{eq:points_br_x_2}).
 
 
 
@@ -907,13 +909,14 @@ calculate the new coordinates in the equations \ref{eq:points_q} to \vref{eq:poi
 	d_{left}=\sqrt{(X_{tl}(x_{tl},y_{tl})-X_{bl}(x_{bl},y_{bl}))^2+(Y_{tl}(x_{tl},y_{tl})-Y_{bl}(x_{bl},y_{bl}))^2+(Z_{tl}(x_{tl},y_{tl})-Z_{bl}(x_{bl},y_{bl}))^2}\label{eq:distL}
 \end{align}
 }
+\newpage
 \begin{align}
- q = \left\{ 
+ q_v = \left\{ 
 	 \begin{array}{ll}
 	 {d_{right}}/{d_{left}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
 	 {d_{left}}/{d_{right}} &\mbox{\hspace{0.5cm}} otherwise
 	 \end{array} 
-\right.\label{eq:points_q}\\
+\right.\label{eq:points_qv}\\
 y_{tr}=\left\{ 
 	 \begin{array}{ll}
 	 {y_{tr} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
@@ -934,8 +937,44 @@ y_{bl}=\left\{
 	 {y_{bl}} &\mbox{\hspace{0.5cm}} d_{left}<d_{right}\\
 	 {y_{bl} + \frac{s\cdot q}{2}} &\mbox{\hspace{0.5cm}} otherwise
 	 \end{array}\right.\label{eq:points_bl_y}\\
- x_{tr} = x_{tr} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_tr_x}\\
- x_{br} = x_{br} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_br_x}
+b_v    =\left\{ 
+	 \begin{array}{ll}
+	 d_{right} &d_{left}<d_{right}\\
+	 d_{left} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_bv}\\
+q_h = \left\{ 
+	 \begin{array}{ll}
+	 {d_{top}}/{d_{bottom}} &\mbox{\hspace{0.5cm}} d_{bottom}<d_{top}\\
+	 {d_{bottom}}/{d_{top}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array} 
+\right.\label{eq:points_qh}\\
+x_{br}=\left\{ 
+	 \begin{array}{ll}
+	 {x_{br} + \frac{s\cdot q_h}{2}} &\mbox{\hspace{0.5cm}} d_{bottom}<d_{top}\\
+	 {x_{br}} + s &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_br_x}\\
+x_{bl}=\left\{ 
+	 \begin{array}{ll}
+	 {x_{bl} + \frac{s\cdot q_h}{2}} &\mbox{\hspace{0.5cm}} d_{bottom}<d_{top}\\
+	 {x_{bl}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_bl_x}\\
+x_{tr}=\left\{ 
+	 \begin{array}{ll}
+	 {x_{tr}} + s &\mbox{\hspace{0.5cm}} d_{bottom}<d_{top}\\
+	 {x_{tr} + \frac{s\cdot q_h}{2}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_tr_x}\\
+x_{tl}=\left\{ 
+	 \begin{array}{ll}
+	 {x_{tl}} &\mbox{\hspace{0.5cm}} d_{bottom}<d_{top}\\
+	 {x_{tl} + \frac{s\cdot q_h}{2}} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_tl_x}\\
+b_h    =\left\{ 
+	 \begin{array}{ll}
+	 d_{top} &d_{bottom}<d_{top}\\
+	 d_{bottom} &\mbox{\hspace{0.5cm}} otherwise
+	 \end{array}\right.\label{eq:points_bv}\\
+ x_{tr} = x_{tr} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_tr_x_2}\\
+ x_{br} = x_{br} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_br_x_2}
 \end{align}  
 
 \begin{figure}[H]
@@ -1016,8 +1055,17 @@ This is now done as long as the algorithm reaches an edge of the template
 
 In the next step the algorithm searches the target picture with the same method, but
 it doesn't only search the diagonal row beginning in the top left corner, it searches
-through the whole picture. Always when it has two consecutive pixel strings it
-creates the proportion. Then it calls a method of the objects the templates are stored in.
+through the whole picture. To prevent problems with the lightning, the threshhold
+for searching the picture ($th_{target}$) is automatically determined by half of the sum of the 
+minimum ($g_{min}$) and maximum grayscale ($g_max$) value of all image pixels
+as in equation.
+
+	\begin{equation}
+		th_{target}=\frac{g_{max}+g_{min}}{2}
+	\end{equation}
+
+Always when it has two consecutive pixel strings it creates the proportion. 
+Then it calls a method of the objects the templates are stored in.
 This method takes each proportion and checks if this proportion is available for
 the current template. If it is, it is stored inside a pair. If a pair of two
 consecutive proportions is found it takes the distance length of the last
