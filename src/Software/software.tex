@@ -1,7 +1,7 @@
 \graphicspath{{./Software/img/}}
 \chapter{Sign Recognition}
  
- Before being able to do filtering, detect signs etc, it is necessary to get the data from the OpenNi nodletmanager
+ Before being able to do filtering, detect signs etc, it is necessary to get the data from the OpenNi nodletmanager,
  the node which supplies the depth and RGB data. Therefore the code for syncronizing RGB, 
  depth and camera info messages was copied from the nodelet being responsible 
  for point cloud creation. 
@@ -131,9 +131,10 @@ void myFilter1(const cv::Mat &src, cv::Mat &dst)
 After realizing that there are only 824 depth values available, it was decided to transform the depth picture
 to the available depth steps. The resulting step map contains the number of each available depth. 
 The converting function uses an array. This array contains the number of the
-step when obtaining the cell number of its value. In table \vref{table:Kinect2Step} an 
-abridgement from the look-up table is shown in table \vref{table:Kinect2Step}  and 
-listing \vref{lst:stpmap} contains the code of the converting function.
+step when obtaining the cell number of its value. Each cell of a non-existing value contains -1, so it is
+possible to check if something is wrong with the value and if it is not an Kinect RAW picture.
+In table \vref{table:Kinect2Step} an abridgement from the look-up table is shown in table \vref{table:Kinect2Step}
+(without the missing fields mentioned before) and listing \vref{lst:stpmap} contains the code of the converting function.
 
 
 \begin{table}[H]
@@ -873,11 +874,9 @@ to the right perspective to search for patterns in the regions.
 \section{Warping Prespective}
 For ajusting the perspective from a surface in the RGB image the OpenCV function warpPerspective
  is used comination with getPerspectiveTransform.
-
-getPerspectiveTransform calculates the perspective transform from 4 pairs of the corresponding points.
-
-\textit{
-``The function calculates the $3 \times 3$ matrix of a perspective transform such that:
+``\textit{
+getPerspectiveTransform calculates the perspective transform from 4 pairs of the corresponding points. The function 
+calculates the $3 \times 3$ matrix of a perspective transform such that:
 \begin{gather}
 \begin{bmatrix} t_i x'_i \\ t_i y'_i \\ t_i \end{bmatrix} = \texttt{map\_matrix} \cdot \begin{bmatrix} x_i \\ y_i \\ 1 \end{bmatrix} 
 \nonumber\\\mbox{where}\nonumber\\dst(i)=(x'_i,y'_i), src(i)=(x_i, y_i), i=0,1,2 
@@ -885,8 +884,8 @@ getPerspectiveTransform calculates the perspective transform from 4 pairs of the
 }''
 \cite{willowgarage:opencv:getPerspectiveTransform}.
 
-\textit{
-``The function warpPerspective applies a perspective transformation to the source image using the specified matrix:
+``\textit{
+The function warpPerspective applies a perspective transformation to the source image using the specified matrix:
 \begin{gather}
 \texttt{dst} (x,y) = \texttt{src} \left ( \frac{M_{11} x + M_{12} y + M_{13}}{M_{31} x + M_{32} y + M_{33}} , \frac{M_{21} x + M_{22} y + M_{23}}{M_{31} x + M_{32} y + M_{33}} \right ) 
 \end{gather}

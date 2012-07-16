@@ -42,7 +42,7 @@ in the resulting depth image too (see figure \vref{figure:sun}).
 \end{center}
 \end{figure}
 
-On surfaces which are to close to the camera, the IR-spots will melt together preventing the camera from
+On surfaces which are too close to the camera, the IR-spots will melt together preventing the camera from
 identifying their location (see figure \vref{figure:close}), which leads to the same result as in the previous cases.
 \begin{figure}[htp]
 \begin{center}
@@ -153,9 +153,9 @@ nearly symetrical to the center and their number is never even but they are not 
 
 \section{Resolution Depending the Depth} \label{resdepDepth}
 When creating the diagram in figure \vref{figure:LaserKinect}, which shows the occuring values from the camera 
-at a specific distance from a plane and parallel surface and the distance measured with a laser distance measurement 
-device(see in figure \vref{figure:hilti}),it was realized, that many values just do not exist. The camera does outputs 
-these values. After realizing this fact it was decided to look for the available values, their number and the values which 
+at a specific distance from a plain and parallel surface and the distance measured with a laser distance measurement 
+device(see in figure \vref{figure:hilti}),it was realized, that many values just do not exist. The camera never outputs 
+these values. After realizing this fact, it was decided to look for the available values, their number and the values which 
 never occur.The figures \vref{figure:depths1} and \vref{figure:depths2} show the distance on the left, 
 the available values (black) and not availabe values (white) in the middle and the number of the missing values between them 
 on the right. Figure \vref{figure:DepthValueDiff} shows the number of missing values in relation to the depth.

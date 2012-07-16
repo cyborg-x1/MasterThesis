@@ -7,7 +7,7 @@ face-recognition in photos, sign matching in cars or to scan objects with
 3D cameras for creating models of them. In the recent past 3D cameras were 
 not affordable for common people till Microsoft startet to ship the Kinect 
 camera, which was meant to enable gamers of the XBox-360 to control their in-game 
-avatar with their own body. As soon it was released a contest was proclaimed 
+avatar with their own body. As soon it was released, a contest was proclaimed 
 to write a free driver to make it usable on different systems, like Linux or Windows.
 Today the Kinect is also used in WillowGarages Robot Operating System,
 where it can act as cheap laser scanner for their Turtlebot. The Turtlebot 
@@ -41,15 +41,15 @@ suitable in size, can also be skipped automatically.
 
 The Robot Operating System or ROS for short, is a meta operating system from WillowGarage, which is designed for usage with distributed 
 robot systems. It's called a meta operating system, because it needs another operating system to run. It's mainly developed for Ubuntu 
-(a Linux distribution) but it also supports other Operating Systems like Windows and Mac OS, but the support for them can still be considered 
+(a Linux distribution), but it also supports other Operating Systems like Windows and Mac OS, but the support for them can still be considered 
 as experimental. 
 
 It also works together with a Google Android device by runnning a special software, which makes the device available
 as hardware extension, enabling processes on different machines to access cameras, accelerometers and the display.
-The basic underlying principle of ROS is the Publisher Subscriber Pattern further called PSP, it's a pattern which 
+The basic underlying principle of ROS is the Publisher Subscriber Pattern, further called PSP, it's a pattern which 
 implements the realworld behaviour of publishers and subscribers (e.g. newspaper) in software. 
-The publishing house advertises and publishes its newspaper or magazine while the subscribers look at the advertisements
-and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
+The publishing house advertises and publishes its newspaper or magazine while the subscribers look at the commercials
+and subscribe to the interesting newspapers like seen in figure \vref{figure:psp_real}.
 
 \begin{figure}[htp]
 	\centering
@@ -61,7 +61,7 @@ and subscribe to the newspaper like seen in figure \vref{figure:psp_real}.
 
 In the PSP the newspapers are now called topics. A PSP system is a subset of different applications, those applications are called nodes.  
 Each node can publish or subscribe to multiple topics at the same time. So it is possible to create a network of different nodes, which
-do processing or act as user interface. The advertisements of the real world are replaced by a so called master. 
+do processing or act as user interface. The commercials of the real world are replaced by a so called master. 
 The master knows everything about the communication channels, all nodes, the computer they run on and 
 which topics they subscribe and publish to. When a new node starts up, it checks for other nodes publishing or subscribing the relevant topics
 and connects with them. An example of this is shown in figure \vref{figure:psp_ROS}.
@@ -146,7 +146,7 @@ OpenCV leans mostly towards real-time vision applications and takes advantage of
 
 The Kinect is a combination of a standard color camera and a depth sensor produced by Microsoft, a so called RGB-D camera. 
 The depth sensor is produced by Primesense and its working principle is currently a secret of the manufacturer. 
-The known facts are, that the Kinect uses an ir-projector to draw a grid of very small points onto each surface 
+The known facts are, that the Kinect uses an IR-projector to draw a grid of very small points onto each surface 
 (see figure \vref{figure:kinect_camera}) and an IR-camera to process the result somehow.  
 There are different approaches on how it might work, the most resonable approach is that it uses 
 specific groups of points and their position on the resulting camera image to calculate how far 
