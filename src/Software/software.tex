@@ -1,5 +1,5 @@
 \graphicspath{{./Software/img/}}
-\chapter{SignRecognition}
+\chapter{Sign Recognition}
  
  Before being able to do filtering, detect signs etc, it is necessary to get the data from the OpenNi nodletmanager
  the node which supplies the depth and RGB data. Therefore the code for syncronizing RGB, 
@@ -25,15 +25,20 @@ was used. It also creates a point cloud for debugging output of the processed da
 	respawn="true"  />
 
 	<!-- SignDetector -->
-	<node pkg="aa_signs" type="signDetection" name="signDetection" output="screen" respawn="true" > 
- 		<remap from="/signDetection/depth_registered/image_rect" 	to="/camera/depth_registered/image_rect_raw" />
- 		<remap from="/signDetection/rgb/image_rect_color" 			to="/camera/rgb/image_rect_color" />
- 		<remap from="/signDetection/rgb/camera_info" 				to="/camera/rgb/camera_info" />
+	<node pkg="aa_signs" type="signDetection" name="signDetection" 
+	 output="screen" respawn="true" > 
+ 		<remap from="/signDetection/depth_registered/image_rect" 	
+ 		to="/camera/depth_registered/image_rect_raw" />
+ 		<remap from="/signDetection/rgb/image_rect_color" 			
+ 		to="/camera/rgb/image_rect_color" />
+ 		<remap from="/signDetection/rgb/camera_info" 				
+ 		to="/camera/rgb/camera_info" />
  		<param name="settingsfile" value="(find aa_signs)/settings/signs.xml" />
 	</node>
 
-  	<!-- Nodelet for creating a pointcloud out of the detector image (for debuging filters) -->
-	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" args="manager" output="screen"/>
+  	<!-- Nodelet for creating a pointcloud out of the detector image-->
+	<node pkg="nodelet" type="nodelet" name="PointCloudAdvisor" 
+	args="manager" output="screen"/>
 
 		<node pkg="nodelet" type="nodelet" name="points_xyzrgb_Advisor" 
 		args="load depth_image_proc/point_cloud_xyzrgb PointCloudAdvisor --no-bond">
@@ -66,7 +71,7 @@ original depth value $P$ by equation \ref{eq:resetPix}.
 \end{equation}
 
 Listing \vref{lst:fstBlur} shows the code of this first filter, which used a box-filter
-(kernel shown in equation \vref{eq:boxedKernel} \cite{willowgarage:opencv:boxed})
+(kernel shown in equation \vref{eq:boxedKernel} as said in manual \cite{willowgarage:opencv:boxed})
 
 \begin{equation}
 	K=\frac{1}{7*3}
@@ -281,8 +286,8 @@ can be seen in figure \vref{figure:neighborhoodmap}.
 \end{figure}
 
 This information helps to write a more performance saving, effective and edge saving bluring method which 
-was named crossBlur because it blures each pixel with a specified number of it's neighbors on top, left, right and bottom.
-The neighborhood condition is needed because it will stop adding pixels on each side if the next pixel in the direction 
+was named crossBlur, because it blures each pixel with a specified number of it's neighbors on top, left, right and bottom.
+The neighborhood condition is needed, because it will stop adding pixels on each side if the next pixel in the direction 
 is not a close neighbor to the current, to preserve the edges. (see in figure \vref{figure:crossblur}).
 
 \begin{figure}[H]
@@ -431,7 +436,7 @@ The message contains information of the camera intrinsics, including the focal
 distances for the x- and y-axis which are needed here.
 
 The X and Y values are calculated by equations \vref{eq:X} and \vref{eq:Y} where $center_x$ and $center_y$ are
-the values of the image center and $f_x$ and $f_y$ the focal distances in x- and y-direction. As in the
+the coordinates of the image center and $f_x$ and $f_y$ the focal distances in x- and y-direction. As in the
 previous sections $D$ represents the value of a pixel in the depth image.
 
 \begin{equation}
@@ -554,7 +559,7 @@ void XYZrangeFilter(const cv::Mat &depth,
 
 \subsection{Normal Calculation}
 With the depth image and the xy map the normal of each pixel can be calculated. This is done by the scalar product
-shown (figure \vref{eq:scalar}).
+shown in figure \vref{eq:scalar}.
 
 \begin{equation}
  \vec{N} =        \left( \begin{array}{c} x_u                           \\                           y_u \\ z_u                           \end{array} \right) 
@@ -566,7 +571,7 @@ shown (figure \vref{eq:scalar}).
 
 The current algorithm tries to calculate two normals, one calculated with the vector from the current pixel to the top and right 
 ($\vec{N}_{tr}=\vec{V_t}\times\vec{V_r}$) and one to the bottom and left ($\vec{N_{bl}}=\vec{V_b}\times\vec{V_l}$). To check
-if the vectors can be calculated, the data from the neighborhood map is used again, so the values from equation 
+if the vectors can be calculated, the data from the neighborhood map is used, so the values from equation 
 \vref{eq:neighbors_bit} are needed again for equations \vref{eq:vec_tr} and \vref{eq:vec_bl}. 
 
 
@@ -632,8 +637,8 @@ to precalculate 2000 values for the lookup table. This means the possible input 
 The precalulated values also include the transformation from radian to degree and are stored as 
 integer values which were multiplied by 100 to save two digits behind the comma.
 
-So the precalculation for the values in the arcus cosinus look-up table $acos_k$ 
-in the array are done with equation \vref{eq:acos_precalc}.
+So the precalculation for the values in the arcus cosinus look-up table $acos(k)$ 
+in the array, are done with equation \vref{eq:acos_precalc}.
 
 \begin{equation}
 	pacos(k)=\lfloor \arccos ((k-1000)/1000) * \frac{180}{\pi}*100 + 0,5 \rfloor
@@ -658,7 +663,7 @@ For one vector in the normal map $\vec{N}(x,y)$ this results in the equations \r
 	\label{eq:angleZ}
 \end{align} 
 
-With the values for k the angles can be gathered from the look-up table resulting in the final equations \ref{eq:anglePX},
+With the values for k, the angles can be gathered from the look-up table resulting in the final equations \ref{eq:anglePX},
 \ref{eq:anglePY} and \vref{eq:anglePZ}.
 
 \begin{align}
@@ -699,7 +704,7 @@ void createAngleMap(const cv::Mat &normals, cv::Mat &angles)
 \subsection{Angle Bluring}
 
 To blur the angles the same method as mentioned in chapter \vref{sect:blurFilter} was used and
-the average was done for each angle seperately. The comparison between a blured and a non-blured
+but the average is done for each angle seperately. The comparison between a blured and a non-blured
 angle picture is shown in figure \vref{figure:AnglesBlured}.
 
 \begin{figure}[H]
@@ -732,7 +737,7 @@ But this mode is not used in the project.
 \subsection{Surface Segmentation}
 
 Before begining with segmenting the surfaces, the picture containing the pixels showing 
-correct angles is blured with an aperture of $5 \times 5$ to remove empty pixels or columns of empty pixels, 
+correct angles is blured with an aperture of $5 \times 5$ to remove empty pixels or columns of empty pixels 
 which seperate surfaces belonging together. After bluring them, the threshold function is used to bring 
 all pixels, which are not zero, to the value 255 (see equation \vref{eq:thresholdSeg}).
 The code for the C++ function is shown in listing \vref{lst:blurAthres}.
@@ -751,20 +756,20 @@ The code for the C++ function is shown in listing \vref{lst:blurAthres}.
 The segmentation algorithm uses a class named $range$ to outline pixel blobs in regions. The class contains integer 
 variables for the minimal and maximal x and y values. All created $range$ objects are stored inside  
 a std::vector at the index which has the same number as the ID they belong to. 
-The algorithm seeks for pixels in the which are not zero in the $P_{ok}$-image and have neighbors.
+The algorithm seeks for pixels which are not zero in the $P_{ok}$-image and have neighbors.
 
 If it finds one, it starts to look, if there is neighbor at the pixels top($b_1$), top-left($b_0$), 
 left($b_7$) and bottom-left($b_6$) ($b_i$ from equation \vref{eq:neighbors_bit} is used here again).
 If it finds a pixel, which is a neighbor and has an suitable angle, then it gathers its ID in the IDs matrix, 
 sets the current pixel $P_{id}(x,y)$ in the ID matrix to this ID and calls the update function of the corresponding 
-range object in the vector, which updates minimum and maximum values. After that it checks, 
+range object in the vector which updates minimum and maximum values. After that, it checks 
 if the rest of the pixels, not checked in step one, are neighbors and have suitable angles. 
-If it finds one which has a different ID, it creates a relation between 
+If it finds one, which has a different ID, it creates a relation between 
 them inside a std::set, a special form of a container, which allows only unique items. 
 If this is done for each of the remaining 
-neighbors, the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn,t have a neighbor at the locations
+neighbors, the algorithm advances to the next pixel. If a pixel contains neighbors, but doesn't have a neighbor at the locations
 mentioned before, a new ID and a range object are created. The range objects minimum and maximum x and y are initialized 
-to the values of the current pixel. This part of the algorithm is shown in \vref{alg:IDs} 
+to the values of the current pixel. This part of the algorithm is shown in algorithm \vref{alg:IDs} 
 and visualized in figure \vref{figure:segment}.
 
 \begin{algorithm}[H]
@@ -870,20 +875,25 @@ For ajusting the perspective from a surface in the RGB image the OpenCV function
  is used comination with getPerspectiveTransform.
 
 getPerspectiveTransform calculates the perspective transform from 4 pairs of the corresponding points.
-The function calculates the $3 \times 3 matrix$ of a perspective transform such that:
+
+\textit{
+``The function calculates the $3 \times 3$ matrix of a perspective transform such that:
 \begin{gather}
 \begin{bmatrix} t_i x'_i \\ t_i y'_i \\ t_i \end{bmatrix} = \texttt{map\_matrix} \cdot \begin{bmatrix} x_i \\ y_i \\ 1 \end{bmatrix} 
 \nonumber\\\mbox{where}\nonumber\\dst(i)=(x'_i,y'_i), src(i)=(x_i, y_i), i=0,1,2 
 \end{gather}
+}''
 \cite{willowgarage:opencv:getPerspectiveTransform}.
 
-The function warpPerspective applies a perspective transformation to the source image using the specified matrix:
+\textit{
+``The function warpPerspective applies a perspective transformation to the source image using the specified matrix:
 \begin{gather}
 \texttt{dst} (x,y) = \texttt{src} \left ( \frac{M_{11} x + M_{12} y + M_{13}}{M_{31} x + M_{32} y + M_{33}} , \frac{M_{21} x + M_{22} y + M_{23}}{M_{31} x + M_{32} y + M_{33}} \right ) 
 \end{gather}
-\cite{willowgarage:opencv:warpPerspective}
+}''
+\cite{willowgarage:opencv:warpPerspective} 
 
-For calculating the points it is necessary to pick four points arranged in a quadrat with a side length of $s$
+For calculating the points, it is necessary to pick four points arranged in a quadrat with a side length of $s$
 (top-left $(x_{tl},y_{tl})$,top-right $(x_{tr},y_{tr})$, bottom-left $(x_{bl},y_{bl})$  and bottom-right point $(x_{br},y_{br})$) 
 from the surface. 
 After picking them, the real coordinates $X$, $Y$ and $Z$ ($D$) are obtained to calculate 
@@ -891,13 +901,14 @@ the real distances between the corresponding points ($d_{top}$, $d_{left}$, $d_{
 (see equations \ref{eq:distT}, \ref{eq:distR}, \ref{eq:distB} and \vref{eq:distL}).
 The distances are needed calculate the new proportions for the coordinates of the pixels in the RGB image, so that
 the texture will be streched to the real proportions to do template matching. Normally this would be done like in
-figure \vref{figure:perspective} a), by scaling the smaller side to the bigger and then matching the proportions
-of height and width. In software this is done with the method showed in \vref{figure:perspective} b). 
+part a) of figure \vref{figure:perspective}, by scaling the smaller side to the bigger and then matching the proportions
+of height and width. In software this is done with the method shown in part b). 
 The lower point of the smaller side is shifted down by the full difference of the sides, while at the other, 
 the bigger side, both points are moved down by the half of it. When calculating the new point coordinates,
 always the smaller side is scaled to the bigger, that's why there are two different ways mentioned to 
 calculate the new coordinates. At the end, it is necessary to bring both sides to the same length
-(see equations \ref{eq:points_qv} to \vref{eq:points_br_x_2}).
+(see equations \ref{eq:points_qv} to \vref{eq:points_br_x_2}). Figure \vref{figure:perspectiveResult}
+shows the input and output of warpPerspective. 
 
 
 
@@ -973,7 +984,7 @@ b_h    =\left\{
 	 \begin{array}{ll}
 	 d_{top} &d_{bottom}<d_{top}\\
 	 d_{bottom} &\mbox{\hspace{0.5cm}} otherwise
-	 \end{array}\right.\label{eq:points_bv}\\
+	 \end{array}\right.\label{eq:points_bh}\\
  x_{tr} = x_{tr} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_tr_x_2}\\
  x_{br} = x_{br} + s \cdot \frac{d_{left}}{d_{top}} - s\label{eq:points_br_x_2}
 \end{align}  
@@ -985,6 +996,15 @@ b_h    =\left\{
   \label{figure:perspective}
 \end{center}
 \end{figure}
+
+\begin{figure}[htp]
+\begin{center}
+  \includegraphics[width=\textwidth/2]{warpPerspective.png}
+  \caption{Result of a Perspective Transform (Input and Output)}
+  \label{figure:perspectiveResult}
+\end{center}
+\end{figure}
+
 
 \subsection{First template matching approach}
 The first approach on finding the signs was done with a HSV color filter and the hough transformation
@@ -1032,7 +1052,7 @@ differences are mostly too small to determine that it is a wrong match
 
 \subsection{Proportion Enhanced Template Matching}
 To optimize the template matching another way was found. This algorithm
-takes the template picture and converts it to grayscale. It starts at the top left pixel
+takes the template picture and converts it to grayscale. It starts at the top-left pixel
 and searches for the first non translucent pixel diagonally. If it has found it,
 it determines if the pixel is dark (value <= 127) or light (value>127). Then it
 starts to seek for the next change, when the value passes 127 again.
@@ -1095,7 +1115,7 @@ with the attributes "name", "file" and "file\_imp". Listing \vref{lst:xmlFile} s
 
 The "name" attribut specifies the string which is shown, when this template has been found in an image.
 Attribut file specifies the template file which can be a 1,3 or 4 (RGB with alpha) channel picture. 
-The second image "file\_imp" is optional, but expects a grayscale image where important pixels are black and the others 
+The second image "file\_imp" is optional, but expects an grayscale image where important pixels are black and the others 
 white. In the special case of a missing or a zero sized name attribut, the template is called "NONAME" with an increasing number
 like "NONAME0, NONAME1 \ldots". If there is no file name specified for the template image or if loading the file
 fails, the template profile will not be created. If the file for the important pixel image will fail to load, there will
@@ -1141,7 +1161,7 @@ are stored in form of a Match object inside a std::vector in the corresponding M
 
 If all proportions of a region are checked for the current surface, the best matching template will
 be marked in the picture with the first letter of it's name. And then the arrays,
-which holds the Match objects for each profile, are cleared for the next region. This is the reason, 
+which hold the Match objects for each profile, are cleared for the next region. This is the reason, 
 why the application only supports \textbf{one sign per surface} at the moment.
 Figure \vref{figure:three} shows all three signs found by the algorithm.
 
@@ -1152,4 +1172,4 @@ Figure \vref{figure:three} shows all three signs found by the algorithm.
   \label{figure:three}
 \end{center}
 \end{figure}
-
+ 

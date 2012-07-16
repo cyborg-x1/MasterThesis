@@ -49,8 +49,7 @@
   \RequirePackage{placeins}
   \RequirePackage{caption}
   \RequirePackage{float}
-  \RequirePackage[final,colorlinks=false]{hyperref}
-
+%  \RequirePackage[final,colorlinks=false]{hyperref}
 
 % Error information should be more than the default.
 \setcounter{errorcontextlines}{5}
@@ -81,7 +80,7 @@
 
 \def\diplomarbeit{\subject{Diplomarbeit}}
 \def\bachelorthesis{\subject{Bachelorthesis}}
-\def\masterthesis{\subject{Masterthesis}}
+\def\masterthesis{\subject{Master Thesis}}
 \def\projektarbeit{\subject{Projektarbeit}}
 \def\laborbericht{\subject{Laborbericht}}
 \def\projektbericht{\subject{Projektbericht}}
@@ -136,7 +135,7 @@
       \begin{minipage}[l]{0.6\textwidth}
   		%\vspace{2px}
   		\fontsize{10}{0}\selectfont 
-  		Fakult\"at Elektronik und Informatik \FakultaetTok
+  		\FakultaetTok
   			\vspace{8px}
 			\end{minipage}
 			\begin{minipage}[r]{0.4\textwidth}
@@ -148,15 +147,15 @@
       %Titel%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       \begin{center}
         %\vskip 5em
-        \vskip 60px
+        \vskip 1cm
         \fontsize{14}{18}\selectfont
         \@subject\par
         %\vskip 2.5em  
-        \vskip 30px
+        \vskip 0.5cm
         \fontsize{22}{28}\selectfont 
         \titlefont\@title\par        
         %\vskip 2.5em
-        \vskip 60px
+        \vskip 1cm
         %
       %Autorblock%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
        %
@@ -168,20 +167,20 @@
        % 
        \ifthenelse{\boolean{mail}}
        	{E-Mail: \EMailTok}
-       	{\vskip 21px}
+       	{\vskip 0.4px}
        % 
-       \vskip 60px
+       \vskip 1cm
        %
       %Abgabetermin%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
        \ifthenelse{\boolean{abgabe}}
-       	{Abgabe: \AbgabeDatumTok}
+       	{Closing Date: \AbgabeDatumTok}
        	{\vskip 21px}
        %
-       \vskip 30px
+       \vskip 0.5cm
       %Betreuer%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-       %Betreuer:\par
-       %  \BetreuerOneTok\par
-       %  \BetreuerTwoTok
+       Advisors:\par
+         \BetreuerOneTok\par
+         \BetreuerTwoTok
        	%
       \end{center}\par
 			%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
