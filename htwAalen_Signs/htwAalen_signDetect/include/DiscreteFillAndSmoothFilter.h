@@ -247,37 +247,6 @@ public:
 	}
 
 	/**
-	 * This function reduces a depth image to a given range
-	 * @param[in] src Source image
-	 * @param[out]dst Destination image
-	 * @param[in] min_range The minimal distance allowed
-	 * @param[in] max_range The maximal distance allowed
-	 */
-	static void RangeFilter(const cv::Mat &src, cv::Mat &dst, short min_range, short max_range)
-	{
-		if(src.type() == CV_16UC1)
-		{
-			dst = src.clone();
-			for (int y = 0; y < src.rows; y++)
-			{
-				for (int x = 0; x < src.cols; x++)
-				{
-					short value=src.at<Vec1shrt>(y,x)[0];
-					if(value<min_range || value>max_range)
-					{
-							dst.at<Vec1shrt>(y,x)[0]=0;
-					}
-				}
-			}
-		}
-		else
-		{
-			std::cerr<<"RangeFilter: Wrong depth image type, node supports only CV_16UC1 (Rectified raw!) !"<<std::endl;
-		}
-	}
-
-
-	/**
 	 * This function fills holes in the depth map, but only if the difference
 	 * between the pixel to the pixel on the end of the gap is
 	 * smaller or equal to the amount o pixels between them.
@@ -1089,12 +1058,6 @@ public:
 		}
 	}
 
-
-//
-//	static std::vector<cv::Rect> blobStepDetector(const cv::Mat &src, cv::Mat &out, unsigned short threshold=4)
-//	{
-//
-//	}
 
 private:
 

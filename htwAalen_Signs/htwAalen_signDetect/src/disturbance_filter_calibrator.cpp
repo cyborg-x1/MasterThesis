@@ -327,10 +327,7 @@ public:
 
 			}
 			cv::Mat filter=filter_in.clone();
-
-
 			cv::boxFilter(filter, filter, 3, cv::Size(7, 3), cv::Point(-1, -1), 1, 0);
-			//cv::GaussianBlur(filter,filter,cv::Size(dyn4,dyn5),dyn6,dyn7);
 			cv::medianBlur(filter, filter, 3);
 
 			//Update non zero pixels
@@ -619,7 +616,7 @@ public:
 
 
 
-					DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image, range, 0, 4600);
+					//DiscreteFillAndSmoothFilter::RangeFilter(imgPtrDepth->image, range, 0, 4600);
 
 					DiscreteFillAndSmoothFilter::convertKinectRawToSteps(range,step);
 
