@@ -1,8 +1,8 @@
 \graphicspath{{./Software/img/}}
-\chapter{Sign Recognition}
+\chapter{Sign Recognition}\label{chapter:SignRecognition}
  
  Before being able to do filtering, detect signs etc, it is necessary to get the data from the OpenNi nodletmanager,
- the node which supplies the depth and RGB data. Therefore the code for syncronizing RGB, 
+ the node which supplies the depth and RGB data. Therefore the code for synchronizing RGB, 
  depth and camera info messages was copied from the nodelet being responsible 
  for point cloud creation. 
  
@@ -61,7 +61,7 @@ noise and this is also the case for this project.
 
 \subsection{First Blur Filter}
 Bluring the depth image to remove the noise sounds like an easy task, but if a boxed filter is used 
-all edges are smothed to surfaces they do not belong to (see first picture in figure \vref{figure:blur}).
+all edges are smoothed with surfaces they do not belong to (see first picture in figure \vref{figure:blur}).
 At first it was tried to do all the filtering and reset all blured pixels $P_b$ which are to far away from their 
 original depth value $P$ by equation \ref{eq:resetPix}.
  
@@ -122,7 +122,7 @@ void myFilter1(const cv::Mat &src, cv::Mat &dst)
 \begin{figure}[H]
 \begin{center}
   \includegraphics[width=\textwidth]{myFilter1.png}
-  \caption{Blur Filter (Boxed/Median/Reset Borders/Median)}
+  \caption[Blur Filter Steps]{Blur Filter Steps(1.Boxed/2.Median/3.Reseting Borders/4.Median)}
   \label{figure:blur}
 \end{center}
 \end{figure}
@@ -719,7 +719,7 @@ angle picture is shown in figure \vref{figure:AnglesBlured}.
 
 \subsection{Angle Filtering}
 
-To get only surfaces, which are interesting, a angle filter was created. It's input parameters
+To get only surfaces which are interesting, a angle filter was created. It's input parameters
 are the minimum and maxium for each angle. The output of this function is a grayscale image
 where pixels all $P_{ok}$ are initialized with 0 and those with suitable angles get the value 255
 (as seen in equation \vref{eq:anglefilter}).
@@ -872,7 +872,7 @@ to the right perspective to search for patterns in the regions.
 
 
 \section{Warping Prespective}
-For ajusting the perspective from a surface in the RGB image the OpenCV function warpPerspective
+For adjusting the perspective from a surface in the RGB image the OpenCV function warpPerspective
  is used comination with getPerspectiveTransform.
 ``\textit{
 getPerspectiveTransform calculates the perspective transform from 4 pairs of the corresponding points. The function 
@@ -1167,8 +1167,8 @@ Figure \vref{figure:three} shows all three signs found by the algorithm.
 \begin{figure}[H]
 \begin{center}
   \includegraphics[width=\textwidth]{three.png}
-  \caption[]{All Three Signs Matched}
+  \caption[All Three Signs Matched]{All Three Signs Matched\footnotemark}
   \label{figure:three}
 \end{center}
 \end{figure}
- 
+\footnotetext{Sign on the right is not inside the current maximum distance}
