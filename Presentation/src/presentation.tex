@@ -102,7 +102,7 @@
 	\subsection{Probleme mit Oberflächen}
 		
 	\begin{frame}{\insertsubsection: Zu Nah}	
-		\includegraphics[scale=0.6]{ToClose.png}
+		\includegraphics[scale=0.4]{ToClose.png}
 	\end{frame}
 			
 	\begin{frame}{\insertsubsection: Sonneneinstrahlung}	
@@ -118,25 +118,195 @@
 	\end{frame}
 	
 	\subsection{Ergebnisse}
-
+	
+	\begin{frame}{\insertsubsection: Abweichungen über die Distanz}	
+	\includegraphics[scale=0.6]{LaserDistanceKinectDistance.png}
+    \end{frame}
+    
+    \begin{frame}{\insertsubsection: Vorhandene Werte bis 4838mm}
+	\moveleft9mm\hbox{\includegraphics[scale=0.073]{availdepths0.png}}
+	\end{frame}
+	
+	\begin{frame}{\insertsubsection: Vorhandene Werte bis 9757mm}	
+	\moveleft9mm\hbox{\includegraphics[scale=0.073]{availdepths1.png}}
+	\end{frame}
+	
+	\begin{frame}{\insertsubsection: Abstand zwischen den Werten nach Tiefe}	
+	\includegraphics[width=\textwidth]{DifferenceForegoing.png}
+	\end{frame}
+	
+	
+	\subsection{Bildrauschen}
+	\begin{frame}{\insertsubsection}	
+		\includegraphics[width=\textwidth]{}
+	\end{frame}
+	
+	
+	
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	%SOFTWARE
+	%SOFTWARE										 %
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	
-	
 	\section{Software}  
 	\subsection{Bildbeschaffung}
-	\subsection{Step Map} 
+	\begin{frame}{\insertsubsection}
+		\begin{itemize}
+		  \item OpenNI-Node (für Kinect Kamera):
+		  \begin{itemize}	
+		    \item RGB-Bild
+		    \item Depth-Bild
+		    \item camera\_info (Enthält: Kameraparameter, Kalibrierung etc.)
+		  \end{itemize}
+		  \item Eigene Node (Code von XYZRGB Nodelet)
+		\end{itemize}
+	\end{frame}
+	
+	
+	
+	
+	\subsection{Weichzeichnen}
+	\begin{frame}{\insertsubsection: OpenCV Funktionen und Rücksetzen von Pixeln (1.Methode)}
+	\begin{itemize}
+     \item Boxed Filter (Blendengröße 7*3)
+     \item Median Filter (3*3)
+     \item Rücksetzen der Pixel, die zu weit von Originalwert entfernt sind, mit folgender Funktion:\\
+   			$$
+      			\left(\left|{P_b(x,y)-P(x,y)}\right|>{\frac{P(x,y)^2}{480000}}\right)\implies P_b(x,y)=P(x,y)
+			$$
+	 \item Erneuter Median Filter (3*3)
+    \end{itemize}
+	\end{frame}
+	
+	\begin{frame}{\insertsubsection: OpenCV Funktionen und Rücksetzen von Pixeln (1.Methode)}
+			\includegraphics[width=\textwidth]{myFilter1.png}
+	\end{frame}
+	 
+	 	
+	\begin{frame}{\insertsubsection: Erstellen einer Nachbarschaftskarte und Kreuzweichzeichner (2.Methode)}
+
+	Umwandeln des Tiefenbildes in ein Schrittbild (Step-Map) mittels Look-Up-Table:\\[0.5cm]
+	{
+	\tiny
+		  \begin{tabular}{lccccccccccc}
+			Kinect Depth& 0 & 317 & 318 & 319 &  ...  & 8550 & 8767 & 8995 & 9235 & 9489 & 9757\\
+			Step Number & 0 &   1 &   2 &   3 &  ...  &  819 &  820 &  821 &  822 & 823  & 824\\
+		  \end{tabular}
+	}\\[0.5cm]
+
+			Beispiel:\\
+			\begin{tabular}{ccc} 
+			0 & 320 & 321\\
+			8146 & 8550 & 9489\\
+			\end{tabular}\\[0.5cm]
+
+			Wird zu:\\
+			\begin{tabular}{ccc}
+			0 & 4 & 5\\
+			817 & 819 & 823\\
+			\end{tabular}
+	\end{frame}
+	 
+	\begin{frame}{\insertsubsection: Erstellen einer Nachbarschaftskarte und Kreuzweichzeichner (2.Methode)}
+	 	Erstellen des Nachbarschaftsbilds (neighborhood-map):\\[0.5cm]
+	 	\includegraphics[width=\textwidth]{neighborhoodmap.pdf}\\
+	 	{\tiny
+	 	$$
+	 	 b_i = \left\{ 
+	 	\begin{array}{ll}
+	         1 & \left|S(x_i,y_i)-S(x,y)\right|<4  \wedge   S(x_i,y_i) \neq 0 \wedge 0<=x_i<u  \wedge 0<=y_i<v\\
+	         0 & \mbox{otherwise} 
+	 	\end{array}
+		\right.   
+	 	$$
+	 	}
+	\end{frame}
 	  
+	\begin{frame}{\insertsubsection: Erstellen einer Nachbarschaftskarte und Kreuzweichzeichner (2.Methode)}
+	 	Weichzeichnen mittels Kreuzweichzeichner:\\[0.5cm]
+	 	\includegraphics[width=\textwidth]{crossBlur.pdf}
+	\end{frame}
+	   
+	   
+	\begin{frame}{\insertsubsection: Erstellen einer Nachbarschaftskarte und Kreuzweichzeichner (2.Methode)}
+	   Ergebnis:
+	   \includegraphics[width=\textwidth]{crossBlurResult.png}
+	\end{frame}
+	   
+	\subsection{Koordinatenberechnung und Filterung}
+	\begin{frame}{Realkoordinaten X und Y}
+	$$X(x,y)=\frac{(x-center_x) \cdot D(x,y)}{f_x}$$
+	$$Y(x,y)=\frac{(y-center_y) \cdot D(x,y)}{f_y}$$
+	$D(x,y):$ Z-Wert von Pixel (x,y)\\
+	$center_x :$ Mitte des Bildes in x-Richtung (Pixel)\\
+	$center_y :$ Mitte des Bildes in y-Richtung (Pixel)\\	
+	$f_x:$ Fokale Distanz in x-Richtung\\
+	$f_y:$ Fokale Distanz in y-Richtung
+	
+	(*Berechnungsformel aus XYZRGB Nodelet entnommen)
+	
+	\end{frame}
+	   
+	\begin{frame}{3D Range Filter}
+	 \includegraphics[width=\textwidth]{XYZFilter.pdf}
+	 {\tiny
+	 \begin{equation}
+ 	 \begin{split}
+ 	   	(X < Xmin \vee X > Xmax \vee Y > Ymax \vee Y < Ymin \vee D(x,y) < Zmin \vee D(x,y) > Zmax)\\
+ 	   	\implies D_{out}(x,y) = 0    	   
+ 	 \end{split}
+ 	 \nonumber
+	\end{equation}
+	} 	 
+	\end{frame}
+	
+	
+	\section{Normale und Winkel}
+	\begin{frame}{Berechnung der Normale}
+	
+	{\tiny
+			\begin{equation}
+		 		\vec{N} =        \left( \begin{array}{c} x_u                           \\                           y_u \\ z_u                           \end{array} \right) 
+		           \times \left( \begin{array}{c} x_v                           \\                           y_v \\ z_v                           \end{array} \right) 
+		         =        \left( \begin{array}{c} y_u \cdot z_v - z_u \cdot y_v \\ z_u \cdot x_v - z_v \cdot x_u \\ x_u \cdot y_v - y_u \cdot x_v \end{array}\right)
+				\nonumber
+			\end{equation}
+			\begin{gather}
+		 \vec{N}_{tr}(x,y)=    \vec{V}_t(x,y) \times \vec{V}_r(x,y) =
+		                  \left( \begin{array}{c}   X(x,y-1) -  X(x,y)  \\ Y(x,y-1) -  Y(x,y) \\ D(x,y-1) -  D(x,y)\end{array} \right) 
+		           \times \left( \begin{array}{c}   X(x+1,y) -  X(x,y)  \\ Y(x+1,y) -  Y(x,y) \\ D(x+1,y) -  D(x,y)\end{array} \right)\nonumber\\
+		 \vec{N}_{bl}(x,y)=    \vec{V}_b(x,y) \times \vec{V}_l(x,y) =
+		                  \left( \begin{array}{c}   X(x,y+1) -  X(x,y)  \\ Y(x,y+1) -  Y(x,y) \\ D(x,y+1) -  D(x,y)\end{array} \right) 
+		           \times \left( \begin{array}{c}   X(x-1,y) -  X(x,y)  \\ Y(x-1,y) -  Y(x,y) \\ D(x-1,y) -  D(x,y)\end{array} \right)\nonumber
+		\end{gather}
+	}
+	\includegraphics[scale=0.5]{normals.pdf}
+	\end{frame}
+	   
+	\begin{frame}{Winkel zu x,y und z-Achse}
+		  \includegraphics[scale=0.9]{Angles.pdf}
+		\begin{align}
+		 \alpha = \arccos \frac{N_x}{\left|\vec{N}\right|}  
+		\nonumber\\
+		 \gamma = \arccos \frac{N_z}{\left|\vec{N}\right|}  
+		\nonumber\\
+		 \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  
+		\nonumber
+		\end{align} 
+	
+	\end{frame}
+	
+	
+	
+	
+	   
 	\begin{frame}{Vielen Dank für Ihre Aufmerksamkeit}
 	    \begin{itemize}
 	      \item Dokumentation und Quellcode(comming sooner or later):\\
 	      {\small\url{http://radiationlaboratories.blogspot.de/2012/07/online-symbol-recognition-through-data.html}}\\
 	       (Shortlink: \url{http://tinyurl.com/OSR-3D-RGB})\\ \includegraphics[scale=1]{qrLink.png}
-	       
 	    \end{itemize}
 	\end{frame} 
 
+
 \end{document}
- 
+  
