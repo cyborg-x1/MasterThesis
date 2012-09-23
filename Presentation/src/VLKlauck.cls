@@ -192,17 +192,17 @@ center=\pgfpoint{.75\pgfphysicalwidth}{.75\pgfphysicalheight}%
 \setlength{\parskip}{1ex}
 \setcounter{tocdepth}{2}
 
-\AtBeginSection[]
-{
-  \begin{frame}<beamer>[allowframebreaks]
-    \frametitle{Inhalt}
-    \tableofcontents[sectionstyle=show/show, subsectionstyle=show/show/show]
-  \end{frame}
-  \begin{frame}<handout>[allowframebreaks]
-    \frametitle{Inhalt}
-    \tableofcontents[sectionstyle=show/show, subsectionstyle=show/show/show]
-  \end{frame}
-}
+% \AtBeginSection[]
+% {
+%   \begin{frame}<beamer>[allowframebreaks]
+%     \frametitle{Inhalt}
+%     \tableofcontents[sectionstyle=show/show, subsectionstyle=show/show/show]
+%   \end{frame}
+%   \begin{frame}<handout>[allowframebreaks]
+%     \frametitle{Inhalt}
+%     \tableofcontents[sectionstyle=show/show, subsectionstyle=show/show/show]
+%   \end{frame}
+% }
 
 
 \AtBeginSubsection[]
@@ -211,15 +211,15 @@ center=\pgfpoint{.75\pgfphysicalwidth}{.75\pgfphysicalheight}%
 %    \frametitle{Inhalt}
 %    \tableofcontents[sectionstyle=hide/hide, subsectionstyle= show/show/show]
 %  \end{frame}
-  \begin{frame}<beamer>[allowframebreaks]
-    \frametitle{Inhalt}
-    %\tableofcontents[sectionstyle=show/show, subsectionstyle= show/show/show]
-    \tableofcontents[currentsubsection]
+  \begin{frame}<beamer>%[allowframebreaks]
+    \frametitle{\insertsubsection} 
+    \tableofcontents[sectionstyle=show/hide, subsectionstyle= show/shaded/hide]
+    %\tableofcontents[currentsubsection,hideothersections]
    \end{frame}
-  \begin{frame}<handout>[allowframebreaks]
-    \frametitle{Inhalt}
-    %\tableofcontents[sectionstyle=show/show, subsectionstyle= show/show/show]
-    \tableofcontents[currentsubsection]
+   \begin{frame}<handout>%[allowframebreaks]
+    \frametitle{\insertsubsection} 
+    \tableofcontents[sectionstyle=show/hide, subsectionstyle= show/shaded/hide]
+    %\tableofcontents[currentsubsection,hideothersections]
    \end{frame}
 }
 
