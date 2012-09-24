@@ -136,12 +136,14 @@
 	\end{frame}
 	
 	
-	\subsection{Bildrauschen}
+	\subsection{Bildrauschen und Kameraverhalten}
 	\begin{frame}{\insertsubsection}	
-		\includegraphics[width=\textwidth]{}
+	    \includegraphics[scale=0.5]{noise.png}
 	\end{frame}
 	
-	
+	\begin{frame}{\insertsubsection}	
+		\includegraphics[scale=0.3]{verticalFractals.png}
+	\end{frame}	
 	
 	
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -260,7 +262,7 @@
 	\end{frame}
 	
 	
-	\section{Normale und Winkel}
+	\subsection{Normale und Winkel}
 	\begin{frame}{Berechnung der Normale}
 	
 	{\tiny
@@ -292,13 +294,95 @@
 		 \beta  = \arccos \frac{N_y}{\left|\vec{N}\right|}  
 		\nonumber
 		\end{align} 
+	\end{frame}
 	
+	
+	\begin{frame}{Winkelweichzeichnen / Filtern nach Winkel}
+		Weichzeichnen des Winkelbildes mit dem vorherigen Kreuzweichzeichner\\
+		\includegraphics[width=\textwidth]{AnglesMapBlured.png}\\
+		Filtern nach Winkel -> Schwarz/Weiß Bild
 	\end{frame}
 	
 	
 	
+	\subsection{Flächensegmentierung und Bildentzerrung}
+	\begin{frame}{Flächensegmentierung}
+		ID-Vergabe und Erstellen von ID-Relationen
+		\includegraphics[scale=0.8]{SurfaceSegmentation.pdf}
+	\end{frame}
 	
-	   
+	\begin{frame}{Flächensegmentierung und Filterung}
+		ID-Zusammenführung
+		\includegraphics[scale=0.8]{merging.pdf}\\
+		\includegraphics[scale=0.8]{AnglesOkSegment.png}
+		
+		Anschließend Filterung nach Flächengröße (Min/Max)
+	\end{frame}
+
+	\begin{frame}{Perspektivische Entzerrung}
+		Entzerrung mittels OpenCV warpPerspektive.\\
+		\includegraphics[scale=0.8]{PerspectiveTransform.pdf}\\ 
+		\includegraphics[scale=1]{warpPerspective.png}
+	\end{frame}
+	
+	\subsection{Template Matching}
+	\begin{frame}{\insertsubsection: 1.Methode}
+		\begin{tabular}{cc}
+			HSV-Filter auf Bild 								   & Resultat:\\
+			\includegraphics[scale=0.6]{HSV.pdf}  & \includegraphics[scale=0.7]{redFilterResult.png}\\	
+		\end{tabular} 
+		
+		Anschließende Kreisfindung mit hughCircles und Kreisposition mit Template vergleichen
+		
+	\end{frame}
+	\begin{frame}{\insertsubsection: Problem 1.Methode}
+		  \includegraphics[scale=0.4]{robotSignProblem.pdf}
+	\end{frame}
+	\begin{frame}{\insertsubsection: 2.Methode}
+		{Analysieren der Template Proportionen}
+		\includegraphics[scale=0.35]{proportionGather.pdf}
+	\end{frame}	
+	
+	\begin{frame}{\insertsubsection: 2.Methode}
+		{\small Suchen nach bekannten Proportionspaaren im entzerrten Kamerabild}
+		\includegraphics[scale=0.45]{FindingProportions.pdf}
+	\end{frame}
+	
+	
+	\begin{frame}{\insertsubsection: 2.Methode}
+	{Resultat}
+	\includegraphics[width=\textwidth]{three.png}
+	\end{frame}
+
+	\section{Zusammenfassung}
+   \begin{frame}
+     \frametitle{Zusammenfassung}
+     \tableofcontents[sectionstyle=show/hide, subsectionstyle=hide/hide/hide]
+   \end{frame}
+
+	\begin{frame}{\insertsection}
+		\begin{itemize}
+	  		\item Nachbarschaftskarte ermöglicht es Performance in allen Schritten 
+	  		       einzusparen
+			\item nachbarschaftsorientierter Kreuzweichzeichner 
+	  			   führt zu guten Ergebnissen ohne spürbare Verzögerung
+			\item Alle Prozessschritte bis einschließlich Winkelweichzeichnung
+		           einfach parallelisierbar (z.B. durch NVIDIA CUDA)
+		    \item \textbf{Der Flächenausschluss über Größen führt im Gegensatz
+		           zum template Matching ohne Flächenausschluss zu einer deutlich
+		           höheren Bildrate, das Bild wird in den meisten Fällen einigermaßen
+		           flüssig dargestellt}
+		\end{itemize}
+	\end{frame}
+	\begin{frame}{\insertsection}
+		Probleme:
+		\begin{itemize}
+		  \item Ähnliche Symbole erfordern eine niedrige Toleranz beim template Matching\\
+		         \textbf{Folge:} nicht in jedem Frame wird ein Schild gefunden
+		  \item Nachbarschaftskarte funktioniert aktuell nur bei harten Kanten
+				 (Lösung: Einbeziehung von Gradienten)
+		\end{itemize}
+	\end{frame}   
 	\begin{frame}{Vielen Dank für Ihre Aufmerksamkeit}
 	    \begin{itemize}
 	      \item Dokumentation und Quellcode(comming sooner or later):\\
@@ -306,6 +390,7 @@
 	       (Shortlink: \url{http://tinyurl.com/OSR-3D-RGB})\\ \includegraphics[scale=1]{qrLink.png}
 	    \end{itemize}
 	\end{frame} 
+
 
 
 \end{document}
