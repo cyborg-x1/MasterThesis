@@ -28,7 +28,7 @@
 #include <KinectTools/KinectTools.hpp>
 #include <KinectTools/tmpMatch.hpp>
 #include <tinyxml.h>
-#include "aa_signs/signDetectionConfig.h"
+#include <aa_signs/signDetectionConfig.h>
 namespace enc = sensor_msgs::image_encodings;
 
 
@@ -731,7 +731,7 @@ public:
 				    }
 				}
 
-				cv::circle(imgPtrRGB->image(r),points_px[0],5,cv::Scalar(255,255,0),2);
+				//cv::circle(imgPtrRGB->image(radius),points_px[0],5,cv::Scalar(255,255,0),2);
 				cv::circle(roi_mat,points_px[1],5,cv::Scalar(0,255,0),2);
 				cv::circle(roi_mat,points_px[2],5,cv::Scalar(255,0,0),2);
 				cv::circle(roi_mat,points_px[3],5,cv::Scalar(0,0,255),2);

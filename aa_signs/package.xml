@@ -2,7 +2,7 @@
 <package>
   <name>aa_signs</name>
   <version>0.0.0</version>
-  <description>The aa_signs package</description>
+  <description>Master Thesis Christian Holl</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -13,7 +13,7 @@
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>GPLv3</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
@@ -40,6 +40,51 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+
+	<build_depend>roscpp</build_depend>
+	<run_depend>roscpp</run_depend>
+	<build_depend>std_srvs</build_depend>
+	<run_depend>std_srvs</run_depend>
+	<build_depend>std_msgs</build_depend>
+	<run_depend>std_msgs</run_depend>
+	<build_depend>vision_opencv</build_depend>
+	<run_depend>vision_opencv</run_depend>
+	<build_depend>cv_bridge</build_depend>
+	<run_depend>cv_bridge</run_depend>
+	<build_depend>image_geometry</build_depend>
+	<run_depend>image_geometry</run_depend>
+	<build_depend>image_transport</build_depend>
+	<run_depend>image_transport</run_depend>
+	<build_depend>openni_camera</build_depend>
+	<run_depend>openni_camera</run_depend>
+	<build_depend>dynamic_reconfigure</build_depend>
+	<run_depend>dynamic_reconfigure</run_depend>
+	<build_depend>message_filters</build_depend>
+	<run_depend>message_filters</run_depend>
+	<build_depend>sensor_msgs</build_depend>
+	<run_depend>sensor_msgs</run_depend>
+	<build_depend>stereo_msgs</build_depend>
+	<run_depend>stereo_msgs</run_depend>
+	<build_depend>tf</build_depend>
+	<run_depend>tf</run_depend>
+	<build_depend>pcl_msgs</build_depend>
+	<run_depend>pcl_msgs</run_depend>
+	<build_depend>pcl_ros</build_depend>
+	<run_depend>pcl_ros</run_depend>
+	<build_depend>pcl_conversions</build_depend>
+	<run_depend>pcl_conversions</run_depend>
+	
+	<build_depend>libpcl1-dev</build_depend>
+	<run_depend>libpcl1-dev</run_depend>
+	
+
+   <!--
+	<build_depend>libopencv-dev</build_depend>
+	<run_depend>libopencv-dev</run_depend>
+	-->
+	
+	<build_depend>libtinyxml-dev</build_depend>
+	<run_depend>libtinyxml-dev</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

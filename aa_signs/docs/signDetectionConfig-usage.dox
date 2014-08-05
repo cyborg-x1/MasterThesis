@@ -1,0 +1,26 @@
+\subsubsection usage Usage
+\verbatim
+<node name="aa_signs" pkg="aa_signs" type="aa_signs">
+  <param name="x_angle_min" type="int" value="0" />
+  <param name="x_angle_max" type="int" value="180" />
+  <param name="y_angle_min" type="int" value="0" />
+  <param name="y_angle_max" type="int" value="180" />
+  <param name="z_angle_min" type="int" value="10" />
+  <param name="z_angle_max" type="int" value="35" />
+  <param name="x_min" type="int" value="-300" />
+  <param name="x_max" type="int" value="300" />
+  <param name="y_min" type="int" value="-200" />
+  <param name="y_max" type="int" value="200" />
+  <param name="z_min" type="int" value="0" />
+  <param name="z_max" type="int" value="2500" />
+  <param name="surface_w_min" type="int" value="20" />
+  <param name="surface_w_max" type="int" value="200" />
+  <param name="surface_h_min" type="int" value="20" />
+  <param name="surface_h_max" type="int" value="200" />
+  <param name="blur_depth" type="int" value="5" />
+  <param name="blur_angles" type="int" value="16" />
+  <param name="show_angles_ok" type="bool" value="False" />
+  <param name="new_template_matching" type="bool" value="True" />
+</node>
+\endverbatim
+

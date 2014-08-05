@@ -1,0 +1,25 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~x_angle_min" : \b [int] min x angle min: 0, default: 0, max: 180
+- \b "~x_angle_max" : \b [int] max x angle min: 0, default: 180, max: 180
+- \b "~y_angle_min" : \b [int] min y angle min: 0, default: 0, max: 180
+- \b "~y_angle_max" : \b [int] max y angle min: 0, default: 180, max: 180
+- \b "~z_angle_min" : \b [int] min z angle min: 0, default: 10, max: 180
+- \b "~z_angle_max" : \b [int] max z angle min: 0, default: 35, max: 180
+- \b "~x_min" : \b [int] min x min: -10000, default: -300, max: 10000
+- \b "~x_max" : \b [int] max x min: -10000, default: 300, max: 10000
+- \b "~y_min" : \b [int] min y min: -10000, default: -200, max: 10000
+- \b "~y_max" : \b [int] max y min: -10000, default: 200, max: 10000
+- \b "~z_min" : \b [int] min z min: -10000, default: 0, max: 10000
+- \b "~z_max" : \b [int] max z min: -10000, default: 2500, max: 10000
+- \b "~surface_w_min" : \b [int] pixel width min min: 0, default: 20, max: 1000
+- \b "~surface_w_max" : \b [int] pixel width max min: 0, default: 200, max: 1000
+- \b "~surface_h_min" : \b [int] pixel width min min: 0, default: 20, max: 1000
+- \b "~surface_h_max" : \b [int] pixel width max min: 0, default: 200, max: 1000
+- \b "~blur_depth" : \b [int] size of bluring depth image min: 1, default: 5, max: 100
+- \b "~blur_angles" : \b [int] size of bluring angle image min: 1, default: 16, max: 100
+- \b "~show_angles_ok" : \b [bool] show the pixel with the correct angles min: False, default: False, max: True
+- \b "~new_template_matching" : \b [bool] use the new template matching instead of circle detection and opencv template matching min: False, default: True, max: True
+
